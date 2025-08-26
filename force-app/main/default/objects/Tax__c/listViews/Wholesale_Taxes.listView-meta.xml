@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Wholesale_Taxes</fullName>
+    <columns>NAME</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>ClientType__c</field>
+        <operation>equals</operation>
+        <value>wholesale</value>
+    </filters>
+    <label>Wholesale Taxes</label>
+</ListView>
