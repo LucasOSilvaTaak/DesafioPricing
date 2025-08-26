@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RG__c</fullName>
+    <caseSensitive>false</caseSensitive>
+    <description>The Contact Rg</description>
+    <externalId>true</externalId>
+    <inlineHelpText>White the RG of them</inlineHelpText>
+    <label>RG</label>
+    <length>255</length>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

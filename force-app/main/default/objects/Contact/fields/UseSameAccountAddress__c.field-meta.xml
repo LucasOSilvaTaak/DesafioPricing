@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>UseSameAccountAddress__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Do you want to use the same account address</description>
+    <inlineHelpText>Chose if you want to use the same account address</inlineHelpText>
+    <label>Use Same Account Address</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>
