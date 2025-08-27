@@ -5,7 +5,11 @@
 		<members>Contact</members>
 		<members>Freight__c</members>
 		<members>Margin__c</members>
+		<members>Order</members>
 		<members>OrderItem</members>
+		<members>Pricebook2</members>
+		<members>PricebookEntry</members>
+		<members>Product2</members>
 		<members>Tax__c</members>
 		<name>CustomObject</name>
 	</types>
