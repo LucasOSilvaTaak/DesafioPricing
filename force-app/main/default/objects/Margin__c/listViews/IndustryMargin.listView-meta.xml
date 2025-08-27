@@ -3,10 +3,5 @@
     <fullName>IndustryMargin</fullName>
     <columns>NAME</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>Client_Type__c</field>
-        <operation>equals</operation>
-        <value>industry</value>
-    </filters>
     <label>Industry Margin</label>
 </ListView>

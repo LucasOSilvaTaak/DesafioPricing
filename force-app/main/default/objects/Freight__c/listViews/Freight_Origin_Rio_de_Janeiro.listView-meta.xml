@@ -3,10 +3,5 @@
     <fullName>Freight_Origin_Rio_de_Janeiro</fullName>
     <columns>NAME</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>StateOrigin__c</field>
-        <operation>equals</operation>
-        <value>RJ</value>
-    </filters>
     <label>Freight Origin Rio de Janeiro</label>
 </ListView>

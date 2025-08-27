@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ProductionCenter__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>A Production_Center</description>
+    <inlineHelpText>Choose a Production_Center</inlineHelpText>
+    <label>Production Center</label>
+    <referenceTo>ProductionCenter__c</referenceTo>
+    <relationshipLabel>Taxes</relationshipLabel>
+    <relationshipName>Taxes</relationshipName>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

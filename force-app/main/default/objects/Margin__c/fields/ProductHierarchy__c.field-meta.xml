@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ProductHierarchy__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Product Hierarchy in magirn</description>
+    <inlineHelpText>Choose a Product Hierarchy</inlineHelpText>
+    <label>Product Hierarchy</label>
+    <referenceTo>ProductHierarchy__c</referenceTo>
+    <relationshipLabel>Margins Table</relationshipLabel>
+    <relationshipName>Margins_Table</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -8,10 +8,5 @@
     <columns>ACCOUNT.TYPE</columns>
     <columns>CORE.USERS.ALIAS</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>ClientType__c</field>
-        <operation>equals</operation>
-        <value>distribution</value>
-    </filters>
     <label>Distribution Account</label>
 </ListView>

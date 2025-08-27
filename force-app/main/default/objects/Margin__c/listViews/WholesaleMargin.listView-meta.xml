@@ -3,10 +3,5 @@
     <fullName>WholesaleMargin</fullName>
     <columns>NAME</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>Client_Type__c</field>
-        <operation>equals</operation>
-        <value>wholesale</value>
-    </filters>
     <label>Wholesale Margin</label>
 </ListView>

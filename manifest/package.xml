@@ -2,7 +2,12 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
 		<members>Account</members>
+		<members>AccountAddress__c</members>
+		<members>AccountGroup__c</members>
+		<members>City__c</members>
 		<members>Contact</members>
+		<members>Country__c</members>
+		<members>DistributionCenter__c</members>
 		<members>Freight__c</members>
 		<members>Margin__c</members>
 		<members>Order</members>
@@ -10,6 +15,8 @@
 		<members>Pricebook2</members>
 		<members>PricebookEntry</members>
 		<members>Product2</members>
+		<members>ProductHierarchy__c</members>
+		<members>State__c</members>
 		<members>Tax__c</members>
 		<name>CustomObject</name>
 	</types>

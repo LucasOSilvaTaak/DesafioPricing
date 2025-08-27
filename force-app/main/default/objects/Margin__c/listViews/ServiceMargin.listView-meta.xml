@@ -3,10 +3,5 @@
     <fullName>ServiceMargin</fullName>
     <columns>NAME</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>Client_Type__c</field>
-        <operation>equals</operation>
-        <value>service</value>
-    </filters>
     <label>Service Margin</label>
 </ListView>

@@ -3,10 +3,5 @@
     <fullName>Distribuition_Margin</fullName>
     <columns>NAME</columns>
     <filterScope>Mine</filterScope>
-    <filters>
-        <field>Client_Type__c</field>
-        <operation>equals</operation>
-        <value>distribution</value>
-    </filters>
     <label>Distribuition Margin</label>
 </ListView>
