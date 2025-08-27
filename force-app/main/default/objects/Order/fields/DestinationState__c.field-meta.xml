@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DestinationState__c</fullName>
+    <description>Wich state is the order</description>
+    <inlineHelpText>Choose on the picklist the state of the order</inlineHelpText>
+    <label>DestinationState</label>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetName>States</valueSetName>
+    </valueSet>
+</CustomField>

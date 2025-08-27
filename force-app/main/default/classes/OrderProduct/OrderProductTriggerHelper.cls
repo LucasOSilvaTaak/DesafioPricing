@@ -1,6 +1,6 @@
 public with sharing class OrderProductTriggerHelper {
-    public static HandleAfterInsertOrderProduct(List<OrderItem> newList){
-        
+    public static void HandleAfterInsertOrderProduct(List<OrderItem> newList){
+
     }
 
 }
