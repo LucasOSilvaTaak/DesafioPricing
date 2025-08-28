@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_Rule</fullName>
+    <active>true</active>
+    <description>You must select at least on account group or a account</description>
+    <errorConditionFormula>OR(
+    AND(ISBLANK( Account__c ), NOT(ISBLANK(AccountGroup__c))),
+    AND(NOT(ISBLANK(Account__c)), ISBLANK(AccountGroup__c)),
+    AND(ISBLANK(Account__c),ISBLANK(AccountGroup__c))
+)</errorConditionFormula>
+    <errorMessage>A account or a account group must be selected, but one at a time</errorMessage>
+</ValidationRule>

@@ -155,7 +155,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Distribution Center</label>
     <nameField>
-        <label>Distri Name</label>
+        <label>Distribution Center Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>

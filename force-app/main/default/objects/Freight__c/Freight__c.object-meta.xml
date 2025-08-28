@@ -156,10 +156,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Freight Table</label>
     <nameField>
-        <displayFormat>Freight-{0000}</displayFormat>
         <label>Freight Table Name</label>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Freights table</pluralLabel>
     <searchLayouts></searchLayouts>

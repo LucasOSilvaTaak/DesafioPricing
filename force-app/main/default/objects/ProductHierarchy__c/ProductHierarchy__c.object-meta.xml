@@ -156,7 +156,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Product Hierarchy</label>
     <nameField>
-        <label>Product Hyra Name</label>
+        <label>Product Hierarchy Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>

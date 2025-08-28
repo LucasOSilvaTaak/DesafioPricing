@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Address_Rule</fullName>
+    <active>true</active>
+    <description>A part of the address needs to be selected</description>
+    <errorConditionFormula>NOT(
+    OR(
+        /* Exatamente 1 preenchido */
+        AND(NOT(ISBLANK(City__c)), ISBLANK(State__c),      ISBLANK(Country__c)),
+        AND(ISBLANK(City__c), NOT(ISBLANK(State__c)), ISBLANK(Country__c)),
+        AND(ISBLANK(City__c), ISBLANK(State__c), NOT(ISBLANK(Country__c)))
+    )
+)</errorConditionFormula>
+    <errorMessage>Only one address part must be selected and one must be select</errorMessage>
+</ValidationRule>
