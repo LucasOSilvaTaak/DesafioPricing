@@ -63,8 +63,32 @@ public with sharing class OrderItemTriggerHelper {
 
         //Lista que sera populada com base nos dados acima para filtrar a lista de freights
         List<Freight__c> freightTempList = new List<Freight__c>();
-
+        Integer bestScore = -1;
         for(OrderItem iOrderProduct : newList){
+            
+            //Pegando os ids para filtar
+            Id productId = iOrderProduct.productIds();
+            Id productHierarchyId = productToHierarchy.get(iOrderProduct.Product2Id);
+
+
+            integer score;
+            for (Freight__c iFreight : freightList){
+                if(iFreight.Status__c == 'Active'){
+
+                    if(iFreight.Product__c == iOrderProduct.productIds()){
+                        score += 10000;
+                    }
+                    else if(iFreight.ProductHierarchy__c == productToHierarchy.get(iOrderProduct.Product2Id)){
+                        score += 1000;
+                    } 
+
+                }
+            }
+
+        }
+
+
+        /*for(OrderItem iOrderProduct : newList){
             
             for (Freight__c iFreight : freightList){
                 if(iFreight.Product__c == iOrderProduct.Product2Id){
@@ -105,7 +129,7 @@ public with sharing class OrderItemTriggerHelper {
         }
         System.debug('Tamanho frete' + freightList.size());
         System.debug('Tamanho Order itens' + newList.size());
-    
+        */
     }
 
 
