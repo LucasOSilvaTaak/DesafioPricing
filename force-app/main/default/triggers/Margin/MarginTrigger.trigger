@@ -1,13 +1,13 @@
-trigger FreightTrigger on Freight__c (before insert, before Update) {
-    System.debug('Freight Trigger Start => ' + Trigger.operationType);
-    FreightTriggerHandler handler = new FreightTriggerHandler(
+trigger MarginTrigger on Margin__c (before insert, before update) {
+        System.debug('Margin Trigger Start => ' + Trigger.operationType);
+    MarginTriggerHandler handler = new MarginTriggerHandler(
         Trigger.old,
         Trigger.new,
         Trigger.oldMap,
         Trigger.newMap
     );
 
-    if(FreightTriggerHandler.IsTriggerEnabled()){
+    if(MarginTriggerHandler.IsTriggerEnabled()){
         switch on Trigger.operationType {
             when BEFORE_INSERT{
                 handler.BeforeInsert();

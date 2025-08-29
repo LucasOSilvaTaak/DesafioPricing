@@ -16,15 +16,15 @@ public with sharing class OrderProductTriggerHandler {
     }
 
 
-    List<AssociatedLocation__c> oldRecordList { get; set; }
-	List<AssociatedLocation__c> newRecordList { get; set; }
-	Map<Id, AssociatedLocation__c> oldRecordMap { get; set; }
-	Map<Id, AssociatedLocation__c> newRecordMap { get; set; }
+    List<OrderProduct> oldRecordList { get; set; }
+	List<OrderProduct> newRecordList { get; set; }
+	Map<Id, OrderProduct> oldRecordMap { get; set; }
+	Map<Id, OrderProduct> newRecordMap { get; set; }
     
-    public OrderProductTriggerHandler(		List<AssociatedLocation__c> oldRecordList,
-		List<AssociatedLocation__c> newRecordList,
-		Map<Id, AssociatedLocation__c> oldRecordMap,
-		Map<Id, AssociatedLocation__c> newRecordMap
+    public OrderProductTriggerHandler(		List<OrderProduct> oldRecordList,
+		List<OrderProduct> newRecordList,
+		Map<Id, OrderProduct> oldRecordMap,
+		Map<Id, OrderProduct> newRecordMap
 	) 
     {
 		this.oldRecordList = oldRecordList;

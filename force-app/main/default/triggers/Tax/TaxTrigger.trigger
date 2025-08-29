@@ -1,6 +1,6 @@
-trigger FreightTrigger on Freight__c (before insert, before Update) {
-    System.debug('Freight Trigger Start => ' + Trigger.operationType);
-    FreightTriggerHandler handler = new FreightTriggerHandler(
+trigger TaxTrigger on Tax__c (before insert, before update) {
+    System.debug('Tax Trigger Start => ' + Trigger.operationType);
+    TaxTriggerHandler handler = new TaxTriggerHandler(
         Trigger.old,
         Trigger.new,
         Trigger.oldMap,
