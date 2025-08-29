@@ -1,6 +1,6 @@
-trigger OrderProduct on OrderProduct (after insert) {
+trigger OrderItemTrigger on OrderItem (before insert) {
     System.debug('Order Product Trigger Start => ' + Trigger.operationType);
-    OrderProductTriggerHandler handler = new OrderProductTriggerHandler(
+    OrderItemTriggerHandler handler = new OrderItemTriggerHandler(
         Trigger.old,
         Trigger.new,
         Trigger.oldMap,
@@ -9,8 +9,8 @@ trigger OrderProduct on OrderProduct (after insert) {
 
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
         switch on Trigger.operationType {
-            when AFTER_INSERT{
-                handler.AfterInsert();
+            when BEFORE_INSERT{
+                handler.BeforeInsert();
             }
         }
     }
