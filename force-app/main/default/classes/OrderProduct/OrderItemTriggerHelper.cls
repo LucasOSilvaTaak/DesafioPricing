@@ -18,69 +18,9 @@ public with sharing class OrderItemTriggerHelper {
 
 
     private static void FillValues(List<OrderItem> newList){
-        productIds = new Set<Id>();
-        for(OrderItem iOrderProduct : newList){
-            productIds.add(iOrderProduct.Product2Id);
-            
-            
 
-        }
-
-        //Busca uma hierarquia de produtos, pois sempre havera uma hieraquia, mas nem sempre havera um frete relacionado a hierarquia
-        productToHierarchy = new Map<Id,Id>();
-        for(Product2 iProduct : [select id, ProductHierarchy__c from Product2 where Id in :productIds]){
-            productToHierarchy.put(iProduct.id ,iProduct.ProductHierarchy__c);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////Parte de produto e hierarquia
-
-        //Busca todos os ids de Ordem para buscar AccountAddress
-        orderIds = new Set<Id>();
-        for(OrderItem iOrderProduct : newList){
-            orderIds.add(iOrderProduct.OrderId);
-        }
-
-        //Busca todos os ids de Ordem para buscar AccountAddress
-        orderToAddress = new Map<Id,id>();
-        for(Order iOrder : [select Id, AccountAddress__c from Order where Id in :orderIds]){
-            orderToAddress.put(iOrder.Id, iOrder.AccountAddress__c);
-        }
-
-        //faz um mapa com os ids de ambos AccountAddress e city
-        addressToCity = new  Map<Id,Id>();
-        for(AccountAddress__c iOrderAddress : [select Id, City__c from AccountAddress__c where Id in :orderToAddress.values()]){
-            addressToCity.put(iOrderAddress.Id, iOrderAddress.City__c);
-        }
-
-        //Mapa de Ids de cidade e estado
-        cityToState = new Map<Id,Id>();
-        for (City__c iCity : [select Id, State__c from City__c where Id in :addressToCity.values()]){
-            cityToState.put(iCity.Id, iCity.State__c);
-        }
-
-        //Mapa de Ids de estado e e pais
-        stateToCountry = new Map<Id,Id>();
-        for (State__c iState : [select Id, Country__c from State__c where Id in :cityToState.values()]){
-            stateToCountry.put(iState.Id, iState.Country__c);
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////Parte de localizacao
-        
-        
-
-        addressToAccount = new Map<Id,Id>();
-        for(AccountAddress__c iAccountAddress : [select Id, Account__c from AccountAddress__c where Id in :orderToAddress.values()]){
-            addressToAccount.put(iAccountAddress.Id, iAccountAddress.Account__c);
-        }
-
-        AccountToAccountGroup = new Map<Id,Id>();
-        for(Account iAccount : [select Id, AccountGroup__c from Account where Id in :addressToAccount.values()]){
-            AccountToAccountGroup.put(iAccount.Id, iAccount.AccountGroup__c);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////Parte de Account
-
+        //preenche os masps e sets para a busca
+        FillMaps(newList);
 
         //buscar a order de cada order procuct para acessar Account Address para acessar cidade que pode acessar estado que acessa pais
 
@@ -290,6 +230,72 @@ public with sharing class OrderItemTriggerHelper {
 
     }
         
+    private static void FillMaps(List<OrderItem> newList){
+                productIds = new Set<Id>();
+        for(OrderItem iOrderProduct : newList){
+            productIds.add(iOrderProduct.Product2Id);
+            
+            
+
+        }
+
+        //Busca uma hierarquia de produtos, pois sempre havera uma hieraquia, mas nem sempre havera um frete relacionado a hierarquia
+        productToHierarchy = new Map<Id,Id>();
+        for(Product2 iProduct : [select id, ProductHierarchy__c from Product2 where Id in :productIds]){
+            productToHierarchy.put(iProduct.id ,iProduct.ProductHierarchy__c);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////Parte de produto e hierarquia
+
+        //Busca todos os ids de Ordem para buscar AccountAddress
+        orderIds = new Set<Id>();
+        for(OrderItem iOrderProduct : newList){
+            orderIds.add(iOrderProduct.OrderId);
+        }
+
+        //Busca todos os ids de Ordem para buscar AccountAddress
+        orderToAddress = new Map<Id,id>();
+        for(Order iOrder : [select Id, AccountAddress__c from Order where Id in :orderIds]){
+            orderToAddress.put(iOrder.Id, iOrder.AccountAddress__c);
+        }
+
+        //faz um mapa com os ids de ambos AccountAddress e city
+        addressToCity = new  Map<Id,Id>();
+        for(AccountAddress__c iOrderAddress : [select Id, City__c from AccountAddress__c where Id in :orderToAddress.values()]){
+            addressToCity.put(iOrderAddress.Id, iOrderAddress.City__c);
+        }
+
+        //Mapa de Ids de cidade e estado
+        cityToState = new Map<Id,Id>();
+        for (City__c iCity : [select Id, State__c from City__c where Id in :addressToCity.values()]){
+            cityToState.put(iCity.Id, iCity.State__c);
+        }
+
+        //Mapa de Ids de estado e e pais
+        stateToCountry = new Map<Id,Id>();
+        for (State__c iState : [select Id, Country__c from State__c where Id in :cityToState.values()]){
+            stateToCountry.put(iState.Id, iState.Country__c);
+        }
+
+
+        ////////////////////////////////////////////////////////////////////////////////////Parte de localizacao
+        
+        
+
+        addressToAccount = new Map<Id,Id>();
+        for(AccountAddress__c iAccountAddress : [select Id, Account__c from AccountAddress__c where Id in :orderToAddress.values()]){
+            addressToAccount.put(iAccountAddress.Id, iAccountAddress.Account__c);
+        }
+
+        AccountToAccountGroup = new Map<Id,Id>();
+        for(Account iAccount : [select Id, AccountGroup__c from Account where Id in :addressToAccount.values()]){
+            AccountToAccountGroup.put(iAccount.Id, iAccount.AccountGroup__c);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////Parte de Account
+
+
+    }
     
 
     
