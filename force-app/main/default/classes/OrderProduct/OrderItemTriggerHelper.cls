@@ -180,7 +180,7 @@ public with sharing class OrderItemTriggerHelper {
             }
             
             if(iOrderProduct.CostFreight__c == null){
-                iOrderProduct.addError('Freight not found');
+                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
             }
         }
 
@@ -210,7 +210,7 @@ public with sharing class OrderItemTriggerHelper {
 
             }
             if(iOrderProduct.TaxPercentage__c == null){
-                iOrderProduct.addError('Tax not found');
+                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
             }
         }
     }
@@ -284,7 +284,7 @@ public with sharing class OrderItemTriggerHelper {
             }
             
             if(iOrderProduct.MarginPercentage__c == null){
-                iOrderProduct.addError('Magin not found');
+                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
             }
         }
 
