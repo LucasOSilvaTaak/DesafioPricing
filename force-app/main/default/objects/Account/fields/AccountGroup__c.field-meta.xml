@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AccountGroup__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>A group a Account</description>
+    <inlineHelpText>Choose a account group</inlineHelpText>
+    <label>Account Group</label>
+    <referenceTo>AccountGroup__c</referenceTo>
+    <relationshipLabel>Accounts</relationshipLabel>
+    <relationshipName>Accounts</relationshipName>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Lookup</type>
+</CustomField>

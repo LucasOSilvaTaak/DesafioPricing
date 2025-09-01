@@ -156,10 +156,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Margin Table</label>
     <nameField>
-        <displayFormat>Margin-{0000}</displayFormat>
         <label>Margim Number</label>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Margins Table</pluralLabel>
     <searchLayouts></searchLayouts>

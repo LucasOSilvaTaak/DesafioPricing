@@ -4,9 +4,8 @@
     <active>true</active>
     <description>if a product is not selected cant have Hierarchy and if have a Hierarchy need to have a product</description>
     <errorConditionFormula>OR(
-    AND(ISBLANK(ProductHierarchy__c), NOT(ISBLANK(Product__c))),
-    AND(NOT(ISBLANK(ProductHierarchy__c)), ISBLANK(Product__c)),
-    AND(ISBLANK(ProductHierarchy__c),ISBLANK(Product__c))
+    AND(ISBLANK(ProductHierarchy__c), ISBLANK(Product__c)),
+    AND(Not(ISBLANK(ProductHierarchy__c)),NOT(ISBLANK(Product__c)))
 )</errorConditionFormula>
     <errorMessage>You need a product to have a hierarchy or a hierarchy to have a product and only one can be select at time</errorMessage>
 </ValidationRule>
