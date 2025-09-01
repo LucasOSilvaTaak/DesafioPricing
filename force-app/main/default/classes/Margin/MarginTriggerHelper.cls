@@ -53,7 +53,7 @@ public with sharing class MarginTriggerHelper {
 
         // 3. Valida duplicidade
         for(Margin__c iMargin : records){
-            if(marginMap.containsKey(MakeKey(iMargin))){
+            if(marginMap.containsKey(MakeKey(iMargin))&& marginMap.get(MakeKey(iMargin)).Id != iMargin.Id){
                 iMargin.addError('Margin already exists');
             }
         }

@@ -47,7 +47,7 @@ public with sharing class FreightTriggerHelper {
 
         // Valida duplicidade
         for(Freight__c iFreight : records){
-            if(freightMap.containsKey(MakeKey(iFreight))){
+            if(freightMap.containsKey(MakeKey(iFreight)) && freightMap.get(MakeKey(iFreight)).Id != iFreight.Id){
                 iFreight.addError('Freight already exists');
             }
         }
