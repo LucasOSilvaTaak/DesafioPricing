@@ -37,4 +37,8 @@ public with sharing class OrderItemTriggerHandler {
         OrderItemTriggerHelper.HandleBeforeInsertOrderProduct(newRecordList);
     }
 
+    public void BeforeUpdate(){
+        OrderItemTriggerHelper.HandleBeforeUpdateOrderProduct(oldRecordList, newRecordList);
+    }
+
 }

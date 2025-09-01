@@ -1,5 +1,13 @@
 public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeInsertOrderProduct(List<OrderItem> newList){
+        FillValues(newList);
+    }
+
+    public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
+        FillValues(newList);
+    }
+
+    private static void FillValues(List<OrderItem> newList){
         set<Id> productIds = new Set<Id>();
         for(OrderItem iOrderProduct : newList){
             productIds.add(iOrderProduct.Product2Id);
@@ -12,9 +20,9 @@ public with sharing class OrderItemTriggerHelper {
             productToHierarchy.put(iProduct.id ,iProduct.ProductHierarchy__c);
         }
 
-////////////////////////////////////////////////////////////////////////////////Parte de produto e hierarquia
+        ////////////////////////////////////////////////////////////////////////////////Parte de produto e hierarquia
 
-     //Busca todos os ids de Ordem para buscar AccountAddress
+        //Busca todos os ids de Ordem para buscar AccountAddress
         Set<Id> orderIds = new Set<Id>();
         for(OrderItem iOrderProduct : newList){
             orderIds.add(iOrderProduct.OrderId);
@@ -44,7 +52,7 @@ public with sharing class OrderItemTriggerHelper {
             stateToCountry.put(iState.Id, iState.Country__c);
         }
 
-////////////////////////////////////////////////////////////////////////////////////Parte de localizacao
+        ////////////////////////////////////////////////////////////////////////////////////Parte de localizacao
 
 
         //buscar a order de cada order procuct para acessar Account Address para acessar cidade que pode acessar estado que acessa pais
@@ -58,86 +66,57 @@ public with sharing class OrderItemTriggerHelper {
             and (City__c in :addressToCity.values()
             or State__c in :cityToState.values()
             or Country__c in :stateToCountry.values())
+            and Status__c = 'Approved'
         
         ];
 
-        //Lista que sera populada com base nos dados acima para filtrar a lista de freights
-        List<Freight__c> freightTempList = new List<Freight__c>();
-        Integer bestScore = -1;
         for(OrderItem iOrderProduct : newList){
             
+            Integer bestScore = -1;
+
             //Pegando os ids para filtar
-            Id productId = iOrderProduct.productIds();
-            Id productHierarchyId = productToHierarchy.get(iOrderProduct.Product2Id);
+            Id productId = iOrderProduct.Product2Id;
+            Id productHierarchyId = productToHierarchy.get(productId);
+            Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
+            Id stateId = cityToState.get(cityId);
+            Id countryId = stateToCountry.get(stateId);
 
-
-            integer score;
+            System.debug('freightList size = ' + freightList.size());
             for (Freight__c iFreight : freightList){
-                if(iFreight.Status__c == 'Active'){
+                integer score = -1;
 
-                    if(iFreight.Product__c == iOrderProduct.productIds()){
-                        score += 10000;
-                    }
-                    else if(iFreight.ProductHierarchy__c == productToHierarchy.get(iOrderProduct.Product2Id)){
-                        score += 1000;
-                    } 
 
+                if(iFreight.Product__c == productId){
+                    score += 100;
                 }
-            }
+                else if(iFreight.ProductHierarchy__c == productHierarchyId){
+                    score += 50;
+                }
 
-        }
-
-
-        /*for(OrderItem iOrderProduct : newList){
-            
-            for (Freight__c iFreight : freightList){
-                if(iFreight.Product__c == iOrderProduct.Product2Id){
-
-                    iOrderProduct.CostFreight__c = iFreight.Value__c;
+                if(iFreight.City__c == cityId){
+                    score += 10;
                 }
                 else{
-                    System.debug('noa achou frete de produto');
-
-                    if(iFreight.ProductHierarchy__c == productToHierarchy.get(iOrderProduct.Product2Id)){
-                        System.debug('Achou frete de hierarquia');
-                        iOrderProduct.CostFreight__c = iFreight.Value__c;
-
+                    if(iFreight.State__c == stateId){
+                        score += 5;
                     }
-                    else{
-                        System.debug('nao achou frete de hierarquia');
-
-                        if(iFreight.City__c == addressToCity.get(orderToAddress.get(iOrderProduct.OrderId)) ){
-                            System.debug('Achou frete de Cidade');
-                            iOrderProduct.CostFreight__c = iFreight.Value__c;
-
-                        }
-                        else{
-                            System.debug('nao Achou frete de Cidade');
-
-                        }
-
+                    else if(iFreight.Country__c == countryId) {
+                        score += 1;
                     }
                 }
-                if(iOrderProduct.CostFreight__c == null ){
-
-                    iOrderProduct.addError('Freight not found');
-                    System.debug('Nao tem frete');
-
+                if(score > bestScore){
+                    bestScore = score;
+                    iOrderProduct.CostFreight__c = iFreight.Value__c;
                 }
                 
-            }
+
+                }
+                if(iOrderProduct.CostFreight__c == null){
+                    iOrderProduct.addError('Freight not found');
+                }
+
         }
-        System.debug('Tamanho frete' + freightList.size());
-        System.debug('Tamanho Order itens' + newList.size());
-        */
     }
-
-
-    /*private static void VerifyFreight(LiSetst<Id> records){
-
-
 
     
-    }
-    */
 }

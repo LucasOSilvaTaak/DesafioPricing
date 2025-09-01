@@ -1,4 +1,4 @@
-trigger OrderItemTrigger on OrderItem (before insert) {
+trigger OrderItemTrigger on OrderItem (before insert, before update) {
     System.debug('Order Product Trigger Start => ' + Trigger.operationType);
     OrderItemTriggerHandler handler = new OrderItemTriggerHandler(
         Trigger.old,
@@ -11,6 +11,9 @@ trigger OrderItemTrigger on OrderItem (before insert) {
         switch on Trigger.operationType {
             when BEFORE_INSERT{
                 handler.BeforeInsert();
+            }
+            when BEFORE_UPDATE{
+                handler.BeforeUpdate();
             }
         }
     }
