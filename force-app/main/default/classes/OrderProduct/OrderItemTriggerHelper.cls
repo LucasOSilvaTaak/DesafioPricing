@@ -6,6 +6,7 @@ public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
         FillValues(newList);
     }
+    
     private static set<Id> productIds;
     private static Map<Id,Id> productToHierarchy;
     private static Set<Id> orderIds;
@@ -58,6 +59,9 @@ public with sharing class OrderItemTriggerHelper {
         AjustFreight(newList, freightList);
         AjustTax(newList, taxList);
         AjustMargin(newList, marginList);
+
+        //Calcular os valores de cada orderm produto
+        CalculateValues(newList);
 
 
     }
@@ -295,6 +299,15 @@ public with sharing class OrderItemTriggerHelper {
         ////////////////////////////////////////////////////////////////////////////////////Parte de Account
 
 
+    }
+
+    private static void CalculateValues(List<OrderItem> newList){
+        for(OrderItem iOrderIten : newList){
+            iOrderIten.NoMarginPrice__c = (iOrderIten.UnitPrice + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
+            iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+            iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
+
+        }
     }
     
 
