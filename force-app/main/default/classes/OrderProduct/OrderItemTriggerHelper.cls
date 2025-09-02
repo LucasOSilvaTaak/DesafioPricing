@@ -278,12 +278,12 @@ public with sharing class OrderItemTriggerHelper {
             ]
         );
 
-        orderToAddress         = new Map<Id, Id>();
-        addressToCity          = new Map<Id, Id>();
-        cityToState            = new Map<Id, Id>();
-        stateToCountry         = new Map<Id, Id>();
-        addressToAccount       = new Map<Id, Id>();
-        accountToAccountGroup  = new Map<Id, Id>(); 
+        orderToAddress = new Map<Id, Id>();
+        addressToCity = new Map<Id, Id>();
+        cityToState = new Map<Id, Id>();
+        stateToCountry = new Map<Id, Id>();
+        addressToAccount = new Map<Id, Id>();
+        accountToAccountGroup = new Map<Id, Id>(); 
 
         for (Order iOrder : orderMap.values()) {
             Id addressId = iOrder.AccountAddress__c;
