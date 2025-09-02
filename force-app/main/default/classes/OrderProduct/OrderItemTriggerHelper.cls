@@ -15,6 +15,8 @@ public with sharing class OrderItemTriggerHelper {
     private static Map<Id,Id> stateToCountry;
     private static Map<Id,Id> addressToAccount;
     private static Map<Id,Id> AccountToAccountGroup;
+    private static Map<Id, Order> orderMap;
+
     
         //Impede que quando o status do pedido for diferente de draft ele impede o update
         private static void DraftOnly(List<OrderItem> newList){
@@ -253,71 +255,59 @@ public with sharing class OrderItemTriggerHelper {
     }
         
     private static void FillMaps(List<OrderItem> newList){
+        orderIds   = new Set<Id>();
         productIds = new Set<Id>();
-        for(OrderItem iOrderProduct : newList){
-            productIds.add(iOrderProduct.Product2Id);
-            
-            
 
+        for (OrderItem iOrderItem : newList) {
+            if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
+            if (iOrderItem.Product2Id != null) productIds.add(iOrderItem.Product2Id);
         }
 
-        //Busca uma hierarquia de produtos, pois sempre havera uma hieraquia, mas nem sempre havera um frete relacionado a hierarquia
-        productToHierarchy = new Map<Id,Id>();
-        for(Product2 iProduct : [select id, ProductHierarchy__c from Product2 where Id in :productIds]){
-            productToHierarchy.put(iProduct.id ,iProduct.ProductHierarchy__c);
+        //Cria um map com todos os lookups de ordem
+        orderMap = new Map<Id, Order>(
+            [
+                select Id,
+                    AccountAddress__c,
+                    AccountAddress__r.City__c,
+                    AccountAddress__r.City__r.State__c,
+                    AccountAddress__r.City__r.State__r.Country__c,
+                    AccountAddress__r.Account__c,
+                    AccountAddress__r.Account__r.AccountGroup__c
+                from Order
+                where Id IN :orderIds
+            ]
+        );
+
+        orderToAddress         = new Map<Id, Id>();
+        addressToCity          = new Map<Id, Id>();
+        cityToState            = new Map<Id, Id>();
+        stateToCountry         = new Map<Id, Id>();
+        addressToAccount       = new Map<Id, Id>();
+        accountToAccountGroup  = new Map<Id, Id>(); 
+
+        for (Order iOrder : orderMap.values()) {
+            Id addressId = iOrder.AccountAddress__c;
+            Id cityId    = iOrder.AccountAddress__r?.City__c;
+            Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
+            Id countryId = iOrder.AccountAddress__r?.City__r?.State__r?.Country__c;
+            Id accountId = iOrder.AccountAddress__r?.Account__c;
+            Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
+
+            orderToAddress.put(iOrder.Id, addressId);
+            if (addressId != null && cityId != null)    addressToCity.put(addressId, cityId);
+            if (cityId   != null && stateId != null)    cityToState.put(cityId, stateId);
+            if (stateId  != null && countryId != null)  stateToCountry.put(stateId, countryId);
+            if (addressId!= null && accountId != null)  addressToAccount.put(addressId, accountId);
+            if (accountId!= null && groupId   != null)  accountToAccountGroup.put(accountId, groupId);
         }
 
-        ////////////////////////////////////////////////////////////////////////////////Parte de produto e hierarquia
 
-        //Busca todos os ids de Ordem para buscar AccountAddress
-        orderIds = new Set<Id>();
-        for(OrderItem iOrderProduct : newList){
-            orderIds.add(iOrderProduct.OrderId);
+        productToHierarchy = new Map<Id, Id>();
+        for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
+            productToHierarchy.put(p.Id, p.ProductHierarchy__c);
         }
-
-        //Busca todos os ids de Ordem para buscar AccountAddress
-        orderToAddress = new Map<Id,id>();
-        for(Order iOrder : [select Id, AccountAddress__c from Order where Id in :orderIds]){
-            orderToAddress.put(iOrder.Id, iOrder.AccountAddress__c);
-        }
-
-        //faz um mapa com os ids de ambos AccountAddress e city
-        addressToCity = new  Map<Id,Id>();
-        for(AccountAddress__c iOrderAddress : [select Id, City__c from AccountAddress__c where Id in :orderToAddress.values()]){
-            addressToCity.put(iOrderAddress.Id, iOrderAddress.City__c);
-        }
-
-        //Mapa de Ids de cidade e estado
-        cityToState = new Map<Id,Id>();
-        for (City__c iCity : [select Id, State__c from City__c where Id in :addressToCity.values()]){
-            cityToState.put(iCity.Id, iCity.State__c);
-        }
-
-        //Mapa de Ids de estado e e pais
-        stateToCountry = new Map<Id,Id>();
-        for (State__c iState : [select Id, Country__c from State__c where Id in :cityToState.values()]){
-            stateToCountry.put(iState.Id, iState.Country__c);
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////Parte de localizacao
-        
-        
-
-        addressToAccount = new Map<Id,Id>();
-        for(AccountAddress__c iAccountAddress : [select Id, Account__c from AccountAddress__c where Id in :orderToAddress.values()]){
-            addressToAccount.put(iAccountAddress.Id, iAccountAddress.Account__c);
-        }
-
-        AccountToAccountGroup = new Map<Id,Id>();
-        for(Account iAccount : [select Id, AccountGroup__c from Account where Id in :addressToAccount.values()]){
-            AccountToAccountGroup.put(iAccount.Id, iAccount.AccountGroup__c);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////Parte de Account
-
-
     }
+    
 
     private static void CalculateValues(List<OrderItem> newList){
         for(OrderItem iOrderIten : newList){
