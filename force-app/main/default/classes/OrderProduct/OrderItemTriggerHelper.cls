@@ -6,7 +6,6 @@ public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
         FillValues(newList);
     }
-    
     private static set<Id> productIds;
     private static Map<Id,Id> productToHierarchy;
     private static Set<Id> orderIds;
@@ -16,12 +15,31 @@ public with sharing class OrderItemTriggerHelper {
     private static Map<Id,Id> stateToCountry;
     private static Map<Id,Id> addressToAccount;
     private static Map<Id,Id> AccountToAccountGroup;
-
+    
+        //Impede que quando o status do pedido for diferente de draft ele impede o update
+        private static void DraftOnly(List<OrderItem> newList){
+            
+            Map<Id,Order> orderMap = new Map<Id, Order>(
+                [select Id, Status
+                from Order
+                where Id in :orderIds]
+            );
+    
+            for(OrderItem iOrderProduct : newList){
+                if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
+            }
+        }
+        
+    
 
     private static void FillValues(List<OrderItem> newList){
 
         //preenche os masps e sets para a busca
         FillMaps(newList);
+
+        //impede qualque modificação após pedido sair de draft
+        DraftOnly(newList);
+
 
         //buscar a order de cada order procuct para acessar Account Address para acessar cidade que pode acessar estado que acessa pais
 
@@ -67,7 +85,7 @@ public with sharing class OrderItemTriggerHelper {
     }
     
     
-    private static void ajustFreight(List<OrderItem> newList, List<Freight__c> freightList){
+    private static void AjustFreight(List<OrderItem> newList, List<Freight__c> freightList){
         
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.CostFreight__c = null;
@@ -235,7 +253,7 @@ public with sharing class OrderItemTriggerHelper {
     }
         
     private static void FillMaps(List<OrderItem> newList){
-                productIds = new Set<Id>();
+        productIds = new Set<Id>();
         for(OrderItem iOrderProduct : newList){
             productIds.add(iOrderProduct.Product2Id);
             
@@ -303,7 +321,7 @@ public with sharing class OrderItemTriggerHelper {
 
     private static void CalculateValues(List<OrderItem> newList){
         for(OrderItem iOrderIten : newList){
-            iOrderIten.NoMarginPrice__c = (iOrderIten.UnitPrice + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
+            iOrderIten.NoMarginPrice__c = (iOrderIten.TotalPrice + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
             iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
 
