@@ -1,6 +1,6 @@
-trigger ProductTrigger on SOBJECT (before insert) {
+trigger ProductTrigger on Product2 (after insert, after update) {
     System.debug('Product Trigger Start => ' + Trigger.operationType);
-    OrderProductTriggerHandler handler = new OrderProductTriggerHandler(
+    ProductTriggerHandler handler = new ProductTriggerHandler(
         Trigger.old,
         Trigger.new,
         Trigger.oldMap,
@@ -9,8 +9,11 @@ trigger ProductTrigger on SOBJECT (before insert) {
 
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
         switch on Trigger.operationType {
-            when BEFORE_INSERT{
+            when AFTER_INSERT{
                 handler.AfterInsert();
+            }
+            When AFTER_UPDATE{
+                handler.AfterUpdate();
             }
         }
     }
