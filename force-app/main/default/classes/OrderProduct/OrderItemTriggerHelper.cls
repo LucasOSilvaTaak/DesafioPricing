@@ -42,9 +42,6 @@ public with sharing class OrderItemTriggerHelper {
         //impede qualque modificação após pedido sair de draft
         DraftOnly(newList);
 
-
-        //buscar a order de cada order procuct para acessar Account Address para acessar cidade que pode acessar estado que acessa pais
-
         //Busca final de todas as freights citadas
         List<Freight__c> freightList = [
             select Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
@@ -142,10 +139,7 @@ public with sharing class OrderItemTriggerHelper {
                 }
     
             }
-            
-            if(iOrderProduct.CostFreight__c == null){
-                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
-            }
+
         }
 
     }
@@ -164,8 +158,6 @@ public with sharing class OrderItemTriggerHelper {
             Id stateId = cityToState.get(cityId);
             Id countryId = stateToCountry.get(stateId);
             
-            iOrderProduct.TaxPercentage__c = null;
-
             for (Tax__c iTax : taxList){
                 if(iTax.Product__c == productId && iTax.State__c == stateId){
                     iOrderProduct.TaxPercentage__c = iTax.TaxOnCost__c;
@@ -173,9 +165,7 @@ public with sharing class OrderItemTriggerHelper {
                 }
 
             }
-            if(iOrderProduct.TaxPercentage__c == null){
-                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
-            }
+
         }
     }
 
@@ -246,10 +236,7 @@ public with sharing class OrderItemTriggerHelper {
                 }
     
             }
-            
-            if(iOrderProduct.MarginPercentage__c == null){
-                iOrderProduct.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
-            }
+
         }
 
     }
@@ -311,6 +298,10 @@ public with sharing class OrderItemTriggerHelper {
 
     private static void CalculateValues(List<OrderItem> newList){
         for(OrderItem iOrderIten : newList){
+            if(iOrderIten.CostFreight__c == null || iOrderIten.TaxPercentage__c == null || iOrderIten.MarginPercentage__c == null){
+                iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
+                continue;
+            }            
             iOrderIten.NoMarginPrice__c = (iOrderIten.TotalPrice + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
             iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
