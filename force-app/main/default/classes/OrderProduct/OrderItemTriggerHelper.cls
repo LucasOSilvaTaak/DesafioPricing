@@ -297,12 +297,15 @@ public with sharing class OrderItemTriggerHelper {
     
 
     private static void CalculateValues(List<OrderItem> newList){
+        
+        map<Id, Product2> productList = new map<Id,Product2>([select Id, ProductionCost__c from Product2 where Id in :productIds]);
+
         for(OrderItem iOrderIten : newList){
             if(iOrderIten.CostFreight__c == null || iOrderIten.TaxPercentage__c == null || iOrderIten.MarginPercentage__c == null){
                 iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
                 continue;
             }            
-            iOrderIten.NoMarginPrice__c = (iOrderIten.TotalPrice + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
+            iOrderIten.NoMarginPrice__c = (productList.get(iOrderIten.Product2Id).ProductionCost__c + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
             iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
 
