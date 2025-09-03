@@ -9,7 +9,8 @@ public with sharing class ProductTriggerHelper {
                 Pricebook2Id = standardPriceBook.Id,
                 Product2Id = iProduct.Id,
                 UnitPrice = iProduct.ProductionCost__c,
-                IsActive = true
+                IsActive = true,
+                CurrencyIsoCode = iProduct.CurrencyIsoCode 
 
             ));
         }
