@@ -1,4 +1,6 @@
 public with sharing class OrderItemTriggerHelper {
+    
+    //Classes publicas para serem usadas nos triggers
     public static void HandleBeforeInsertOrderProduct(List<OrderItem> newList){
         FillValues(newList);
     }
@@ -6,25 +8,25 @@ public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
         FillValues(newList);
     }
-    private static set<Id> productIds;
-    private static Map<Id,Id> productToHierarchy;
-    private static Set<Id> orderIds;
-    private static Map<Id,Id> orderToAddress;
-    private static Map<Id,Id> cityToState;
-    private static Map<Id,Id> addressToCity;
-    private static Map<Id,Id> stateToCountry;
-    private static Map<Id,Id> addressToAccount;
-    private static Map<Id,Id> AccountToAccountGroup;
-    private static Map<Id, Order> orderMap;
+
 
     
-        //Impede que quando o status do pedido for diferente de draft ele impede o update
-        private static void DraftOnly(List<OrderItem> newList){
+    private static Set<Id> productIds = new Set<Id>();
+    private static Set<Id> productHierarchyIds = new Set<Id>();
+    private static Set<Id> cityIds = new Set<Id>();
+    private static Set<Id> stateIds = new Set<Id>();
+    private static Set<Id> countryIds = new Set<Id>();
+    private static Set<Id> AccountIds = new Set<Id>();
+    private static Set<Id> AccountGroupIds = new Set<Id>();
+
     
-            for(OrderItem iOrderProduct : newList){
-                if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
-            }
+    //Impede que quando o status do pedido for diferente de draft ele impede o update
+    private static void DraftOnly(List<OrderItem> newList){
+
+        for(OrderItem iOrderProduct : newList){
+            if(iOrderProduct.Order.Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
         }
+    }
         
     
 
@@ -41,10 +43,10 @@ public with sharing class OrderItemTriggerHelper {
             select Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
             from Freight__c
             where (Product__c in :productIds 
-            or ProductHierarchy__c in :productToHierarchy.values())
-            and (City__c in :addressToCity.values()
-            or State__c in :cityToState.values()
-            or Country__c in :stateToCountry.values())
+            or ProductHierarchy__c in :productHierarchyIds)
+            and (City__c in :cityIds
+            or State__c in :stateIds
+            or Country__c in :countryIds)
             and Status__c = 'Approved'
         
         ];
@@ -53,8 +55,8 @@ public with sharing class OrderItemTriggerHelper {
             select TaxOnCost__c, State__c, Product__c, Status__c
             from Tax__c
             where Status__c = 'Approved'
-            and State__c in :cityToState.values()
-            and Product__c in :productIdS
+            and State__c in :stateIds
+            and Product__c in :productIds
         ];
 
         List<Margin__c> marginList = [
@@ -62,9 +64,9 @@ public with sharing class OrderItemTriggerHelper {
                 AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
             from Margin__c
             where Status__c = 'Approved'
-            and (Product__c in :productIds or ProductHierarchy__c in :productToHierarchy.values())
-            and (Account__c in :addressToAccount.values() or AccountGroup__c in :AccountToAccountGroup.values())
-            and (City__c in :addressToCity.values() or State__c in :cityToState.values() or Country__c in :stateToCountry.values())
+            and (Product__c in :productIds or ProductHierarchy__c in :productHierarchyIds)
+            and (Account__c in :AccountIds or AccountGroup__c in :AccountGroupIds)
+            and (City__c in :cityIds or State__c in :stateIds or Country__c in :countryIds)
         ];
 
         AjustFreight(newList, freightList);
@@ -87,10 +89,10 @@ public with sharing class OrderItemTriggerHelper {
     
             //Pegando os ids para filtar
             Id productId = iOrderProduct.Product2Id;
-            Id productHierarchyId = productToHierarchy.get(productId);
-            Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
-            Id stateId = cityToState.get(cityId);
-            Id countryId = stateToCountry.get(stateId);
+            Id productHierarchyId = iOrderProduct.Product2.ProductHierarchy__c;
+            Id cityId = iOrderProduct.Order.AccountAddress__r.City__c;
+            Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;
+            Id countryId = iOrderProduct.Order.AccountAddress__r.City__r.State__r.Country__c;
     
             for (Freight__c iFreight : freightList){
                 integer score = -1;
@@ -145,12 +147,9 @@ public with sharing class OrderItemTriggerHelper {
             Integer bestScore = -1;
 
     
-            //Pegando os ids para filtar
             Id productId = iOrderProduct.Product2Id;
-            Id productHierarchyId = productToHierarchy.get(productId);
-            Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
-            Id stateId = cityToState.get(cityId);
-            Id countryId = stateToCountry.get(stateId);
+            Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;
+
             
             for (Tax__c iTax : taxList){
                 if(iTax.Product__c == productId && iTax.State__c == stateId){
@@ -170,12 +169,12 @@ public with sharing class OrderItemTriggerHelper {
 
     
             Id productId = iOrderProduct.Product2Id;
-            Id productHierarchyId = productToHierarchy.get(productId);
-            Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
-            Id stateId = cityToState.get(cityId);
-            Id countryId = stateToCountry.get(stateId);
-            Id AccountId = addressToAccount.get(orderToAddress.get(iOrderProduct.OrderId));
-            Id AccountGroupId = AccountToAccountGroup.get(AccountId);
+            Id productHierarchyId = iOrderProduct.Product2.ProductHierarchy__c;
+            Id cityId = iOrderProduct.Order.AccountAddress__r.City__c;
+            Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;
+            Id countryId = iOrderProduct.Order.AccountAddress__r.City__r.State__r.Country__c;
+            Id AccountId = iOrderProduct.Order.AccountAddress__r.Account__c;
+            Id AccountGroupId = iOrderProduct.Order.AccountAddress__r.Account__r.AccountGroup__c;
 
             for (Margin__c iMargin : marginList){
                 integer score = -1;
@@ -236,8 +235,8 @@ public with sharing class OrderItemTriggerHelper {
     }
         
     private static void FillMaps(List<OrderItem> newList){
-        orderIds   = new Set<Id>();
-        productIds = new Set<Id>();
+        Set<Id> orderIds   = new Set<Id>();
+        Set<Id> productIds = new Set<Id>();
 
         for (OrderItem iOrderItem : newList) {
             if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
@@ -245,7 +244,7 @@ public with sharing class OrderItemTriggerHelper {
         }
 
         //Cria um map com todos os lookups de ordem
-        orderMap = new Map<Id, Order>(
+        Map<Id,Order>  orderMap = new Map<Id, Order>(
             [
                 select Id,
                     AccountAddress__c,
@@ -259,35 +258,42 @@ public with sharing class OrderItemTriggerHelper {
                 where Id IN :orderIds
             ]
         );
-
-        orderToAddress = new Map<Id, Id>();
-        addressToCity = new Map<Id, Id>();
-        cityToState = new Map<Id, Id>();
-        stateToCountry = new Map<Id, Id>();
-        addressToAccount = new Map<Id, Id>();
-        accountToAccountGroup = new Map<Id, Id>(); 
-
-        for (Order iOrder : orderMap.values()) {
-            Id addressId = iOrder.AccountAddress__c;
-            Id cityId    = iOrder.AccountAddress__r?.City__c;
-            Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
-            Id countryId = iOrder.AccountAddress__r?.City__r?.State__r?.Country__c;
-            Id accountId = iOrder.AccountAddress__r?.Account__c;
-            Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
-
-            orderToAddress.put(iOrder.Id, addressId);
-            if (addressId != null && cityId != null)    addressToCity.put(addressId, cityId);
-            if (cityId   != null && stateId != null)    cityToState.put(cityId, stateId);
-            if (stateId  != null && countryId != null)  stateToCountry.put(stateId, countryId);
-            if (addressId!= null && accountId != null)  addressToAccount.put(addressId, accountId);
-            if (accountId!= null && groupId   != null)  accountToAccountGroup.put(accountId, groupId);
-        }
-
-
-        productToHierarchy = new Map<Id, Id>();
+        
+        Map<Id, Id> productToHierarchy = new Map<Id, Id>();
         for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
             productToHierarchy.put(p.Id, p.ProductHierarchy__c);
         }
+                    System.debug(newList.size());
+
+        for (OrderItem iOrderItem : newList) {
+
+            Order tempOrder = orderMap.get(iOrderItem.OrderId);
+            System.debug(tempOrder.AccountAddress__c);
+            Id tempProductHierarchyId = productToHierarchy.get(iOrderItem.Product2Id);
+
+            //Populando os valores de cada Order Item
+            iOrderItem.Order.AccountAddress__c = tempOrder.AccountAddress__c;
+            iOrderItem.Order.AccountAddress__r.City__c = tempOrder.AccountAddress__r.City__c;
+            iOrderItem.Order.AccountAddress__r.City__r.State__c = tempOrder.AccountAddress__r.City__r.State__c;
+            iOrderItem.Order.AccountAddress__r.City__r.State__r.Country__c = tempOrder.AccountAddress__r.City__r.State__r.Country__c;
+            iOrderItem.Order.AccountAddress__r.Account__c = tempOrder.AccountAddress__r.Account__c;
+            iOrderItem.Order.AccountAddress__r.Account__r.AccountGroup__c = tempOrder.AccountAddress__r.Account__r.AccountGroup__c;
+            iOrderItem.Product2.ProductHierarchy__c = tempProductHierarchyId;
+            iOrderItem.Order.Status = tempOrder.Status;
+
+            //Populando os sets para a busca
+            productIds.add(iOrderItem.Product2Id);
+            productHierarchyIds.add(tempProductHierarchyId);
+            cityIds.add(tempOrder.AccountAddress__r.City__c);
+            stateIds.add(tempOrder.AccountAddress__r.City__r.State__c);
+            countryIds.add(tempOrder.AccountAddress__r.City__r.State__r.Country__c);
+            AccountIds.add(tempOrder.AccountAddress__r.Account__c);
+            AccountGroupIds.add(tempOrder.AccountAddress__r.Account__r.AccountGroup__c);
+
+        }
+
+
+
     }
     
 
@@ -300,6 +306,7 @@ public with sharing class OrderItemTriggerHelper {
                 iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
                 continue;
             }            
+
             iOrderIten.NoMarginPrice__c = (productList.get(iOrderIten.Product2Id).ProductionCost__c + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
             iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
