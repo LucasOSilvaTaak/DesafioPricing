@@ -20,12 +20,6 @@ public with sharing class OrderItemTriggerHelper {
     
         //Impede que quando o status do pedido for diferente de draft ele impede o update
         private static void DraftOnly(List<OrderItem> newList){
-            
-            Map<Id,Order> orderMap = new Map<Id, Order>(
-                [select Id, Status
-                from Order
-                where Id in :orderIds]
-            );
     
             for(OrderItem iOrderProduct : newList){
                 if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
@@ -259,7 +253,8 @@ public with sharing class OrderItemTriggerHelper {
                     AccountAddress__r.City__r.State__c,
                     AccountAddress__r.City__r.State__r.Country__c,
                     AccountAddress__r.Account__c,
-                    AccountAddress__r.Account__r.AccountGroup__c
+                    AccountAddress__r.Account__r.AccountGroup__c,
+                    Status
                 from Order
                 where Id IN :orderIds
             ]
