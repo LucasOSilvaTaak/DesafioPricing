@@ -20,7 +20,7 @@ public with sharing class FreightTriggerHelper {
             String temp = MakeKey(iFreight);
 
             if(keys.contains(temp)){
-                iFreight.addError('Duplicate in batch');
+                iFreight.addError('Freight already exists');
             } else {
                 keys.add(temp);
             }

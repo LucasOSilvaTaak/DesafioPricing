@@ -6,6 +6,7 @@ public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
         FillValues(newList);
     }
+    
     private static set<Id> productIds;
     private static Map<Id,Id> productToHierarchy;
     private static Set<Id> orderIds;
@@ -271,7 +272,7 @@ public with sharing class OrderItemTriggerHelper {
             Id addressId = iOrder.AccountAddress__c;
             Id cityId    = iOrder.AccountAddress__r?.City__c;
             Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
-            Id countryId = iOrder.AccountAddress__r?.City__r?.State__r?.Country__c;
+            Id countryId = iOrder.Accoun08tAddress__r?.City__r?.State__r?.Country__c;
             Id accountId = iOrder.AccountAddress__r?.Account__c;
             Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
 
