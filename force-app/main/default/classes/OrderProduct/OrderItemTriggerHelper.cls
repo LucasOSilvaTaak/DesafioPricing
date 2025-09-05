@@ -6,7 +6,7 @@ public with sharing class OrderItemTriggerHelper {
     public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
         FillValues(newList);
     }
-    
+
     private static set<Id> productIds;
     private static Map<Id,Id> productToHierarchy;
     private static Set<Id> orderIds;
@@ -19,13 +19,13 @@ public with sharing class OrderItemTriggerHelper {
     private static Map<Id, Order> orderMap;
 
     
-        //Impede que quando o status do pedido for diferente de draft ele impede o update
-        private static void DraftOnly(List<OrderItem> newList){
-    
-            for(OrderItem iOrderProduct : newList){
-                if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
-            }
+    //Impede que quando o status do pedido for diferente de draft ele impede o update
+    private static void DraftOnly(List<OrderItem> newList){
+
+        for(OrderItem iOrderProduct : newList){
+            if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
         }
+    }
         
     
 
