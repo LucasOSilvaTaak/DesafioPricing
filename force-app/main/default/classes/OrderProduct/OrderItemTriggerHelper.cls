@@ -19,24 +19,15 @@ public with sharing class OrderItemTriggerHelper {
     private static Map<Id, Order> orderMap;
 
     
-    //Impede que quando o status do pedido for diferente de draft ele impede o update
-    private static void DraftOnly(List<OrderItem> newList){
-
-        for(OrderItem iOrderProduct : newList){
-            if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
-        }
-    }
-        
     
-
     private static void FillValues(List<OrderItem> newList){
-
+        
         //preenche os masps e sets para a busca
         FillMaps(newList);
-
+        
         //impede qualque modificação após pedido sair de draft
         DraftOnly(newList);
-
+        
         //Busca final de todas as freights citadas
         List<Freight__c> freightList = [
             select Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
@@ -47,8 +38,8 @@ public with sharing class OrderItemTriggerHelper {
             or State__c in :cityToState.values()
             or Country__c in :stateToCountry.values())
             and Status__c = 'Approved'
-        
-        ];
+            
+            ];
         
         List<Tax__c> taxList = [
             select TaxOnCost__c, State__c, Product__c, Status__c
@@ -57,34 +48,98 @@ public with sharing class OrderItemTriggerHelper {
             and State__c in :cityToState.values()
             and Product__c in :productIdS
         ];
-
+            
         List<Margin__c> marginList = [
             select Product__c, ProductHierarchy__c, Account__c, 
-                AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
+            AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
             from Margin__c
             where Status__c = 'Approved'
             and (Product__c in :productIds or ProductHierarchy__c in :productToHierarchy.values())
             and (Account__c in :addressToAccount.values() or AccountGroup__c in :AccountToAccountGroup.values())
             and (City__c in :addressToCity.values() or State__c in :cityToState.values() or Country__c in :stateToCountry.values())
         ];
-
-        AjustFreight(newList, freightList);
-        AjustTax(newList, taxList);
-        AjustMargin(newList, marginList);
-
-        //Calcular os valores de cada orderm produto
-        CalculateValues(newList);
-
-
+            
+            AjustFreight(newList, freightList);
+            AjustTax(newList, taxList);
+            AjustMargin(newList, marginList);
+            
+            //Calcular os valores de cada orderm produto
+            CalculateValues(newList);
+                    
+                    
     }
-    
+                
+                
+    private static void FillMaps(List<OrderItem> newList){
+        orderIds   = new Set<Id>();
+        productIds = new Set<Id>();
+
+        for (OrderItem iOrderItem : newList) {
+            if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
+            if (iOrderItem.Product2Id != null) productIds.add(iOrderItem.Product2Id);
+        }
+
+        //Cria um map com todos os lookups de ordem
+        orderMap = new Map<Id, Order>(
+            [
+                select Id,
+                    AccountAddress__c,
+                    AccountAddress__r.City__c,
+                    AccountAddress__r.City__r.State__c,
+                    AccountAddress__r.City__r.State__r.Country__c,
+                    AccountAddress__r.Account__c,
+                    AccountAddress__r.Account__r.AccountGroup__c,
+                    Status
+                from Order
+                where Id IN :orderIds
+            ]
+        );
+
+        orderToAddress = new Map<Id, Id>();
+        addressToCity = new Map<Id, Id>();
+        cityToState = new Map<Id, Id>();
+        stateToCountry = new Map<Id, Id>();
+        addressToAccount = new Map<Id, Id>();
+        accountToAccountGroup = new Map<Id, Id>(); 
+
+        for (Order iOrder : orderMap.values()) {
+            Id addressId = iOrder.AccountAddress__c;
+            Id cityId    = iOrder.AccountAddress__r?.City__c;
+            Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
+            Id countryId = iOrder.Accoun08tAddress__r?.City__r?.State__r?.Country__c;
+            Id accountId = iOrder.AccountAddress__r?.Account__c;
+            Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
+
+            orderToAddress.put(iOrder.Id, addressId);
+            if (addressId != null && cityId != null)    addressToCity.put(addressId, cityId);
+            if (cityId   != null && stateId != null)    cityToState.put(cityId, stateId);
+            if (stateId  != null && countryId != null)  stateToCountry.put(stateId, countryId);
+            if (addressId!= null && accountId != null)  addressToAccount.put(addressId, accountId);
+            if (accountId!= null && groupId   != null)  accountToAccountGroup.put(accountId, groupId);
+        }
+
+
+        productToHierarchy = new Map<Id, Id>();
+        for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
+            productToHierarchy.put(p.Id, p.ProductHierarchy__c);
+        }
+    }
+                
+    //Impede que quando o status do pedido for diferente de draft ele impede o update
+    private static void DraftOnly(List<OrderItem> newList){
+
+        for(OrderItem iOrderProduct : newList){
+            if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
+        }
+    }
+        
     
     private static void AjustFreight(List<OrderItem> newList, List<Freight__c> freightList){
         
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.CostFreight__c = null;
             Integer bestScore = -1;
-
+                        
     
             //Pegando os ids para filtar
             Id productId = iOrderProduct.Product2Id;
@@ -132,15 +187,15 @@ public with sharing class OrderItemTriggerHelper {
                     bestScore = score;
                     iOrderProduct.CostFreight__c = iFreight.Value__c;
                 }
-    
+                
             }
-
+            
         }
-
+        
     }
-
+    
     private static void AjustTax(List<OrderItem> newList, List<Tax__c> taxList){
-         
+        
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.TaxPercentage__c = null;
             Integer bestScore = -1;
@@ -151,7 +206,6 @@ public with sharing class OrderItemTriggerHelper {
             Id productHierarchyId = productToHierarchy.get(productId);
             Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
             Id stateId = cityToState.get(cityId);
-            Id countryId = stateToCountry.get(stateId);
             
             for (Tax__c iTax : taxList){
                 if(iTax.Product__c == productId && iTax.State__c == stateId){
@@ -236,61 +290,6 @@ public with sharing class OrderItemTriggerHelper {
 
     }
         
-    private static void FillMaps(List<OrderItem> newList){
-        orderIds   = new Set<Id>();
-        productIds = new Set<Id>();
-
-        for (OrderItem iOrderItem : newList) {
-            if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
-            if (iOrderItem.Product2Id != null) productIds.add(iOrderItem.Product2Id);
-        }
-
-        //Cria um map com todos os lookups de ordem
-        orderMap = new Map<Id, Order>(
-            [
-                select Id,
-                    AccountAddress__c,
-                    AccountAddress__r.City__c,
-                    AccountAddress__r.City__r.State__c,
-                    AccountAddress__r.City__r.State__r.Country__c,
-                    AccountAddress__r.Account__c,
-                    AccountAddress__r.Account__r.AccountGroup__c,
-                    Status
-                from Order
-                where Id IN :orderIds
-            ]
-        );
-
-        orderToAddress = new Map<Id, Id>();
-        addressToCity = new Map<Id, Id>();
-        cityToState = new Map<Id, Id>();
-        stateToCountry = new Map<Id, Id>();
-        addressToAccount = new Map<Id, Id>();
-        accountToAccountGroup = new Map<Id, Id>(); 
-
-        for (Order iOrder : orderMap.values()) {
-            Id addressId = iOrder.AccountAddress__c;
-            Id cityId    = iOrder.AccountAddress__r?.City__c;
-            Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
-            Id countryId = iOrder.Accoun08tAddress__r?.City__r?.State__r?.Country__c;
-            Id accountId = iOrder.AccountAddress__r?.Account__c;
-            Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
-
-            orderToAddress.put(iOrder.Id, addressId);
-            if (addressId != null && cityId != null)    addressToCity.put(addressId, cityId);
-            if (cityId   != null && stateId != null)    cityToState.put(cityId, stateId);
-            if (stateId  != null && countryId != null)  stateToCountry.put(stateId, countryId);
-            if (addressId!= null && accountId != null)  addressToAccount.put(addressId, accountId);
-            if (accountId!= null && groupId   != null)  accountToAccountGroup.put(accountId, groupId);
-        }
-
-
-        productToHierarchy = new Map<Id, Id>();
-        for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
-            productToHierarchy.put(p.Id, p.ProductHierarchy__c);
-        }
-    }
-    
 
     private static void CalculateValues(List<OrderItem> newList){
         
