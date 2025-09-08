@@ -33,10 +33,10 @@ private static Boolean isEnabled;
 		this.newRecordMap = newRecordMap;
 	}
 
-    public void BeforeInsert(){
+    public void beforeInsert(){
         FreightTriggerHelper.HandleInsertFreight(newRecordList);
     }
-    public void BeforeUpdate(){
+    public void beforeUpdate(){
         FreightTriggerHelper.HandleUpdateFreight(oldRecordList, newRecordList);
     }
 }

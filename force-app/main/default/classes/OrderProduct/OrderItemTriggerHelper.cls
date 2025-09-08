@@ -305,7 +305,7 @@ public with sharing class OrderItemTriggerHelper {
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
 
         }
-    }
+    } 
     
 
     
