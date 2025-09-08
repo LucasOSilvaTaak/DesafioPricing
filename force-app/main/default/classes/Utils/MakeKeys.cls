@@ -18,13 +18,15 @@ public with sharing class MakeKeys {
             string value = String.valueOf(fieldaMap.get(iString));
             if(fields.contains(iString)){
                 key += (value == null || value == 'null') ? '' : (value + '-');
-                
+
             }
+            
 
         }
         if(key.endsWith('-')){
             key = key.substring(0, key.length() - 1);
         }
+        System.debug('KEY RECORD DB: ' + key);
 
         return key;
     }
@@ -33,6 +35,7 @@ public with sharing class MakeKeys {
         Map<String,Id> keyMap = new Map<String,Id>();
         for(SObject iRecord : records){
             keyMap.put(makeKey(iRecord), iRecord.Id);
+
         }
         return keyMap;
     }

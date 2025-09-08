@@ -5,9 +5,11 @@ public with sharing class TaxTriggerHelper {
     }
 
     public static void HandleUpdateTax(List<Tax__c> oldList, List<Tax__c> newList){
-        VerifyDuplicity(newList);
-        System.debug('Houve update');
-
+        List<Tax__c> changedRecords = new List<Tax__c>();
+        for(Integer i = 0; i < newList.size(); i++){
+            if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
+        }
+        if(!changedRecords.isEmpty()) VerifyDuplicity(changedRecords);    
     }
 
     private static void VerifyDuplicity(List<Tax__c> records){
@@ -16,7 +18,7 @@ public with sharing class TaxTriggerHelper {
         Set<Id> StateIds = new Set<Id>();
 
         for(Tax__c iTax : records){
-            String temp = MakeKey(iTax);
+            String temp = MakeKeys.makeKey(iTax);
             if(keys.contains(temp))iTax.addError('Duplicate in batch');
             else keys.add(temp);
 
@@ -24,24 +26,24 @@ public with sharing class TaxTriggerHelper {
             if(iTax.State__c != null) StateIds.add(iTax.State__c);
         }
 
-        List<Tax__c> TaxList = [select Id, Product__c, State__c 
-                                    from Tax__c
-                                    where Product__c in :productIds
-                                    and State__c in :StateIds
+        List<Tax__c> TaxList = [SELECT Id, Product__c, State__c 
+                                FROM Tax__c
+                                WHERE Product__c in :productIds
+                                AND State__c in :StateIds
                                 ];
                                 
 
-        Map<String, Tax__c> TaxMap = new Map<String, Tax__c>();
-        for(Tax__c iTax : TaxList){
-            TaxMap.put(MakeKey(iTax), iTax);
-        }
+        Map<String, Id> TaxMap = MakeKeys.makeKeyMap(TaxList);
 
         for(Tax__c iTax : records){
-            if(TaxMap.containsKey(MakeKey(iTax))){
-                Tax__c existing = TaxMap.get(MakeKey(iTax));
-                if(existing.Id != iTax.Id){
+            String key = MakeKeys.makeKey(iTax);
+
+            if(TaxMap.containsKey(key)){
+
+                if(TaxMap.get(key) != iTax.Id){
                     iTax.addError('Tax already exists');
                 }
+
             }
         }
 
@@ -51,8 +53,5 @@ public with sharing class TaxTriggerHelper {
 
 
 
-    private static String MakeKey(Tax__c tax){
-        return String.valueOf(tax.Product__c) + '-' +
-               String.valueOf(tax.State__c);
-    }
+
 }

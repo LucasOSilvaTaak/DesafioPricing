@@ -4,7 +4,11 @@ public with sharing class MarginTriggerHelper {
     }
 
     public static void HandleUpdateMargin(List<Margin__c> oldList, List<Margin__c> newList){
-        VerifyDuplicity(newList);
+        List<Margin__c> changedRecords = new List<Margin__c>();
+        for(Integer i = 0; i < newList.size(); i++){
+            if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
+        }
+        if(!changedRecords.isEmpty()) VerifyDuplicity(changedRecords);    
     }
 
     private static void VerifyDuplicity(List<Margin__c> records){
@@ -19,13 +23,11 @@ public with sharing class MarginTriggerHelper {
 
         //Monta chaves e coleta IDs
         for(Margin__c iMargin : records){
-            String temp = MakeKey(iMargin);
+            String temp = MakeKeys.makeKey(iMargin);
 
-            if(keys.contains(temp)){
-                iMargin.addError('Duplicate in batch');
-            } else {
-                keys.add(temp);
-            }
+            if(keys.contains(temp)) iMargin.addError('Duplicate in batch');
+            else keys.add(temp);
+            
 
             if(iMargin.Product__c != null) productIds.add(iMargin.Product__c);
             if(iMargin.ProductHierarchy__c != null) productHierarchyIds.add(iMargin.ProductHierarchy__c);
@@ -38,34 +40,27 @@ public with sharing class MarginTriggerHelper {
 
         //Busca margens já existentes no banco
         List<Margin__c> marginList = [
-            select Id, Product__c, ProductHierarchy__c, Account__c, AccountGroup__c,
+            SELECT Id, Product__c, ProductHierarchy__c, Account__c, AccountGroup__c,
                    City__c, State__c, Country__c
-            from Margin__c
-            where (Product__c IN :productIds OR ProductHierarchy__c IN :productHierarchyIds)
-              and (Account__c IN :accountIds OR AccountGroup__c IN :accountGroupIds)
-              and (City__c IN :cityIds OR State__c IN :stateIds OR Country__c IN :countryIds)
+            FROM Margin__c
+            WHERE (Product__c IN :productIds OR ProductHierarchy__c IN :productHierarchyIds)
+            AND (Account__c IN :accountIds OR AccountGroup__c IN :accountGroupIds)
+            AND (City__c IN :cityIds OR State__c IN :stateIds OR Country__c IN :countryIds)
         ];
 
-        Map<String, Margin__c> marginMap = new Map<String, Margin__c>();
-        for(Margin__c iMargin : marginList){
-            marginMap.put(MakeKey(iMargin), iMargin);
-        }
+        Map<String, Id> marginMap = MakeKeys.makeKeyMap(marginList);
 
-        // 3. Valida duplicidade
+
+        //Valida duplicidade
         for(Margin__c iMargin : records){
-            if(marginMap.containsKey(MakeKey(iMargin))&& marginMap.get(MakeKey(iMargin)).Id != iMargin.Id){
+            string key = MakeKeys.makeKey(iMargin);
+
+
+            if(marginMap.containsKey(key) && marginMap.get(key) != iMargin.Id){
                 iMargin.addError('Margin already exists');
             }
         }
     }
 
-    private static String MakeKey(Margin__c margin){
-        return String.valueOf(margin.Product__c) + '-' +
-               String.valueOf(margin.ProductHierarchy__c) + '-' +
-               String.valueOf(margin.Account__c) + '-' +
-               String.valueOf(margin.AccountGroup__c) + '-' +
-               String.valueOf(margin.City__c) + '-' +
-               String.valueOf(margin.State__c) + '-' +
-               String.valueOf(margin.Country__c);
-    }
+
 }
