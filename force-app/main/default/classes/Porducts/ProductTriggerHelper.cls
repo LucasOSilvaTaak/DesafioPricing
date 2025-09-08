@@ -1,6 +1,6 @@
 public with sharing class ProductTriggerHelper {
 
-    public static void HandleAfterInsertOrder(List<Product2> newList){
+    public static void handleAfterInsertOrder(List<Product2> newList){
         List<PricebookEntry>  pricebookEntryList = new List<PricebookEntry>();
         Pricebook2 standardPriceBook = [SELECT Id FROM Pricebook2 WHERE isStandard = true LIMIT 1];
 
@@ -19,34 +19,39 @@ public with sharing class ProductTriggerHelper {
 
     }
 
-     public static void HandleAfterUpdateOrder(List<Product2> oldList, List<Product2> newList){
-        Set<Id> productIdsToUpdate = new Set<Id>();
+     public static void handleAfterUpdateOrder(List<Product2> oldList, List<Product2> newList){
+        
+        Set<Id> updatedProducts = new Set<Id>();
+
         for(Integer i = 0; i < newList.size(); i++){
-            if(oldList[i].ProductionCost__c != newList[i].ProductionCost__c){
-                productIdsToUpdate.add(newList[i].Id);
+
+            if(!oldList[i].equals(newList[i].ProductionCost__c)){
+
+                updatedProducts.add(newList[i].Id);
+
             }
         }
 
-        if(productIdsToUpdate.isEmpty()){
-            return;
-        }
+        if(updatedProducts.isEmpty()) return;
+        
 
         Pricebook2 standardPriceBook = [SELECT Id FROM Pricebook2 WHERE isStandard = true LIMIT 1];
 
         List<PricebookEntry> pricebookEntriesToUpdate = [
             SELECT Id, Product2Id, UnitPrice
             FROM PricebookEntry
-            WHERE Product2Id IN :productIdsToUpdate
+            WHERE Product2Id IN :updatedProducts
             AND Pricebook2Id = :standardPriceBook.Id
         ];
 
         Map<Id, Product2> productMap = new Map<Id, Product2>(newList);
 
-        for(PricebookEntry pbe : pricebookEntriesToUpdate){
-            Product2 prod = productMap.get(pbe.Product2Id);
-            if(prod != null){
-                pbe.UnitPrice = prod.ProductionCost__c;
-            }
+        for(PricebookEntry iPricebookEntry : pricebookEntriesToUpdate){
+
+            Product2 product = productMap.get(iPricebookEntry.Product2Id);
+
+            if(product != null) iPricebookEntry.UnitPrice = product.ProductionCost__c;
+            
         }
 
         if(!pricebookEntriesToUpdate.isEmpty()){

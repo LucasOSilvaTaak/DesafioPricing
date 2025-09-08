@@ -1,10 +1,10 @@
 public with sharing class OrderItemTriggerHelper {
-    public static void HandleBeforeInsertOrderProduct(List<OrderItem> newList){
-        FillValues(newList);
+    public static void HANDleBeforeInsertOrderProduct(List<OrderItem> newList){
+        fillValues(newList);
     }
 
-    public static void HandleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
-        FillValues(newList);
+    public static void HANDleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
+        fillValues(newList);
     }
 
     private static set<Id> productIds;
@@ -20,57 +20,62 @@ public with sharing class OrderItemTriggerHelper {
 
     
     
-    private static void FillValues(List<OrderItem> newList){
+    private static void fillValues(List<OrderItem> newList){
         
         //preenche os masps e sets para a busca
-        FillMaps(newList);
+        fillMaps(newList);
         
         //impede qualque modificação após pedido sair de draft
-        DraftOnly(newList);
+        draftOnly(newList);
         
         //Busca final de todas as freights citadas
         List<Freight__c> freightList = [
-            select Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
-            from Freight__c
-            where (Product__c in :productIds 
-            or ProductHierarchy__c in :productToHierarchy.values())
-            and (City__c in :addressToCity.values()
-            or State__c in :cityToState.values()
-            or Country__c in :stateToCountry.values())
-            and Status__c = 'Approved'
+            SELECT Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
+            FROM Freight__c
+            WHERE (Product__c IN :productIds 
+                OR ProductHierarchy__c IN :productToHierarchy.values())
+            AND (City__c IN :addressToCity.values() 
+                OR State__c IN :cityToState.values() 
+                OR Country__c IN :stateToCountry.values())
+            AND Status__c = 'Approved'
             
             ];
         
         List<Tax__c> taxList = [
-            select TaxOnCost__c, State__c, Product__c, Status__c
-            from Tax__c
-            where Status__c = 'Approved'
-            and State__c in :cityToState.values()
-            and Product__c in :productIdS
+            SELECT TaxOnCost__c, State__c, Product__c, Status__c
+            FROM Tax__c
+            WHERE Status__c = 'Approved'
+            AND State__c IN :cityToState.values()
+            AND Product__c IN :productIdS
         ];
             
         List<Margin__c> marginList = [
-            select Product__c, ProductHierarchy__c, Account__c, 
+            SELECT Product__c, ProductHierarchy__c, Account__c, 
             AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
-            from Margin__c
-            where Status__c = 'Approved'
-            and (Product__c in :productIds or ProductHierarchy__c in :productToHierarchy.values())
-            and (Account__c in :addressToAccount.values() or AccountGroup__c in :AccountToAccountGroup.values())
-            and (City__c in :addressToCity.values() or State__c in :cityToState.values() or Country__c in :stateToCountry.values())
+            FROM Margin__c
+            WHERE Status__c = 'Approved'
+            AND (Product__c IN :productIds 
+                OR ProductHierarchy__c IN :productToHierarchy.values())
+            AND (Account__c IN :addressToAccount.values() 
+                OR AccountGroup__c IN :AccountToAccountGroup.values())
+            AND (City__c IN :addressToCity.values() 
+                OR State__c IN :cityToState.values() or Country__c IN :stateToCountry.values())
         ];
             
-            AjustFreight(newList, freightList);
-            AjustTax(newList, taxList);
-            AjustMargin(newList, marginList);
+            ajustFreight(newList, freightList);
+
+            ajustTax(newList, taxList);
+
+            ajustMargin(newList, marginList);
             
             //Calcular os valores de cada orderm produto
-            CalculateValues(newList);
+            calculateValues(newList);
                     
                     
     }
                 
                 
-    private static void FillMaps(List<OrderItem> newList){
+    private static void fillMaps(List<OrderItem> newList){
         orderIds   = new Set<Id>();
         productIds = new Set<Id>();
 
@@ -82,7 +87,7 @@ public with sharing class OrderItemTriggerHelper {
         //Cria um map com todos os lookups de ordem
         orderMap = new Map<Id, Order>(
             [
-                select Id,
+                SELECT Id,
                     AccountAddress__c,
                     AccountAddress__r.City__c,
                     AccountAddress__r.City__r.State__c,
@@ -90,8 +95,8 @@ public with sharing class OrderItemTriggerHelper {
                     AccountAddress__r.Account__c,
                     AccountAddress__r.Account__r.AccountGroup__c,
                     Status
-                from Order
-                where Id IN :orderIds
+                FROM Order
+                WHERE Id IN :orderIds
             ]
         );
 
@@ -106,7 +111,7 @@ public with sharing class OrderItemTriggerHelper {
             Id addressId = iOrder.AccountAddress__c;
             Id cityId    = iOrder.AccountAddress__r?.City__c;
             Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
-            Id countryId = iOrder.Accoun08tAddress__r?.City__r?.State__r?.Country__c;
+            Id countryId = iOrder.AccountAddress__r?.City__r?.State__r?.Country__c;
             Id accountId = iOrder.AccountAddress__r?.Account__c;
             Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
 
@@ -120,13 +125,13 @@ public with sharing class OrderItemTriggerHelper {
 
 
         productToHierarchy = new Map<Id, Id>();
-        for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
+        for (Product2 p :   [SELECT Id, ProductHierarchy__c FROM Product2 where Id in :productIds]) {
             productToHierarchy.put(p.Id, p.ProductHierarchy__c);
         }
     }
                 
-    //Impede que quando o status do pedido for diferente de draft ele impede o update
-    private static void DraftOnly(List<OrderItem> newList){
+    //Impede que quANDo o status do pedido for diferente de draft ele impede o update
+    private static void draftOnly(List<OrderItem> newList){
 
         for(OrderItem iOrderProduct : newList){
             if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
@@ -134,14 +139,14 @@ public with sharing class OrderItemTriggerHelper {
     }
         
     
-    private static void AjustFreight(List<OrderItem> newList, List<Freight__c> freightList){
+    private static void ajustFreight(List<OrderItem> newList, List<Freight__c> freightList){
         
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.CostFreight__c = null;
             Integer bestScore = -1;
                         
     
-            //Pegando os ids para filtar
+            //PegANDo os ids para filtar
             Id productId = iOrderProduct.Product2Id;
             Id productHierarchyId = productToHierarchy.get(productId);
             Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
@@ -194,14 +199,14 @@ public with sharing class OrderItemTriggerHelper {
         
     }
     
-    private static void AjustTax(List<OrderItem> newList, List<Tax__c> taxList){
+    private static void ajustTax(List<OrderItem> newList, List<Tax__c> taxList){
         
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.TaxPercentage__c = null;
             Integer bestScore = -1;
 
     
-            //Pegando os ids para filtar
+            //PegANDo os ids para filtar
             Id productId = iOrderProduct.Product2Id;
             Id productHierarchyId = productToHierarchy.get(productId);
             Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
@@ -218,7 +223,7 @@ public with sharing class OrderItemTriggerHelper {
         }
     }
 
-    private static void AjustMargin(List<OrderItem> newList, List<Margin__c> marginList){
+    private static void ajustMargin(List<OrderItem> newList, List<Margin__c> marginList){
         for(OrderItem iOrderProduct : newList){
             iOrderProduct.MarginPercentage__c = null;
             Integer bestScore = -1;
@@ -291,10 +296,11 @@ public with sharing class OrderItemTriggerHelper {
     }
         
 
-    private static void CalculateValues(List<OrderItem> newList){
+    private static void calculateValues(List<OrderItem> newList){
         
-        map<Id, Product2> productList = new map<Id,Product2>([select Id, ProductionCost__c from Product2 where Id in :productIds]);
-
+        map<Id, Product2> productList = new map<Id,Product2>( 
+            [SELECT Id, ProductionCost__c FROM Product2 WHERE Id IN :productIds] 
+        );
         for(OrderItem iOrderIten : newList){
             if(iOrderIten.CostFreight__c == null || iOrderIten.TaxPercentage__c == null || iOrderIten.MarginPercentage__c == null){
                 iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');

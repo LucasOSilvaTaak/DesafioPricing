@@ -10,10 +10,10 @@ trigger OrderItemTrigger on OrderItem (before insert, before update) {
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
         switch on Trigger.operationType {
             when BEFORE_INSERT{
-                handler.BeforeInsert();
+                handler.beforeInsert();
             }
             when BEFORE_UPDATE{
-                handler.BeforeUpdate();
+                handler.beforeUpdate();
             }
         }
     }

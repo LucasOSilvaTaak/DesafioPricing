@@ -7,7 +7,7 @@ trigger FreightTrigger on Freight__c (before insert, before Update) {
         Trigger.newMap
     );
 
-    if(FreightTriggerHandler.IsTriggerEnabled()){
+    if(FreightTriggerHandler.isTriggerEnabled()){
         switch on Trigger.operationType {
             when BEFORE_INSERT{
                 handler.BeforeInsert();

@@ -7,7 +7,7 @@ trigger MarginTrigger on Margin__c (before insert, before update) {
         Trigger.newMap
     );
 
-    if(MarginTriggerHandler.IsTriggerEnabled()){
+    if(MarginTriggerHandler.isTriggerEnabled()){
         switch on Trigger.operationType {
             when BEFORE_INSERT{
                 handler.BeforeInsert();

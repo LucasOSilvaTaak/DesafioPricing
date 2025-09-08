@@ -1,18 +1,18 @@
 public with sharing class FreightTriggerHelper {
     public static void HandleInsertFreight(List<Freight__c> newList){
-        VerifyDuplicity(newList);
+        verifyDuplicity(newList);
     }
 
-    public static void HandleUpdateFreight(List<Freight__c> oldList, List<Freight__c> newList){
+    public static void handleUpdateFreight(List<Freight__c> oldList, List<Freight__c> newList){
         List<Freight__c> changedRecords = new List<Freight__c>();
         for(Integer i = 0; i < newList.size(); i++){
             if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
         }
-        if(!changedRecords.isEmpty()) VerifyDuplicity(newList);
+        if(!changedRecords.isEmpty()) verifyDuplicity(newList);
 
     }
 
-    private static void VerifyDuplicity(List<Freight__c> records){
+    private static void verifyDuplicity(List<Freight__c> records){
 
         Set<String> keys = new Set<String>();
         Set<Id> productIds = new Set<Id>();

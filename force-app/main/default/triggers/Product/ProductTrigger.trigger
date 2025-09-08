@@ -10,10 +10,10 @@ trigger ProductTrigger on Product2 (after insert, after update) {
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
         switch on Trigger.operationType {
             when AFTER_INSERT{
-                handler.AfterInsert();
+                handler.afterInsert();
             }
             When AFTER_UPDATE{
-                handler.AfterUpdate();
+                handler.afterUpdate();
             }
         }
     }

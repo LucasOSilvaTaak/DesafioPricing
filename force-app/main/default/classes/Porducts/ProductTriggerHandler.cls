@@ -3,15 +3,15 @@ private static Boolean isEnabled;
     static{
         isEnabled=true;
     }
-    public static Boolean IsTriggerEnabled(){
+    public static Boolean isTriggerEnabled(){
         return isEnabled;
     }
 
-    public static Boolean DisableTrigger(){
+    public static Boolean disableTrigger(){
         return isEnabled = false;
     }
 
-    public static Boolean EnableTrigger(){
+    public static Boolean enableTrigger(){
         return isEnabled = true;
     }
 
@@ -34,11 +34,11 @@ private static Boolean isEnabled;
 		this.newRecordMap = newRecordMap;
 	}
 
-    public void AfterInsert(){
-        ProductTriggerHelper.HandleAfterInsertOrder(newRecordList);
+    public void afterInsert(){
+        ProductTriggerHelper.handleAfterInsertOrder(newRecordList);
     }
 
-    public void AfterUpdate(){
-        ProductTriggerHelper.HandleAfterUpdateOrder(oldRecordList, newRecordList);
+    public void afterUpdate(){
+        ProductTriggerHelper.handleAfterUpdateOrder(oldRecordList, newRecordList);
     }
 }

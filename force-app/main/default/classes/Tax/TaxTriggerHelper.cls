@@ -1,18 +1,18 @@
 public with sharing class TaxTriggerHelper {
-    public static void HandleInsertTax(List<Tax__c> newList){
-        VerifyDuplicity(newList);
+    public static void handleInsertTax(List<Tax__c> newList){
+        verifyDuplicity(newList);
 
     }
 
-    public static void HandleUpdateTax(List<Tax__c> oldList, List<Tax__c> newList){
+    public static void handleUpdateTax(List<Tax__c> oldList, List<Tax__c> newList){
         List<Tax__c> changedRecords = new List<Tax__c>();
         for(Integer i = 0; i < newList.size(); i++){
             if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
         }
-        if(!changedRecords.isEmpty()) VerifyDuplicity(changedRecords);    
+        if(!changedRecords.isEmpty()) verifyDuplicity(changedRecords);    
     }
 
-    private static void VerifyDuplicity(List<Tax__c> records){
+    private static void verifyDuplicity(List<Tax__c> records){
         Set<String> keys = new Set<String>();
         Set<Id> productIds = new Set<Id>();
         Set<Id> StateIds = new Set<Id>();

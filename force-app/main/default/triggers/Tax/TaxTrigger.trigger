@@ -7,13 +7,13 @@ trigger TaxTrigger on Tax__c (before insert, before update) {
         Trigger.newMap
     );
 
-    if(FreightTriggerHandler.IsTriggerEnabled()){
+    if(FreightTriggerHandler.isTriggerEnabled()){
         switch on Trigger.operationType {
             when BEFORE_INSERT{
-                handler.BeforeInsert();
+                handler.beforeInsert();
             }
             when BEFORE_UPDATE{
-                handler.BeforeUpdate();
+                handler.beforeUpdate();
             }
         }
     }

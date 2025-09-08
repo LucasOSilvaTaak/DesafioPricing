@@ -13,7 +13,7 @@ trigger OrderTrigger on Order (before update) {
                 handler.BeforeInsert();
             }*/
             when BEFORE_UPDATE{
-                handler.BeforeUpdate();
+                handler.beforeUpdate();
             }
         }
     }
