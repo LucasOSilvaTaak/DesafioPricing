@@ -1,6 +1,9 @@
 public with sharing class OrderItemTriggerHelper {
+    
     public static void handleBeforeInsert(List<OrderItem> newList){
+       
         fillOrderItem(newList);
+    
     }
 
     public static void handleBeforeUpdate(List<OrderItem> oldList , List<OrderItem> records){
@@ -15,8 +18,6 @@ public with sharing class OrderItemTriggerHelper {
         if(!changedList.isEmpty()) fillOrderItem(changedList);
 
     }
-
-    
     
     private static void fillOrderItem(List<OrderItem> records){
         
@@ -35,6 +36,7 @@ public with sharing class OrderItemTriggerHelper {
         Set<Id> accountGroupIds = new Set<Id>();
 
         for(OrderItem iOrderItem : records){
+
             productIds.add(iOrderItem.Product2Id);
             productHierarchyIds.add(iOrderItem.Product2.ProductHierarchy__c);
             cityIds.add(iOrderItem.Order.AccountAddress__r.City__c);
@@ -42,6 +44,7 @@ public with sharing class OrderItemTriggerHelper {
             countryIds.add(iOrderItem.Order.AccountAddress__r.City__r.State__r.Country__c);
             accountIds.add(iOrderItem.Order.AccountAddress__r.Account__c);
             accountGroupIds.add(iOrderItem.Order.AccountAddress__r.Account__r.AccountGroup__c);
+
         }
         
         //Busca final de todas as freights citadas
@@ -53,9 +56,8 @@ public with sharing class OrderItemTriggerHelper {
             AND (City__c IN :cityIds 
                 OR State__c IN :stateIds
                 OR Country__c IN :AccountIds)
-            AND Status__c = 'Approved'
-            
-            ];
+            AND Status__c = 'Approved'            
+        ];
         
         
         List<Tax__c> taxList = [
@@ -79,29 +81,36 @@ public with sharing class OrderItemTriggerHelper {
                 OR State__c IN :stateIds or Country__c IN : countryIds)
         ];
         
-            
+        
+        //Funções que preenchem os valores de cada Order Item
+
         ajustFreight(records, freightList);
 
         ajustTax(records, taxList);
 
         ajustMargin(records, marginList);
             
-            //Calcular os valores de cada orderm produto
+        //Calcular os valores de cada orderm produto
         calculatePrices(records);
-                    
-                    
+                                      
     }
                 
     //Tenho que arrumar esse metodo para usar menos maps
     private static void fillOrderItensLockups(List<OrderItem> records){
+
+        //Sets ids de ordem e produto 
         Set<Id> orderIds   = new Set<Id>();
         Set<Id> productIds = new Set<Id>();
 
+        //preenche todos os ids
         for (OrderItem iOrderItem : records) {
+            
             orderIds.add(iOrderItem.OrderId);
             productIds.add(iOrderItem.Product2Id);
+        
         }
 
+        //Cria um map com todos os valores nescessarios de produto
         Map<Id, Product2> productMap = new Map<Id, Product2>(
             [SELECT Id, ProductHierarchy__c, ProductionCost__c FROM Product2 WHERE Id IN :productIds]
         );
@@ -122,9 +131,10 @@ public with sharing class OrderItemTriggerHelper {
             ]
         );
         
-  
+        //Preenche os lookups de cada ordem item
         for (OrderItem iOrderItem : records) {
 
+            //Busca um valor temporario para cada ordem e produtos do map
             Order tempOrder = orderMap.get(iOrderItem.OrderId);
             Product2 tempProduct = productMap.get(iOrderItem.Product2Id);
 
@@ -135,22 +145,21 @@ public with sharing class OrderItemTriggerHelper {
         }
 
     }
-                
-    //Impede que quANDo o status do pedido for diferente de draft ele impede o update
     
 
+    //Permite apenas alterações de pedidos em rascunhos
     private static void draftOnly(List<OrderItem> records){
 
         for(OrderItem iOrderProduct : records){
+        
             if(iOrderProduct.Order.Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
+        
         }
     }
         
     
     private static void ajustFreight(List<OrderItem> records, List<Freight__c> freightList){
-        
-        
-        
+
         for(OrderItem iOrderProduct : records){
 
             //PegANDo os ids para filtar
@@ -160,7 +169,6 @@ public with sharing class OrderItemTriggerHelper {
             Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;
             Id countryId = iOrderProduct.Order.AccountAddress__r.City__r.State__r.Country__c;
 
-
             Freight__c toFind = new Freight__c(
                 Product__c = productId,
                 ProductHierarchy__c = productHierarchyId,
@@ -169,10 +177,10 @@ public with sharing class OrderItemTriggerHelper {
                 Country__c = countryId
             );
 
-
             iOrderProduct.CostFreight__c = null;
             
             Freight__c bestFreight = (Freight__c) findBestSpecificity(freightList, toFind);
+
             if(bestFreight != null) iOrderProduct.CostFreight__c = bestFreight.value__c;
             
         }
@@ -182,14 +190,14 @@ public with sharing class OrderItemTriggerHelper {
     private static void ajustTax(List<OrderItem> records, List<Tax__c> taxList){
         
         for(OrderItem iOrderProduct : records){
+            
             iOrderProduct.TaxPercentage__c = null;
+            
             Integer bestScore = -1;
-
     
             //PegANDo os ids para filtar
             Id productId = iOrderProduct.Product2Id;
-            Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;
-            
+            Id stateId = iOrderProduct.Order.AccountAddress__r.City__r.State__c;            
 
             //Não adicionar o findBestSpecificity por que é demais para algo tão simples
             
@@ -205,7 +213,10 @@ public with sharing class OrderItemTriggerHelper {
     }
 
     private static void ajustMargin(List<OrderItem> records, List<Margin__c> marginList){
+
         for(OrderItem iOrderProduct : records){
+
+            //Anula para que reculcule os dados em caso de update, pois se não achar e tiver !null ele aceita o antigo
             iOrderProduct.MarginPercentage__c = null;
 
             Id productId = iOrderProduct.Product2Id;
@@ -226,10 +237,9 @@ public with sharing class OrderItemTriggerHelper {
                 AccountGroup__c = AccountGroupId
             );
 
-            
             Margin__c bestMargin = (Margin__c) findBestSpecificity(marginList, toFind);
+            
             if(bestMargin != null) iOrderProduct.MarginPercentage__c = bestMargin.value__c;
-
 
         }
 
@@ -240,14 +250,14 @@ public with sharing class OrderItemTriggerHelper {
     //achar um jeito de retirar todos os maps
     private static void calculatePrices(List<OrderItem> records){
         
-
         for(OrderItem iOrderIten : records){
-            if(iOrderIten.CostFreight__c == null || iOrderIten.TaxPercentage__c == null || iOrderIten.MarginPercentage__c == null){
-                iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
-                continue;
-            }            
+
+            if(verifyFieldsNotNull(iOrderIten)) continue; 
+        
             iOrderIten.NoMarginPrice__c = (iOrderIten.Product2.ProductionCost__c + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
+        
             iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+        
             iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
 
         }
@@ -281,23 +291,65 @@ public with sharing class OrderItemTriggerHelper {
 
             //Calculando a pontuacao de cada um com base nos campos que temos
             for(String fieldName : fieldsWeights.keySet()){
+            
                 Object recordValue = recordMap.get(fieldName);
+            
                 Object toFindValue = toFindMap.get(fieldName);
 
                 // Só soma peso se ambos não forem nulos e forem iguais
                 if(recordValue != null && toFindValue != null && recordValue == toFindValue){
+            
                     score += fieldsWeights.get(fieldName);
+                
                 }
             }
 
             if(score > bestScore){
+                
                 bestScore = score;
                 bestRecord = record;
+            
             }
         }
 
         // Retorna null se nenhum registro tiver correspondência
         return bestRecord;
+    }
+
+    //Verifica se os campos nescessarios para os calculos foram achados
+    private static Boolean verifyFieldsNotNull(OrderItem iOrderIten){
+
+        if(iOrderIten.CostFreight__c == null ){
+
+            errorMessage += 'Freight cost not found. ';
+        
+            hasError = true;
+            
+            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
+
+        }
+        
+        if(iOrderIten.TaxPercentage__c == null ){
+        
+            errorMessage += 'Tax percentage not found. ';
+        
+            hasError = true;
+            
+            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
+
+        }
+        
+        if(iOrderIten.MarginPercentage__c == null ){
+        
+            errorMessage += 'Margin percentage not found. ';
+        
+            hasError = true;
+            
+            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
+
+        }
+
+        return hasError;
     }
 
 }
