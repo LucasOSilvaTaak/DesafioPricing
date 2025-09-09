@@ -12,11 +12,17 @@ public with sharing class MakeKeys {
 
 
     public static String makeKey(SObject record){
+        
         String key = '';
+
         Map<String,Object> fieldaMap = record.getPopulatedFieldsAsMap();
+
         for(String iString : fields){
+
             string value = String.valueOf(fieldaMap.get(iString));
+
             if(fields.contains(iString)){
+
                 key += (value == null || value == 'null') ? '' : (value + '-');
 
             }
@@ -26,17 +32,20 @@ public with sharing class MakeKeys {
         if(key.endsWith('-')){
             key = key.substring(0, key.length() - 1);
         }
-        System.debug('KEY RECORD DB: ' + key);
 
         return key;
     }
 
     public static Map<String,Id> makeKeyMap(List<SObject> records){
-        Map<String,Id> keyMap = new Map<String,Id>();
-        for(SObject iRecord : records){
-            keyMap.put(makeKey(iRecord), iRecord.Id);
 
+        Map<String,Id> keyMap = new Map<String,Id>();
+        
+        for(SObject iRecord : records){
+        
+            keyMap.put(makeKey(iRecord), iRecord.Id);
+        
         }
+        
         return keyMap;
     }
 

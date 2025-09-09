@@ -1,10 +1,19 @@
 public with sharing class OrderItemTriggerHelper {
-    public static void HANDleBeforeInsertOrderProduct(List<OrderItem> newList){
-        fillValues(newList);
+    public static void handleBeforeInsert(List<OrderItem> newList){
+        fillOrderItem(newList);
     }
 
-    public static void HANDleBeforeUpdateOrderProduct(List<OrderItem> oldList , List<OrderItem> newList){
-        fillValues(newList);
+    public static void handleBeforeUpdate(List<OrderItem> oldList , List<OrderItem> records){
+        
+        List<OrderItem> changedList = new List<OrderItem>();
+        
+        for(Integer i =0; i < records.size(); i++){
+        
+            if(!records[i].equals(oldList[i])) changedList.add(records[i]);
+        }
+
+        if(!changedList.isEmpty()) fillOrderItem(changedList);
+
     }
 
     private static set<Id> productIds;
@@ -20,13 +29,13 @@ public with sharing class OrderItemTriggerHelper {
 
     
     
-    private static void fillValues(List<OrderItem> newList){
+    private static void fillOrderItem(List<OrderItem> records){
         
         //preenche os masps e sets para a busca
-        fillMaps(newList);
+        fillOrderItensLockups(records);
         
         //impede qualque modificação após pedido sair de draft
-        draftOnly(newList);
+        draftOnly(records);
         
         //Busca final de todas as freights citadas
         List<Freight__c> freightList = [
@@ -62,25 +71,25 @@ public with sharing class OrderItemTriggerHelper {
                 OR State__c IN :cityToState.values() or Country__c IN :stateToCountry.values())
         ];
             
-            ajustFreight(newList, freightList);
+            ajustFreight(records, freightList);
 
-            ajustTax(newList, taxList);
+            ajustTax(records, taxList);
 
-            ajustMargin(newList, marginList);
+            ajustMargin(records, marginList);
             
             //Calcular os valores de cada orderm produto
-            calculateValues(newList);
+            calculateValues(records);
                     
                     
     }
                 
                 
-    private static void fillMaps(List<OrderItem> newList){
+    private static void fillOrderItensLockups(List<OrderItem> records){
         orderIds   = new Set<Id>();
         productIds = new Set<Id>();
 
-        for (OrderItem iOrderItem : newList) {
-            if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
+        for (OrderItem iOrderItem : records) {
+            if (iOrderItem.OrderId != null) orderIds.add(iOrderItem.OrderId);
             if (iOrderItem.Product2Id != null) productIds.add(iOrderItem.Product2Id);
         }
 
@@ -99,6 +108,7 @@ public with sharing class OrderItemTriggerHelper {
                 WHERE Id IN :orderIds
             ]
         );
+
 
         orderToAddress = new Map<Id, Id>();
         addressToCity = new Map<Id, Id>();
@@ -131,77 +141,48 @@ public with sharing class OrderItemTriggerHelper {
     }
                 
     //Impede que quANDo o status do pedido for diferente de draft ele impede o update
-    private static void draftOnly(List<OrderItem> newList){
+    private static void draftOnly(List<OrderItem> records){
 
-        for(OrderItem iOrderProduct : newList){
+        for(OrderItem iOrderProduct : records){
             if(orderMap.get(iOrderProduct.OrderId).Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
         }
     }
         
     
-    private static void ajustFreight(List<OrderItem> newList, List<Freight__c> freightList){
+    private static void ajustFreight(List<OrderItem> records, List<Freight__c> freightList){
         
-        for(OrderItem iOrderProduct : newList){
-            iOrderProduct.CostFreight__c = null;
-            Integer bestScore = -1;
-                        
-    
+        
+        
+        for(OrderItem iOrderProduct : records){
+
             //PegANDo os ids para filtar
             Id productId = iOrderProduct.Product2Id;
             Id productHierarchyId = productToHierarchy.get(productId);
             Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
             Id stateId = cityToState.get(cityId);
             Id countryId = stateToCountry.get(stateId);
-    
-            for (Freight__c iFreight : freightList){
-                integer score = -1;
+            
+            Freight__c toFind = new Freight__c(
+                Product__c = productId,
+                ProductHierarchy__c = productHierarchyId,
+                City__c = cityId,
+                State__c = stateId,
+                Country__c = countryId
+            );
 
-    
-                if(iFreight.Product__c == productId){
-                    score += 100;
-                }
-                else {
-                    if(iFreight.ProductHierarchy__c == productHierarchyId){
-                        score += 50;
-                    }
-                    else{
 
-                        continue;
-                    }
-                }
-    
-                if(iFreight.City__c == cityId){
-                    score += 10;
-                }
-                else{
-                    if(iFreight.State__c == stateId){
-                        score += 5;
-                    }
-                    else{
-                        if(iFreight.Country__c == countryId) {
-                            score += 1;
-                        }
-                        else{
-
-                            continue;
-                        }
-                    }
-                }
-
-                if(score > bestScore){
-                    bestScore = score;
-                    iOrderProduct.CostFreight__c = iFreight.Value__c;
-                }
-                
-            }
+            iOrderProduct.CostFreight__c = null;
+            
+            Freight__c bestFreight = (Freight__c) findBestSpecificity(freightList, toFind);
+            if(bestFreight != null) iOrderProduct.CostFreight__c = bestFreight.value__c;
             
         }
         
     }
     
-    private static void ajustTax(List<OrderItem> newList, List<Tax__c> taxList){
+    private static void ajustTax(List<OrderItem> records, List<Tax__c> taxList){
         
-        for(OrderItem iOrderProduct : newList){
+        for(OrderItem iOrderProduct : records){
             iOrderProduct.TaxPercentage__c = null;
             Integer bestScore = -1;
 
@@ -211,6 +192,8 @@ public with sharing class OrderItemTriggerHelper {
             Id productHierarchyId = productToHierarchy.get(productId);
             Id cityId = addressToCity.get(orderToAddress.get(iOrderProduct.OrderId));
             Id stateId = cityToState.get(cityId);
+
+            //Não adicionar o findBestSpecificity por que é demais para algo tão simples
             
             for (Tax__c iTax : taxList){
                 if(iTax.Product__c == productId && iTax.State__c == stateId){
@@ -223,10 +206,9 @@ public with sharing class OrderItemTriggerHelper {
         }
     }
 
-    private static void ajustMargin(List<OrderItem> newList, List<Margin__c> marginList){
-        for(OrderItem iOrderProduct : newList){
+    private static void ajustMargin(List<OrderItem> records, List<Margin__c> marginList){
+        for(OrderItem iOrderProduct : records){
             iOrderProduct.MarginPercentage__c = null;
-            Integer bestScore = -1;
 
     
             Id productId = iOrderProduct.Product2Id;
@@ -237,71 +219,33 @@ public with sharing class OrderItemTriggerHelper {
             Id AccountId = addressToAccount.get(orderToAddress.get(iOrderProduct.OrderId));
             Id AccountGroupId = AccountToAccountGroup.get(AccountId);
 
-            for (Margin__c iMargin : marginList){
-                integer score = -1;
+            Margin__c toFind = new Margin__c(
+                Product__c = productId,
+                ProductHierarchy__c = productHierarchyId,
+                City__c = cityId,
+                State__c = stateId,
+                Country__c = countryId,
+                Account__c = AccountId,
+                AccountGroup__c = AccountGroupId
+            );
 
-    
-                if(iMargin.Product__c == productId){
-                    score += 1000;
-                }
-                else {
-                    if(iMargin.ProductHierarchy__c == productHierarchyId){
-                        score += 500;
-                    }
-                    else{
+            
+            Margin__c bestMargin = (Margin__c) findBestSpecificity(marginList, toFind);
+            if(bestMargin != null) iOrderProduct.MarginPercentage__c = bestMargin.value__c;
 
-                        continue;
-                    }
-                }
-
-                if(iMargin.Account__c == AccountId){
-                    score += 100;
-                }
-                else{
-                    if(iMargin.AccountGroup__c  == AccountGroupId){
-                        score += 50;
-                    }
-                    else{
-                        continue;
-                    }
-                }
-    
-                if(iMargin.City__c == cityId){
-                    score += 10;
-                }
-                else{
-                    if(iMargin.State__c == stateId){
-                        score += 5;
-                    }
-                    else{
-                        if(iMargin.Country__c == countryId) {
-                            score += 1;
-                        }
-                        else{
-
-                            continue;
-                        }
-                    }
-                }
-
-                if(score > bestScore){
-                    bestScore = score;
-                    iOrderProduct.MarginPercentage__c = iMargin.Value__c;
-                }
-    
-            }
 
         }
 
     }
         
 
-    private static void calculateValues(List<OrderItem> newList){
+    //achar um jeito de retirar todos os maps
+    private static void calculateValues(List<OrderItem> records){
         
         map<Id, Product2> productList = new map<Id,Product2>( 
             [SELECT Id, ProductionCost__c FROM Product2 WHERE Id IN :productIds] 
         );
-        for(OrderItem iOrderIten : newList){
+        for(OrderItem iOrderIten : records){
             if(iOrderIten.CostFreight__c == null || iOrderIten.TaxPercentage__c == null || iOrderIten.MarginPercentage__c == null){
                 iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team');
                 continue;
@@ -313,6 +257,51 @@ public with sharing class OrderItemTriggerHelper {
         }
     } 
     
+    private static SObject findBestSpecificity(List<SObject> records, SObject toFind){
+        
+        //Mapa de valor por campo
+        Map<String, Integer> fieldsWeights = new Map<String, Integer>{
+            'Product__c' => 1000,
+            'ProductHierarchy__c' => 500,
+            'Account__c' => 100,
+            'AccountGroup__c' => 50,
+            'City__c' => 10,
+            'State__c' => 5,
+            'Country__c' => 1
+        };
 
-    
+        Integer bestScore = -1;
+        SObject bestRecord;
+
+        //Mapa dos campos do objeto que queremos
+        Map<String,Object> toFindMap = toFind.getPopulatedFieldsAsMap();
+
+        for(SObject record : records){
+           
+            Integer score = -1;
+
+            //Mapa do objeto que temos agora
+            Map<String,Object> recordMap = record.getPopulatedFieldsAsMap();
+
+            //Calculando a pontuacao de cada um com base nos campos que temos
+            for(String fieldName : fieldsWeights.keySet()){
+                Object recordValue = recordMap.get(fieldName);
+                Object toFindValue = toFindMap.get(fieldName);
+
+                // Só soma peso se ambos não forem nulos e forem iguais
+                if(recordValue != null && toFindValue != null && recordValue == toFindValue){
+                    score += fieldsWeights.get(fieldName);
+                }
+            }
+
+            if(score > bestScore){
+                bestScore = score;
+                bestRecord = record;
+            }
+        }
+
+        // Retorna null se nenhum registro tiver correspondência
+        return bestRecord;
+    }
+
 }

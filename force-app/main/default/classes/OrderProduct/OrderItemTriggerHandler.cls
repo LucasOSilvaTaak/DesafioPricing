@@ -1,18 +1,26 @@
 public with sharing class OrderItemTriggerHandler {
     private static Boolean isEnabled;
+    
     static{
         isEnabled=true;
     }
+    
     public static Boolean isTriggerEnabled(){
+    
         return isEnabled;
+    
     }
 
     public static Boolean disableTrigger(){
+    
         return isEnabled = false;
+    
     }
 
     public static Boolean enableTrigger(){
+    
         return isEnabled = true;
+    
     }
 
 
@@ -21,7 +29,8 @@ public with sharing class OrderItemTriggerHandler {
 	Map<Id, OrderItem> oldRecordMap { get; set; }
 	Map<Id, OrderItem> newRecordMap { get; set; }
     
-    public OrderItemTriggerHandler(		List<OrderItem> oldRecordList,
+    public OrderItemTriggerHandler(		
+        List<OrderItem> oldRecordList,
 		List<OrderItem> newRecordList,
 		Map<Id, OrderItem> oldRecordMap,
 		Map<Id, OrderItem> newRecordMap
@@ -34,11 +43,11 @@ public with sharing class OrderItemTriggerHandler {
 	}
 
     public void beforeInsert(){
-        OrderItemTriggerHelper.HandleBeforeInsertOrderProduct(newRecordList);
+        OrderItemTriggerHelper.handleBeforeInsert(newRecordList);
     }
 
     public void beforeUpdate(){
-        OrderItemTriggerHelper.HandleBeforeUpdateOrderProduct(oldRecordList, newRecordList);
+        OrderItemTriggerHelper.handleBeforeUpdate(oldRecordList, newRecordList);
     }
 
 }
