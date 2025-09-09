@@ -156,7 +156,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Margin Table</label>
     <nameField>
-        <label>Margim Number</label>
+        <label>Margim Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
