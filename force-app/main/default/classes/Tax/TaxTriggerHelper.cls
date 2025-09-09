@@ -17,7 +17,7 @@ public with sharing class TaxTriggerHelper {
      
         for(Integer i = 0; i < newList.size(); i++){
      
-            if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
+            if(!CompareSObjects.equals(oldList[i], newList[i], fields)) changedRecords.add(newList[i]);
      
         }
      

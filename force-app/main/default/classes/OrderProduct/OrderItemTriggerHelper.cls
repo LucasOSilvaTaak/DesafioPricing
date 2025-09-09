@@ -6,13 +6,21 @@ public with sharing class OrderItemTriggerHelper {
     
     }
 
-    public static void handleBeforeUpdate(List<OrderItem> oldList , List<OrderItem> records){
+    public static void handleBeforeUpdate(List<OrderItem> oldList , List<OrderItem> newList){
         
         List<OrderItem> changedList = new List<OrderItem>();
         
-        for(Integer i = 0; i < records.size(); i++){
+        for(Integer i = 0; i < newList.size(); i++){
         
-            if(!records[i].equals(oldList[i])) changedList.add(records[i]);
+            if(!CompareSObjects.equals(oldList[i], newList[i], new Set<String>{
+                'Product2Id',
+                'UnitPrice',
+                'Quantity',
+                'CostFreight__c',
+                'TaxPercentage__c',
+                'MarginPercentage__c'
+            })) changedList.add(newList[i]);
+            
         }
 
         if(!changedList.isEmpty()) fillOrderItem(changedList);
@@ -26,6 +34,8 @@ public with sharing class OrderItemTriggerHelper {
         
         //Segue com apenas aqueles que podem ser alterados
         List<OrderItem> draftOrderItem = draftOnly(records);
+        
+        //se não tiver nenhum em rascunho para o processo 
         if(draftOrderItem.size() > 0){
 
             Set<Id> productIds = new Set<Id>();
@@ -66,7 +76,7 @@ public with sharing class OrderItemTriggerHelper {
                 FROM Tax__c
                 WHERE Status__c = 'Approved'
                 AND State__c IN : stateIds
-                AND Product__c IN :productIdS
+                AND Product__c IN :productIds
             ];
                 
             List<Margin__c> marginList = [
@@ -85,7 +95,6 @@ public with sharing class OrderItemTriggerHelper {
             
             
             //Funções que preenchem os valores de cada Order Item
-    
             ajustFreight(draftOrderItem, freightList);
     
             ajustTax(draftOrderItem, taxList);
