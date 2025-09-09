@@ -322,10 +322,13 @@ public with sharing class OrderItemTriggerHelper {
 
     //Verifica se os campos nescessarios para os calculos foram achados
     private static Boolean verifyFieldsNotNull(OrderItem iOrderIten){
+        
+        String errorMessage = '';
+        Boolean hasError = false;
 
         if(iOrderIten.CostFreight__c == null ){
 
-            errorMessage += 'Freight cost not found. ';
+            errorMessage += ' Freight cost not found. ';
         
             hasError = true;
             
@@ -335,7 +338,7 @@ public with sharing class OrderItemTriggerHelper {
         
         if(iOrderIten.TaxPercentage__c == null ){
         
-            errorMessage += 'Tax percentage not found. ';
+            errorMessage += ' Tax percentage not found. ';
         
             hasError = true;
             
@@ -345,7 +348,7 @@ public with sharing class OrderItemTriggerHelper {
         
         if(iOrderIten.MarginPercentage__c == null ){
         
-            errorMessage += 'Margin percentage not found. ';
+            errorMessage += ' Margin percentage not found. ';
         
             hasError = true;
             
