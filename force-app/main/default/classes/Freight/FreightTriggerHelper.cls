@@ -64,7 +64,7 @@ public with sharing class FreightTriggerHelper {
         for(Freight__c iFreight : records){
             
             string key = MakeKeys.makeKey(iFreight);
-            System.debug('key: '+key);
+
             if(freightMap.containsKey(key) && freightMap.get(key) != iFreight.Id){
             
                 iFreight.addError('Freight already exists');
