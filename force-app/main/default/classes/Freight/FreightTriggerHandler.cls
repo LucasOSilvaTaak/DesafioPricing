@@ -1,5 +1,6 @@
 public with sharing class FreightTriggerHandler {
-private static Boolean isEnabled;
+    
+    private static Boolean isEnabled;
     
     static{
             

@@ -1,5 +1,6 @@
 public with sharing class ProductTriggerHandler {
-private static Boolean isEnabled;
+
+    private static Boolean isEnabled;
     
     static{
     

@@ -50,7 +50,6 @@ public with sharing class MarginTriggerHelper {
             
             else keys.add(temp);
             
-
             if(iMargin.Product__c != null) productIds.add(iMargin.Product__c);
             if(iMargin.ProductHierarchy__c != null) productHierarchyIds.add(iMargin.ProductHierarchy__c);
             if(iMargin.Account__c != null) accountIds.add(iMargin.Account__c);
@@ -76,9 +75,7 @@ public with sharing class MarginTriggerHelper {
         //Valida duplicidade
         for(Margin__c iMargin : records){
            
-           
             string key = MakeKeys.makeKey(iMargin,fields);
-
 
             if(marginMap.containsKey(key) && marginMap.get(key) != iMargin.Id){
            

@@ -1,5 +1,7 @@
 public with sharing class TaxTriggerHandler {
-private static Boolean isEnabled;
+
+    private static Boolean isEnabled;
+
     static{
         
         isEnabled=true;

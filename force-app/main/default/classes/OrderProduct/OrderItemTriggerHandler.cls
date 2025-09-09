@@ -1,4 +1,5 @@
 public with sharing class OrderItemTriggerHandler {
+    
     private static Boolean isEnabled;
     
     static{
