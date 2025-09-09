@@ -25,7 +25,7 @@ public with sharing class OrderItemTriggerHelper {
         fillOrderItensLockups(records);
         
         //impede qualque modificação após pedido sair de draft
-        //draftOnly(records);
+        draftOnly(records);
 
         Set<Id> productIds = new Set<Id>();
         Set<Id> productHierarchyIds = new Set<Id>();
