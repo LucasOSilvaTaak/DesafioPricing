@@ -3,14 +3,14 @@ public with sharing class CompareSObjects {
     //COMPARA DOIS SOBJECTS COM BASE NOS CAMPOS INFORMADOS
     public static Boolean equals(SObject record1, SObject record2, Set<String> fields){
         
-        Map<String,Object> map1 = record1.getPopulatedFieldsAsMap();
-        Map<String,Object> map2 = record2.getPopulatedFieldsAsMap();
+        Map<String,Object> fieldMap1 = record1.getPopulatedFieldsAsMap();
+        Map<String,Object> fieldMap2 = record2.getPopulatedFieldsAsMap();
 
         for(String field : fields){
             
-            Object value1 = map1.get(field);
+            Object value1 = fieldMap1.get(field);
         
-            Object value2 = map2.get(field);
+            Object value2 = fieldMap2.get(field);
 
             if(value1 == null && value2 == null) continue;
         
