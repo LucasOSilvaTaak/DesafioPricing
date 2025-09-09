@@ -332,8 +332,6 @@ public with sharing class OrderItemTriggerHelper {
         
             hasError = true;
             
-            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
-
         }
         
         if(iOrderIten.TaxPercentage__c == null ){
@@ -342,8 +340,6 @@ public with sharing class OrderItemTriggerHelper {
         
             hasError = true;
             
-            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
-
         }
         
         if(iOrderIten.MarginPercentage__c == null ){
@@ -351,11 +347,10 @@ public with sharing class OrderItemTriggerHelper {
             errorMessage += ' Margin percentage not found. ';
         
             hasError = true;
-            
-            iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
 
         }
 
+        if (hasError) iOrderIten.addError('The sale of this product is not authorized due to lack of parameters, please contact the pricing team: ' + errorMessage);
         return hasError;
     }
 
