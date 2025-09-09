@@ -16,16 +16,13 @@ public with sharing class OrderItemTriggerHelper {
 
     }
 
-    private static set<Id> productIds;
-    private static Map<Id,Id> productToHierarchy;
-    private static Set<Id> orderIds;
-    private static Map<Id,Id> orderToAddress;
-    private static Map<Id,Id> cityToState;
-    private static Map<Id,Id> addressToCity;
-    private static Map<Id,Id> stateToCountry;
-    private static Map<Id,Id> addressToAccount;
-    private static Map<Id,Id> AccountToAccountGroup;
-    private static Map<Id, Order> orderMap;
+    private static Set<Id> productIds = new Set<Id>();
+    private static Set<Id> productHierarchyIds = new Set<Id>();
+    private static Set<Id> cityIds = new Set<Id>();
+    private static Set<Id> stateIds = new Set<Id>();
+    private static Set<Id> countryIds = new Set<Id>();
+    private static Set<Id> AccountIds = new Set<Id>();
+    private static Set<Id> AccountGroupIds = new Set<Id>();
 
     
     
@@ -35,21 +32,21 @@ public with sharing class OrderItemTriggerHelper {
         fillOrderItensLockups(records);
         
         //impede qualque modificação após pedido sair de draft
-        draftOnly(records);
+        //draftOnly(records);
         
         //Busca final de todas as freights citadas
         List<Freight__c> freightList = [
             SELECT Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
             FROM Freight__c
             WHERE (Product__c IN :productIds 
-                OR ProductHierarchy__c IN :productToHierarchy.values())
-            AND (City__c IN :addressToCity.values() 
-                OR State__c IN :cityToState.values() 
-                OR Country__c IN :stateToCountry.values())
+                OR ProductHierarchy__c IN :productHierarchyIds)
+            AND (City__c IN :cityIds 
+                OR State__c IN :stateIds
+                OR Country__c IN :AccountIds)
             AND Status__c = 'Approved'
             
             ];
-        
+        /*
         List<Tax__c> taxList = [
             SELECT TaxOnCost__c, State__c, Product__c, Status__c
             FROM Tax__c
@@ -70,33 +67,34 @@ public with sharing class OrderItemTriggerHelper {
             AND (City__c IN :addressToCity.values() 
                 OR State__c IN :cityToState.values() or Country__c IN :stateToCountry.values())
         ];
+        */
             
-            ajustFreight(records, freightList);
+            //ajustFreight(records, freightList);
 
-            ajustTax(records, taxList);
+            //ajustTax(records, taxList);
 
-            ajustMargin(records, marginList);
+            //ajustMargin(records, marginList);
             
             //Calcular os valores de cada orderm produto
-            calculateValues(records);
+            //calculatePrices(records);
                     
                     
     }
                 
-                
+    //Tenho que arrumar esse metodo para usar menos maps
     private static void fillOrderItensLockups(List<OrderItem> records){
-        orderIds   = new Set<Id>();
-        productIds = new Set<Id>();
+        Set<Id> orderIds   = new Set<Id>();
+        Set<Id> productIds = new Set<Id>();
 
         for (OrderItem iOrderItem : records) {
-            if (iOrderItem.OrderId != null) orderIds.add(iOrderItem.OrderId);
+            if (iOrderItem.OrderId != null)    orderIds.add(iOrderItem.OrderId);
             if (iOrderItem.Product2Id != null) productIds.add(iOrderItem.Product2Id);
         }
 
         //Cria um map com todos os lookups de ordem
-        orderMap = new Map<Id, Order>(
+        Map<Id,Order>  orderMap = new Map<Id, Order>(
             [
-                SELECT Id,
+                select Id,
                     AccountAddress__c,
                     AccountAddress__r.City__c,
                     AccountAddress__r.City__r.State__c,
@@ -104,43 +102,47 @@ public with sharing class OrderItemTriggerHelper {
                     AccountAddress__r.Account__c,
                     AccountAddress__r.Account__r.AccountGroup__c,
                     Status
-                FROM Order
-                WHERE Id IN :orderIds
+                from Order
+                where Id IN :orderIds
             ]
         );
-
-
-        orderToAddress = new Map<Id, Id>();
-        addressToCity = new Map<Id, Id>();
-        cityToState = new Map<Id, Id>();
-        stateToCountry = new Map<Id, Id>();
-        addressToAccount = new Map<Id, Id>();
-        accountToAccountGroup = new Map<Id, Id>(); 
-
-        for (Order iOrder : orderMap.values()) {
-            Id addressId = iOrder.AccountAddress__c;
-            Id cityId    = iOrder.AccountAddress__r?.City__c;
-            Id stateId   = iOrder.AccountAddress__r?.City__r?.State__c;
-            Id countryId = iOrder.AccountAddress__r?.City__r?.State__r?.Country__c;
-            Id accountId = iOrder.AccountAddress__r?.Account__c;
-            Id groupId   = iOrder.AccountAddress__r?.Account__r?.AccountGroup__c;
-
-            orderToAddress.put(iOrder.Id, addressId);
-            if (addressId != null && cityId != null)    addressToCity.put(addressId, cityId);
-            if (cityId   != null && stateId != null)    cityToState.put(cityId, stateId);
-            if (stateId  != null && countryId != null)  stateToCountry.put(stateId, countryId);
-            if (addressId!= null && accountId != null)  addressToAccount.put(addressId, accountId);
-            if (accountId!= null && groupId   != null)  accountToAccountGroup.put(accountId, groupId);
-        }
-
-
-        productToHierarchy = new Map<Id, Id>();
-        for (Product2 p :   [SELECT Id, ProductHierarchy__c FROM Product2 where Id in :productIds]) {
+        
+        Map<Id, Id> productToHierarchy = new Map<Id, Id>();
+        for (Product2 p : [select Id, ProductHierarchy__c from Product2 where Id in :productIds]) {
             productToHierarchy.put(p.Id, p.ProductHierarchy__c);
         }
+
+        for (OrderItem iOrderItem : records) {
+
+            Order tempOrder = orderMap.get(iOrderItem.OrderId);
+            Id tempProductHierarchyId = productToHierarchy.get(iOrderItem.Product2Id);
+
+            //Populando os valores de cada Order Item
+            iOrderItem.Order.AccountAddress__c = tempOrder.AccountAddress__c;
+            iOrderItem.Order.AccountAddress__r.City__c = tempOrder.AccountAddress__r.City__c;
+            iOrderItem.Order.AccountAddress__r.City__r.State__c = tempOrder.AccountAddress__r.City__r.State__c;
+            iOrderItem.Order.AccountAddress__r.City__r.State__r.Country__c = tempOrder.AccountAddress__r.City__r.State__r.Country__c;
+            iOrderItem.Order.AccountAddress__r.Account__c = tempOrder.AccountAddress__r.Account__c;
+            iOrderItem.Order.AccountAddress__r.Account__r.AccountGroup__c = tempOrder.AccountAddress__r.Account__r.AccountGroup__c;
+            iOrderItem.Product2.ProductHierarchy__c = tempProductHierarchyId;
+            iOrderItem.Order.Status = tempOrder.Status;
+
+            //Populando os sets para a busca
+            productIds.add(iOrderItem.Product2Id);
+            productHierarchyIds.add(tempProductHierarchyId);
+            cityIds.add(tempOrder.AccountAddress__r.City__c);
+            stateIds.add(tempOrder.AccountAddress__r.City__r.State__c);
+            countryIds.add(tempOrder.AccountAddress__r.City__r.State__r.Country__c);
+            AccountIds.add(tempOrder.AccountAddress__r.Account__c);
+            AccountGroupIds.add(tempOrder.AccountAddress__r.Account__r.AccountGroup__c);
+
+        }
+
     }
                 
     //Impede que quANDo o status do pedido for diferente de draft ele impede o update
+    /*
+
     private static void draftOnly(List<OrderItem> records){
 
         for(OrderItem iOrderProduct : records){
@@ -179,7 +181,6 @@ public with sharing class OrderItemTriggerHelper {
         }
         
     }
-    
     private static void ajustTax(List<OrderItem> records, List<Tax__c> taxList){
         
         for(OrderItem iOrderProduct : records){
@@ -237,10 +238,11 @@ public with sharing class OrderItemTriggerHelper {
         }
 
     }
+        */
         
 
     //achar um jeito de retirar todos os maps
-    private static void calculateValues(List<OrderItem> records){
+    private static void calculatePrices(List<OrderItem> records){
         
         map<Id, Product2> productList = new map<Id,Product2>( 
             [SELECT Id, ProductionCost__c FROM Product2 WHERE Id IN :productIds] 
