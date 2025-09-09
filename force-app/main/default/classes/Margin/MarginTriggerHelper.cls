@@ -1,4 +1,15 @@
 public with sharing class MarginTriggerHelper {
+    
+    private static Set<String> fields = new Set<String>{
+        'City__c',
+        'State__c',
+        'Country__c',
+        'Product__c',
+        'ProductHierarchy__c',
+        'Account__c',
+        'AccountHierarchy__c'
+    };
+    
     public static void handleInsertMargin(List<Margin__c> newList){
      
         verifyDuplicity(newList);
@@ -33,7 +44,7 @@ public with sharing class MarginTriggerHelper {
         //Monta chaves e coleta IDs
         for(Margin__c iMargin : records){
             
-            String temp = MakeKeys.makeKey(iMargin);
+            String temp = MakeKeys.makeKey(iMargin,fields);
 
             if(keys.contains(temp)) iMargin.addError('Duplicate in batch');
             
@@ -59,14 +70,14 @@ public with sharing class MarginTriggerHelper {
             AND (City__c IN :cityIds OR State__c IN :stateIds OR Country__c IN :countryIds)
         ];
 
-        Map<String, Id> marginMap = MakeKeys.makeKeyMap(marginList);
+        Map<String, Id> marginMap = MakeKeys.makeKeyMap(marginList, fields);
 
 
         //Valida duplicidade
         for(Margin__c iMargin : records){
            
            
-            string key = MakeKeys.makeKey(iMargin);
+            string key = MakeKeys.makeKey(iMargin,fields);
 
 
             if(marginMap.containsKey(key) && marginMap.get(key) != iMargin.Id){

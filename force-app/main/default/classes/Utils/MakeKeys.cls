@@ -1,15 +1,8 @@
+//CLASSE QUE CRIA CHAVES UNICAS COM BASE NOS CAMPOS
 public with sharing class MakeKeys {
-    private static Set<String> fields = new Set<String>{
-        'City__c',
-        'State__c',
-        'Country__c',
-        'Product__c',
-        'ProductHierarchy__c',
-        'Account__c',
-        'AccountHierarchy__c'
-    };
 
-    public static String makeKey(SObject record){
+    //CRIA UMA CHAVE UNICA COM BASE NOS CAMPOS INFORMADOS
+    public static String makeKey(SObject record, Set<String> fields){
         
         String key = '';
 
@@ -27,7 +20,7 @@ public with sharing class MakeKeys {
             
 
         }
-        
+
         if(key.endsWith('-')){
 
             key = key.substring(0, key.length() - 1);
@@ -37,13 +30,14 @@ public with sharing class MakeKeys {
         return key;
     }
 
-    public static Map<String,Id> makeKeyMap(List<SObject> records){
+    //GERA UMA MAPA DE CHAVES UNICAS COM BASE NOS CAMPOS INFORMADOS A PARTIR DE UMA LISTA DE REGISTROS
+    public static Map<String,Id> makeKeyMap(List<SObject> records,  Set<String> fields){
 
         Map<String,Id> keyMap = new Map<String,Id>();
         
         for(SObject iRecord : records){
         
-            keyMap.put(makeKey(iRecord), iRecord.Id);
+            keyMap.put(makeKey(iRecord,fields), iRecord.Id);
         
         }
         

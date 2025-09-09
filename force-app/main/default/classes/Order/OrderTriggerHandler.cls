@@ -1,5 +1,7 @@
 public with sharing class OrderTriggerHandler {
-private static Boolean isEnabled;
+    
+    private static Boolean isEnabled;
+    
     static{
         
         isEnabled=true;

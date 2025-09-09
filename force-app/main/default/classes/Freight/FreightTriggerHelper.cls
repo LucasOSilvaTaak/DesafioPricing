@@ -1,5 +1,13 @@
 public with sharing class FreightTriggerHelper {
 
+    private static Set<String> fields = new Set<String>{
+        'City__c',
+        'State__c',
+        'Country__c',
+        'Product__c',
+        'ProductHierarchy__c'
+    };
+
     public static void HandleInsertFreight(List<Freight__c> newList){
 
         verifyDuplicity(newList);
@@ -33,7 +41,7 @@ public with sharing class FreightTriggerHelper {
         //Monta chaves e coleta IDs
         for(Freight__c iFreight : records){
            
-            String temp = MakeKeys.makeKey(iFreight);
+            String temp = MakeKeys.makeKey(iFreight,fields);
 
             if(keys.contains(temp)) iFreight.addError('Freight already exists');
             
@@ -58,12 +66,12 @@ public with sharing class FreightTriggerHelper {
             AND (City__c IN :cityIds OR State__c IN :stateIds OR Country__c IN :countryIds)
         ];
 
-        Map<String, Id> freightMap = MakeKeys.makeKeyMap(freightList);
+        Map<String, Id> freightMap = MakeKeys.makeKeyMap(freightList,fields);
 
         // Valida duplicidade
         for(Freight__c iFreight : records){
             
-            string key = MakeKeys.makeKey(iFreight);
+            string key = MakeKeys.makeKey(iFreight,fields);
 
             if(freightMap.containsKey(key) && freightMap.get(key) != iFreight.Id){
             

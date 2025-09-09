@@ -1,4 +1,10 @@
 public with sharing class TaxTriggerHelper {
+    
+    private static Set<String> fields = new Set<String>{
+        'State__c',
+        'Product__c'
+    };
+    
     public static void handleInsertTax(List<Tax__c> newList){
      
         verifyDuplicity(newList);
@@ -26,7 +32,7 @@ public with sharing class TaxTriggerHelper {
 
         for(Tax__c iTax : records){
      
-            String temp = MakeKeys.makeKey(iTax);
+            String temp = MakeKeys.makeKey(iTax,fields);
      
             if(keys.contains(temp))iTax.addError('Duplicate in batch');
      
@@ -45,11 +51,11 @@ public with sharing class TaxTriggerHelper {
         ];
                                 
 
-        Map<String, Id> TaxMap = MakeKeys.makeKeyMap(TaxList);
+        Map<String, Id> TaxMap = MakeKeys.makeKeyMap(TaxList,fields);
 
         for(Tax__c iTax : records){
      
-            String key = MakeKeys.makeKey(iTax);
+            String key = MakeKeys.makeKey(iTax,fields);
 
             if(TaxMap.containsKey(key)){
 

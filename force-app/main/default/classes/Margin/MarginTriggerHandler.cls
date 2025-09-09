@@ -1,5 +1,7 @@
 public with sharing class MarginTriggerHandler {
-private static Boolean isEnabled;
+    
+    private static Boolean isEnabled;
+    
     static{
      
         isEnabled=true;
