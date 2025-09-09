@@ -18,7 +18,6 @@ public with sharing class MakeKeys {
 
             }
             
-
         }
 
         if(key.endsWith('-')){

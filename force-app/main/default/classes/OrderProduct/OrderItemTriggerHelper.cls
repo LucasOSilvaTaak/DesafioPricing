@@ -10,7 +10,7 @@ public with sharing class OrderItemTriggerHelper {
         
         List<OrderItem> changedList = new List<OrderItem>();
         
-        for(Integer i =0; i < records.size(); i++){
+        for(Integer i = 0; i < records.size(); i++){
         
             if(!records[i].equals(oldList[i])) changedList.add(records[i]);
         }
@@ -24,74 +24,77 @@ public with sharing class OrderItemTriggerHelper {
         //preenche os masps e sets para a busca
         fillOrderItensLockups(records);
         
-        //impede qualque modificação após pedido sair de draft
-        draftOnly(records);
+        //Segue com apenas aqueles que podem ser alterados
+        List<OrderItem> draftOrderItem = draftOnly(records);
+        if(draftOrderItem.size() > 0){
 
-        Set<Id> productIds = new Set<Id>();
-        Set<Id> productHierarchyIds = new Set<Id>();
-        Set<Id> cityIds = new Set<Id>();
-        Set<Id> stateIds = new Set<Id>();
-        Set<Id> countryIds = new Set<Id>();
-        Set<Id> accountIds = new Set<Id>();
-        Set<Id> accountGroupIds = new Set<Id>();
-
-        for(OrderItem iOrderItem : records){
-
-            productIds.add(iOrderItem.Product2Id);
-            productHierarchyIds.add(iOrderItem.Product2.ProductHierarchy__c);
-            cityIds.add(iOrderItem.Order.AccountAddress__r.City__c);
-            stateIds.add(iOrderItem.Order.AccountAddress__r.City__r.State__c);
-            countryIds.add(iOrderItem.Order.AccountAddress__r.City__r.State__r.Country__c);
-            accountIds.add(iOrderItem.Order.AccountAddress__r.Account__c);
-            accountGroupIds.add(iOrderItem.Order.AccountAddress__r.Account__r.AccountGroup__c);
-
+            Set<Id> productIds = new Set<Id>();
+            Set<Id> productHierarchyIds = new Set<Id>();
+            Set<Id> cityIds = new Set<Id>();
+            Set<Id> stateIds = new Set<Id>();
+            Set<Id> countryIds = new Set<Id>();
+            Set<Id> accountIds = new Set<Id>();
+            Set<Id> accountGroupIds = new Set<Id>();
+    
+            for(OrderItem iOrderItem : draftOrderItem){
+    
+                productIds.add(iOrderItem.Product2Id);
+                productHierarchyIds.add(iOrderItem.Product2.ProductHierarchy__c);
+                cityIds.add(iOrderItem.Order.AccountAddress__r.City__c);
+                stateIds.add(iOrderItem.Order.AccountAddress__r.City__r.State__c);
+                countryIds.add(iOrderItem.Order.AccountAddress__r.City__r.State__r.Country__c);
+                accountIds.add(iOrderItem.Order.AccountAddress__r.Account__c);
+                accountGroupIds.add(iOrderItem.Order.AccountAddress__r.Account__r.AccountGroup__c);
+    
+            }
+            
+            //Busca final de todas as freights citadas
+            List<Freight__c> freightList = [
+                SELECT Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
+                FROM Freight__c
+                WHERE (Product__c IN :productIds 
+                    OR ProductHierarchy__c IN :productHierarchyIds)
+                AND (City__c IN :cityIds 
+                    OR State__c IN :stateIds
+                    OR Country__c IN :countryIds)
+                AND Status__c = 'Approved'            
+            ];
+            
+            
+            List<Tax__c> taxList = [
+                SELECT TaxOnCost__c, State__c, Product__c, Status__c
+                FROM Tax__c
+                WHERE Status__c = 'Approved'
+                AND State__c IN : stateIds
+                AND Product__c IN :productIdS
+            ];
+                
+            List<Margin__c> marginList = [
+                SELECT Product__c, ProductHierarchy__c, Account__c, 
+                AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
+                FROM Margin__c
+                WHERE Status__c = 'Approved'
+                AND (Product__c IN :productIds 
+                    OR ProductHierarchy__c IN : productHierarchyIds)
+                AND (Account__c IN :accountIds 
+                    OR AccountGroup__c IN :accountGroupIds)
+                AND (City__c IN :cityIds 
+                    OR State__c IN :stateIds 
+                    OR Country__c IN : countryIds)
+            ];
+            
+            
+            //Funções que preenchem os valores de cada Order Item
+    
+            ajustFreight(draftOrderItem, freightList);
+    
+            ajustTax(draftOrderItem, taxList);
+    
+            ajustMargin(draftOrderItem, marginList);
+                
+            //Calcular os valores de cada orderm produto
+            calculatePrices(draftOrderItem);
         }
-        
-        //Busca final de todas as freights citadas
-        List<Freight__c> freightList = [
-            SELECT Value__c, Product__c, ProductHierarchy__c, City__c, State__c, Country__c, Status__c
-            FROM Freight__c
-            WHERE (Product__c IN :productIds 
-                OR ProductHierarchy__c IN :productHierarchyIds)
-            AND (City__c IN :cityIds 
-                OR State__c IN :stateIds
-                OR Country__c IN :AccountIds)
-            AND Status__c = 'Approved'            
-        ];
-        
-        
-        List<Tax__c> taxList = [
-            SELECT TaxOnCost__c, State__c, Product__c, Status__c
-            FROM Tax__c
-            WHERE Status__c = 'Approved'
-            AND State__c IN : stateIds
-            AND Product__c IN :productIdS
-        ];
-            
-        List<Margin__c> marginList = [
-            SELECT Product__c, ProductHierarchy__c, Account__c, 
-            AccountGroup__c, City__c, State__c, Country__c, Status__c, Value__c
-            FROM Margin__c
-            WHERE Status__c = 'Approved'
-            AND (Product__c IN :productIds 
-                OR ProductHierarchy__c IN : productHierarchyIds)
-            AND (Account__c IN :accountIds 
-                OR AccountGroup__c IN :accountGroupIds)
-            AND (City__c IN :cityIds 
-                OR State__c IN :stateIds or Country__c IN : countryIds)
-        ];
-        
-        
-        //Funções que preenchem os valores de cada Order Item
-
-        ajustFreight(records, freightList);
-
-        ajustTax(records, taxList);
-
-        ajustMargin(records, marginList);
-            
-        //Calcular os valores de cada orderm produto
-        calculatePrices(records);
                                       
     }
                 
@@ -147,14 +150,18 @@ public with sharing class OrderItemTriggerHelper {
     }
     
 
-    //Permite apenas alterações de pedidos em rascunhos
-    private static void draftOnly(List<OrderItem> records){
+    //Permite apenas alterações de pedidos em rascunhos e devolve a lista dos que podem ser alterados
+    private static List<OrderItem> draftOnly(List<OrderItem> records){
 
+        List<OrderItem> changedList = new List<OrderItem>();
         for(OrderItem iOrderProduct : records){
         
             if(iOrderProduct.Order.Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
-        
+            else{
+                changedList.add(iOrderProduct);
+            }
         }
+        return changedList;
     }
         
     
