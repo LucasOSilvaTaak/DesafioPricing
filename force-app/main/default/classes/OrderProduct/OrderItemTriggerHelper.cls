@@ -202,9 +202,13 @@ public with sharing class OrderItemTriggerHelper {
             //Não adicionar o findBestSpecificity por que é demais para algo tão simples
             
             for (Tax__c iTax : taxList){
+                
                 if(iTax.Product__c == productId && iTax.State__c == stateId){
+                   
                     iOrderProduct.TaxPercentage__c = iTax.TaxOnCost__c;
+                   
                     break;
+                
                 }
 
             }
