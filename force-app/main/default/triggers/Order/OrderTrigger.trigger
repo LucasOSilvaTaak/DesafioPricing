@@ -1,5 +1,7 @@
 trigger OrderTrigger on Order (before update) {
+   
     System.debug('Order Trigger Start => ' + Trigger.operationType);
+   
     OrderTriggerHandler handler = new OrderTriggerHandler(
         Trigger.old,
         Trigger.new,
@@ -8,12 +10,19 @@ trigger OrderTrigger on Order (before update) {
     );
 
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
+    
         switch on Trigger.operationType {
+    
             /*when BEFORE_INSERT{
+    
                 handler.BeforeInsert();
+    
             }*/
+        
             when BEFORE_UPDATE{
+        
                 handler.beforeUpdate();
+        
             }
         }
     }

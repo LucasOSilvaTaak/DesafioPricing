@@ -23,7 +23,6 @@ public with sharing class OrderItemTriggerHandler {
     
     }
 
-
     List<OrderItem> oldRecordList { get; set; }
 	List<OrderItem> newRecordList { get; set; }
 	Map<Id, OrderItem> oldRecordMap { get; set; }
@@ -36,18 +35,24 @@ public with sharing class OrderItemTriggerHandler {
 		Map<Id, OrderItem> newRecordMap
 	) 
     {
-		this.oldRecordList = oldRecordList;
+		
+        this.oldRecordList = oldRecordList;
 		this.newRecordList = newRecordList;
 		this.oldRecordMap = oldRecordMap;
 		this.newRecordMap = newRecordMap;
-	}
+	
+    }
 
     public void beforeInsert(){
+    
         OrderItemTriggerHelper.handleBeforeInsert(newRecordList);
+    
     }
 
     public void beforeUpdate(){
+    
         OrderItemTriggerHelper.handleBeforeUpdate(oldRecordList, newRecordList);
+    
     }
 
 }

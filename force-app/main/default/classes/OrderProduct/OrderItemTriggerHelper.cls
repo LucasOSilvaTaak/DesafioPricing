@@ -249,8 +249,6 @@ public with sharing class OrderItemTriggerHelper {
 
     }
         
-        
-
     //achar um jeito de retirar todos os maps
     private static void calculatePrices(List<OrderItem> records){
         

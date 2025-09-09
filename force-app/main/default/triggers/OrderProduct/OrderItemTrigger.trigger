@@ -1,5 +1,7 @@
 trigger OrderItemTrigger on OrderItem (before insert, before update) {
+    
     System.debug('Order Product Trigger Start => ' + Trigger.operationType);
+    
     OrderItemTriggerHandler handler = new OrderItemTriggerHandler(
         Trigger.old,
         Trigger.new,
@@ -8,12 +10,19 @@ trigger OrderItemTrigger on OrderItem (before insert, before update) {
     );
 
     if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
+    
         switch on Trigger.operationType {
+    
             when BEFORE_INSERT{
+    
                 handler.beforeInsert();
+    
             }
+    
             when BEFORE_UPDATE{
+    
                 handler.beforeUpdate();
+    
             }
         }
     }

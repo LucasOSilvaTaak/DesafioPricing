@@ -1,18 +1,27 @@
 public with sharing class MarginTriggerHelper {
     public static void handleInsertMargin(List<Margin__c> newList){
+     
         verifyDuplicity(newList);
+    
     }
 
     public static void handleUpdateMargin(List<Margin__c> oldList, List<Margin__c> newList){
+        
         List<Margin__c> changedRecords = new List<Margin__c>();
+        
         for(Integer i = 0; i < newList.size(); i++){
+        
             if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
+        
         }
+        
         if(!changedRecords.isEmpty()) verifyDuplicity(changedRecords);    
     }
 
     private static void verifyDuplicity(List<Margin__c> records){
+        
         Set<String> keys = new Set<String>();
+        
         Set<Id> productIds = new Set<Id>();
         Set<Id> productHierarchyIds = new Set<Id>();
         Set<Id> accountIds = new Set<Id>();
@@ -23,9 +32,11 @@ public with sharing class MarginTriggerHelper {
 
         //Monta chaves e coleta IDs
         for(Margin__c iMargin : records){
+            
             String temp = MakeKeys.makeKey(iMargin);
 
             if(keys.contains(temp)) iMargin.addError('Duplicate in batch');
+            
             else keys.add(temp);
             
 
@@ -53,11 +64,15 @@ public with sharing class MarginTriggerHelper {
 
         //Valida duplicidade
         for(Margin__c iMargin : records){
+           
+           
             string key = MakeKeys.makeKey(iMargin);
 
 
             if(marginMap.containsKey(key) && marginMap.get(key) != iMargin.Id){
+           
                 iMargin.addError('Margin already exists');
+           
             }
         }
     }

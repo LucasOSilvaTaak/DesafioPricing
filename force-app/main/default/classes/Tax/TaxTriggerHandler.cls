@@ -1,14 +1,20 @@
 public with sharing class TaxTriggerHandler {
 private static Boolean isEnabled;
     static{
+        
         isEnabled=true;
+    
     }
     public static Boolean isTriggerEnabled(){
+    
         return isEnabled;
+    
     }
 
     public static Boolean disableTrigger(){
+    
         return isEnabled = false;
+    
     }
 
     public static Boolean enableTrigger(){
@@ -35,9 +41,13 @@ private static Boolean isEnabled;
 	}
 
     public void beforeInsert(){
+    
         TaxTriggerHelper.HandleInsertTax(newRecordList);
+    
     }
     public void beforeUpdate(){
+    
         TaxTriggerHelper.HandleUpdateTax(oldRecordList, newRecordList);
+    
     }
 }

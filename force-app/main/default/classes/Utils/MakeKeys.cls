@@ -9,8 +9,6 @@ public with sharing class MakeKeys {
         'AccountHierarchy__c'
     };
 
-
-
     public static String makeKey(SObject record){
         
         String key = '';
@@ -23,14 +21,17 @@ public with sharing class MakeKeys {
 
             if(fields.contains(iString)){
 
-                key += (value == null || value == 'null') ? '' : (value + '-');
+                key += (value == null) ? '' : (value + '-');
 
             }
             
 
         }
+        
         if(key.endsWith('-')){
+
             key = key.substring(0, key.length() - 1);
+
         }
 
         return key;

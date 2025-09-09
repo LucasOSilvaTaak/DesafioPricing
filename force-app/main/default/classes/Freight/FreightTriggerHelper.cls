@@ -1,13 +1,22 @@
 public with sharing class FreightTriggerHelper {
+
     public static void HandleInsertFreight(List<Freight__c> newList){
+
         verifyDuplicity(newList);
+
     }
 
+
     public static void handleUpdateFreight(List<Freight__c> oldList, List<Freight__c> newList){
+
         List<Freight__c> changedRecords = new List<Freight__c>();
+
         for(Integer i = 0; i < newList.size(); i++){
+
             if(!newList[i].equals(oldList[i])) changedRecords.add(newList[i]);
+
         }
+
         if(!changedRecords.isEmpty()) verifyDuplicity(newList);
 
     }
@@ -23,18 +32,21 @@ public with sharing class FreightTriggerHelper {
 
         //Monta chaves e coleta IDs
         for(Freight__c iFreight : records){
+           
             String temp = MakeKeys.makeKey(iFreight);
 
             if(keys.contains(temp)) iFreight.addError('Freight already exists');
             
-
             else keys.add(temp);
 
-
             if(iFreight.Product__c != null) productIds.add(iFreight.Product__c);
+            
             if(iFreight.ProductHierarchy__c != null) productHierarchyIds.add(iFreight.ProductHierarchy__c);
+            
             if(iFreight.City__c != null) cityIds.add(iFreight.City__c);
+            
             if(iFreight.State__c != null) stateIds.add(iFreight.State__c);
+            
             if(iFreight.Country__c != null) countryIds.add(iFreight.Country__c);
         }
 
@@ -50,9 +62,13 @@ public with sharing class FreightTriggerHelper {
 
         // Valida duplicidade
         for(Freight__c iFreight : records){
+            
             string key = MakeKeys.makeKey(iFreight);
+            System.debug('key: '+key);
             if(freightMap.containsKey(key) && freightMap.get(key) != iFreight.Id){
+            
                 iFreight.addError('Freight already exists');
+            
             }
         }
     }
