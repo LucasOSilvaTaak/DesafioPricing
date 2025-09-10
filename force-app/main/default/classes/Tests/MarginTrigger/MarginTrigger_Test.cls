@@ -1,6 +1,6 @@
 
 @isTest
-private class TaxTrigger_Test {
+private class MarginTrigger_Test {
 
     @TestSetup
     static void makeData(){
@@ -62,15 +62,17 @@ private class TaxTrigger_Test {
         );
         insert distributionCenterA;
 
-        Tax__c taxDefault = new Tax__c(
-            Name = 'Tax Default',
+        Freight__c FreightDefault = new Freight__c(
+            Name = 'Freight Default',
             Product__c = productA.Id,
             State__c = stateA.id,
-            TaxOnCost__c = 1,
+            Value__c = 1,
             distributionCenter__c = distributionCenterA.Id
+            
         );
-        insert taxDefault;
+        insert FreightDefault;
 
+        
     }
 
     @isTest
@@ -80,19 +82,20 @@ private class TaxTrigger_Test {
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
 
-        Tax__c taxTest = new Tax__c(
-            Name = 'Tax test',
+        Freight__c FreightTest = new Freight__c(
+            Name = 'Freight Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
-            TaxOnCost__c = 1,
+            Value__c = 1,
             distributionCenter__c = distributionCenterA.Id
+            
         );
 
         Test.startTest();
-            Database.SaveResult result = Database.insert(taxTest, false);
+            Database.SaveResult result = Database.insert(FreightTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, true, 'Test failed: Tax record was not inserted: '+ result.errors + '.');
+        Assert.areEqual(result.success, true, 'Test failed: Freight record was not inserted: '+ result.errors + '.');
     }
 
     @isTest
@@ -102,19 +105,20 @@ private class TaxTrigger_Test {
         State__c stateA = [SELECT Id FROM State__c WHERE Name = 'State A' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
 
-        Tax__c taxTest = new Tax__c(
-            Name = 'Tax test',
+        Freight__c FreightTest = new Freight__c(
+            Name = 'Freight Test',
             Product__c = productA.Id,
             State__c = stateA.Id,
-            TaxOnCost__c = 1,
+            Value__c = 1,
             distributionCenter__c = distributionCenterA.Id
+            
         );
 
         Test.startTest();
-            Database.SaveResult result = Database.insert(taxTest, false);
+            Database.SaveResult result = Database.insert(FreightTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, false, 'Test failed: Tax record was not inserted: '+ result.errors + '.');
+        Assert.areEqual(result.success, false, 'Test failed: Freight record was inserted: '+ result.errors + '.');
     }
 
     @isTest
@@ -126,23 +130,25 @@ private class TaxTrigger_Test {
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
 
-        Tax__c taxTest = new Tax__c(
-            Name = 'Tax test',
+        Freight__c FreightTest = new Freight__c(
+            Name = 'Freight Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
-            TaxOnCost__c = 1,
+            Value__c = 1,
             distributionCenter__c = distributionCenterA.Id
+            
         );
-        insert taxTest;
+        insert FreightTest;
 
-        taxTest.Product__c = productB.Id;
+        FreightTest.Product__c = productB.Id;
 
         Test.startTest();
-            Database.SaveResult result = Database.update(taxTest, false);
+            Database.SaveResult result = Database.update(FreightTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, true, 'Test failed: Tax record was not inserted: '+ result.errors + '.');
+        Assert.areEqual(result.success, true, 'Test failed: Freight record was not updated: '+ result.errors + '.');
     }
+    
     @isTest
     static void testVerifyUpdateDuplicityFailed() {
 
@@ -152,22 +158,23 @@ private class TaxTrigger_Test {
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
 
-        Tax__c taxTest = new Tax__c(
-            Name = 'Tax test',
+        Freight__c FreightTest = new Freight__c(
+            Name = 'Freight Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
-            TaxOnCost__c = 1,
+            Value__c = 1,
             distributionCenter__c = distributionCenterA.Id
+            
         );
-        insert taxTest;
+        insert FreightTest;
 
-        taxTest.State__c = stateA.Id;
+        FreightTest.State__c = stateA.Id;
 
         Test.startTest();
-            Database.SaveResult result = Database.update(taxTest, false);
+            Database.SaveResult result = Database.update(FreightTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, false, 'Test failed: Tax record was not inserted: ' + result.errors + '.');
+        Assert.areEqual(result.success, false, 'Test failed: Freight record was updated: ' + result.errors + '.');
     }
 
     @isTest
@@ -179,32 +186,25 @@ private class TaxTrigger_Test {
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
 
-        List<Tax__c> TaxTestList = new List<Tax__c>{
-            new Tax__c(
-                Name = 'Tax test',
+        List<Freight__c> FreightTestList = new List<Freight__c>{
+            new Freight__c(
+                Name = 'Freight Test',
                 Product__c = productA.Id,
                 State__c = stateB.Id,
-                TaxOnCost__c = 1,
+                Value__c = 1,
                 distributionCenter__c = distributionCenterA.Id
             ),
-            new Tax__c(
-                Name = 'Tax test 2',
+            new Freight__c(
+                Name = 'Freight Test 2',
                 Product__c = productA.Id,
                 State__c = stateB.Id,
-                TaxOnCost__c = 1,
-                distributionCenter__c = distributionCenterA.Id
-            ),
-            new Tax__c(
-                Name = 'Tax test 3',
-                Product__c = productA.Id,
-                State__c = stateB.Id,
-                TaxOnCost__c = 1,
+                Value__c = 1,
                 distributionCenter__c = distributionCenterA.Id
             )
         };
 
-        Test.startTest();
-            Database.SaveResult[] results = Database.insert(TaxTestList, false);
+    Test.startTest();
+            Database.SaveResult[] results = Database.insert(FreightTestList, false);
 
         Test.stopTest();
 
@@ -218,8 +218,6 @@ private class TaxTrigger_Test {
         }   
 
         Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');
-
-
         
     }
 }
