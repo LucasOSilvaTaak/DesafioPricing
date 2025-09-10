@@ -62,17 +62,30 @@ private class MarginTrigger_Test {
         );
         insert distributionCenterA;
 
-        Freight__c FreightDefault = new Freight__c(
-            Name = 'Freight Default',
+
+        AccountGroup__c AccountGroupA = (AccountGroup__c) testFactory.createSObject(
+            new AccountGroup__c()
+        );
+        insert AccountGroupA;
+
+        Account AccountA = (Account) testFactory.createSObject(
+            new Account(
+                Name = 'Account A',
+                AccountGroup__c = AccountGroupA.Id
+        ));
+
+
+        Margin__c MarginDefault = new Margin__c(
+            Name = 'Margin Default',
             Product__c = productA.Id,
             State__c = stateA.id,
             Value__c = 1,
-            distributionCenter__c = distributionCenterA.Id
+            distributionCenter__c = distributionCenterA.Id,
+            Account__c = AccountA.Id
             
         );
-        insert FreightDefault;
+        insert MarginDefault;
 
-        
     }
 
     @isTest
@@ -81,21 +94,23 @@ private class MarginTrigger_Test {
         Product2 productA = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
+        Account AccountA = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
 
-        Freight__c FreightTest = new Freight__c(
-            Name = 'Freight Test',
+        Margin__c MarginTest = new Margin__c(
+            Name = 'Margin Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
             Value__c = 1,
-            distributionCenter__c = distributionCenterA.Id
+            distributionCenter__c = distributionCenterA.Id,
+            Account__c = AccountA.Id
             
         );
 
         Test.startTest();
-            Database.SaveResult result = Database.insert(FreightTest, false);
+            Database.SaveResult result = Database.insert(MarginTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, true, 'Test failed: Freight record was not inserted: '+ result.errors + '.');
+        Assert.areEqual(result.success, true, 'Test failed: Margin record was not inserted: '+ result.errors + '.');
     }
 
     @isTest
@@ -104,21 +119,24 @@ private class MarginTrigger_Test {
         Product2 productA = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
         State__c stateA = [SELECT Id FROM State__c WHERE Name = 'State A' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
+        Account AccountA = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
 
-        Freight__c FreightTest = new Freight__c(
-            Name = 'Freight Test',
+        Margin__c MarginTest = new Margin__c(
+            Name = 'Margin Test',
             Product__c = productA.Id,
             State__c = stateA.Id,
             Value__c = 1,
-            distributionCenter__c = distributionCenterA.Id
+            distributionCenter__c = distributionCenterA.Id,
+            Account__c = AccountA.Id
+
             
         );
 
         Test.startTest();
-            Database.SaveResult result = Database.insert(FreightTest, false);
+            Database.SaveResult result = Database.insert(MarginTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, false, 'Test failed: Freight record was inserted: '+ result.errors + '.');
+        Assert.areEqual(result.success, false, 'Test failed: Margin record was inserted: '+ result.errors + '.');
     }
 
     @isTest
@@ -129,24 +147,27 @@ private class MarginTrigger_Test {
         State__c stateA = [SELECT Id FROM State__c WHERE Name = 'State A' LIMIT 1];
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
+        Account AccountA = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
 
-        Freight__c FreightTest = new Freight__c(
-            Name = 'Freight Test',
+        Margin__c MarginTest = new Margin__c(
+            Name = 'Margin Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
             Value__c = 1,
-            distributionCenter__c = distributionCenterA.Id
+            distributionCenter__c = distributionCenterA.Id,
+            Account__c = AccountA.Id
+
             
         );
-        insert FreightTest;
+        insert MarginTest;
 
-        FreightTest.Product__c = productB.Id;
+        MarginTest.Product__c = productB.Id;
 
         Test.startTest();
-            Database.SaveResult result = Database.update(FreightTest, false);
+            Database.SaveResult result = Database.update(MarginTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, true, 'Test failed: Freight record was not updated: '+ result.errors + '.');
+        Assert.areEqual(result.success, true, 'Test failed: Margin record was not updated: '+ result.errors + '.');
     }
     
     @isTest
@@ -157,24 +178,26 @@ private class MarginTrigger_Test {
         State__c stateA = [SELECT Id FROM State__c WHERE Name = 'State A' LIMIT 1];
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
+        Account AccountA = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
 
-        Freight__c FreightTest = new Freight__c(
-            Name = 'Freight Test',
+        Margin__c MarginTest = new Margin__c(
+            Name = 'Margin Test',
             Product__c = productA.Id,
             State__c = stateB.Id,
             Value__c = 1,
-            distributionCenter__c = distributionCenterA.Id
+            distributionCenter__c = distributionCenterA.Id,
+            Account__c = AccountA.Id
             
         );
-        insert FreightTest;
+        insert MarginTest;
 
-        FreightTest.State__c = stateA.Id;
+        MarginTest.State__c = stateA.Id;
 
         Test.startTest();
-            Database.SaveResult result = Database.update(FreightTest, false);
+            Database.SaveResult result = Database.update(MarginTest, false);
         Test.stopTest();
 
-        Assert.areEqual(result.success, false, 'Test failed: Freight record was updated: ' + result.errors + '.');
+        Assert.areEqual(result.success, false, 'Test failed: Margin record was updated: ' + result.errors + '.');
     }
 
     @isTest
@@ -185,26 +208,31 @@ private class MarginTrigger_Test {
         State__c stateA = [SELECT Id FROM State__c WHERE Name = 'State A' LIMIT 1];
         State__c stateB = [SELECT Id FROM State__c WHERE Name = 'State B' LIMIT 1];
         DistributionCenter__c distributionCenterA = [SELECT Id FROM distributionCenter__c WHERE Name = 'Distribution Center A' LIMIT 1];
+        Account AccountA = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
 
-        List<Freight__c> FreightTestList = new List<Freight__c>{
-            new Freight__c(
-                Name = 'Freight Test',
+        List<Margin__c> MarginTestList = new List<Margin__c>{
+            new Margin__c(
+                Name = 'Margin Test',
                 Product__c = productA.Id,
                 State__c = stateB.Id,
                 Value__c = 1,
-                distributionCenter__c = distributionCenterA.Id
+                distributionCenter__c = distributionCenterA.Id,
+                Account__c = AccountA.Id
+
             ),
-            new Freight__c(
-                Name = 'Freight Test 2',
+            new Margin__c(
+                Name = 'Margin Test 2',
                 Product__c = productA.Id,
                 State__c = stateB.Id,
                 Value__c = 1,
-                distributionCenter__c = distributionCenterA.Id
+                distributionCenter__c = distributionCenterA.Id,
+                Account__c = AccountA.Id
+
             )
         };
 
     Test.startTest();
-            Database.SaveResult[] results = Database.insert(FreightTestList, false);
+            Database.SaveResult[] results = Database.insert(MarginTestList, false);
 
         Test.stopTest();
 

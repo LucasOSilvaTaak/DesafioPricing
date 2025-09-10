@@ -201,7 +201,7 @@ public with sharing class FreightTrigger_Test {
             )
         };
 
-    Test.startTest();
+        Test.startTest();
             Database.SaveResult[] results = Database.insert(FreightTestList, false);
 
         Test.stopTest();

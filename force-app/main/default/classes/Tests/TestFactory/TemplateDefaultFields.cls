@@ -23,7 +23,11 @@ public with sharing class TemplateDefaultFields {
 	public class AccountDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
-				'Name' => 'Account - Teste ' + String.valueOf(countSObjectCreated)
+				'Name' => 'Account - Teste ' + String.valueOf(countSObjectCreated),
+				'Cnpj__c' => '00.000.000/0001-0' + String.valueOf(countSObjectCreated),
+				'Street__c' => String.valueOf(countSObjectCreated),
+				'Number__c' => String.valueOf(countSObjectCreated),
+				'CurrencyIsoCode' => 'BRL'
 			};
 		}
 	}
@@ -404,7 +408,16 @@ public with sharing class TemplateDefaultFields {
 	
 	public class ProductHierarchyDefaults implements FieldDefaults{
 		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
-			System.debug('Aaaaaaaaa');
+			return new Map<String,Object>{
+				'Name' => 'Name ' + String.valueOf(countSObjectCreated),
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated)
+
+			};
+		}
+	}
+
+	public class AccountGroupDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
 			return new Map<String,Object>{
 				'Name' => 'Name ' + String.valueOf(countSObjectCreated),
 				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated)
