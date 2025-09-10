@@ -71,4 +71,4 @@ public class TestFactorySObject {
 	}
 
 	public class TestFactoryException extends Exception {}
-}		
+}

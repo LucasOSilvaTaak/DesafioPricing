@@ -135,8 +135,10 @@ public with sharing class TemplateDefaultFields {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
 				'Name' => 'Product2 Test ' + String.valueOf(countSObjectCreated),
-				'ExternalId__c' => 'Product2 Test ' + String.valueOf(countSObjectCreated),
-				'IsActive' => true
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated),
+				'CurrencyIsoCode' => 'BRL',
+				'IsActive' => true,
+				'ProductionCost__c' => 100
 			};
 		}
 	}
@@ -360,4 +362,56 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+
+	public class CityDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'Name' => 'City Test ' + String.valueOf(countSObjectCreated),
+				'IBGECode__c' => 'CT' + String.valueOf(countSObjectCreated) 
+
+			};
+		}
+	}
+	
+	public class StateDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'Name' => 'State Test ' + String.valueOf(countSObjectCreated),
+				'abbreviation__c' => 'ST' + String.valueOf(countSObjectCreated) 
+
+			};
+		}
+	}
+
+	public class CountryDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'Name' => 'Country Test ' + String.valueOf(countSObjectCreated),
+				'abbreviation__c' => 'CO' + String.valueOf(countSObjectCreated) 
+			};
+		}
+	}
+
+	public class DistributionCenterDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'Name' => 'Name ' + String.valueOf(countSObjectCreated),
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated)
+
+			};
+		}
+	}
+	
+	public class ProductHierarchyDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			System.debug('Aaaaaaaaa');
+			return new Map<String,Object>{
+				'Name' => 'Name ' + String.valueOf(countSObjectCreated),
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated)
+
+			};
+		}
+	}
+
+
 }
