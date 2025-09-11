@@ -188,10 +188,81 @@ private class OrderItemTriggerTest {
         );
 
         Test.startTest();
-        insert orderItem;
+
+        Database.SaveResult result = Database.insert(orderItem, false);
+
         Test.stopTest();
 
-        System.assertNotEquals(null, orderItem.Id, 'OrderItem não foi criado');
+        Assert.areEqual(true, result.success, 'Product have all parameters so it should have been created');
     }
+    
+    @isTest
+    static void testCreatingOrderItemFailed() {
+        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product B' LIMIT 1];
+        Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
+
+        // Recuperar o PricebookEntry correspondente
+        PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
+                            FROM PricebookEntry 
+                            WHERE Pricebook2Id = :order.Pricebook2Id 
+                            AND Product2Id = :product.Id 
+                            LIMIT 1];
+
+        OrderItem orderItem = new OrderItem(
+            OrderId = order.Id,
+            PricebookEntryId = pricebookEntry.Id,
+            Quantity = 2,
+            UnitPrice = pricebookEntry.UnitPrice
+        );
+
+        Test.startTest();
+        Database.SaveResult result = Database.insert(orderItem, false);
+        Test.stopTest();
+
+        Assert.areEqual(false, result.success, 'Product dont have a margin, tax and Freight, so should not be created');
+    }
+
+
+    @isTest
+    static void testUpdateOrderItem() {
+        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
+        Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
+
+        // Recuperar o PricebookEntry correspondente
+        PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
+                            FROM PricebookEntry 
+                            WHERE Pricebook2Id = :order.Pricebook2Id 
+                            AND Product2Id = :product.Id 
+                            LIMIT 1];
+
+        OrderItem orderItem = new OrderItem(
+            OrderId = order.Id,
+            PricebookEntryId = pricebookEntry.Id,
+            Quantity = 2,
+            UnitPrice = pricebookEntry.UnitPrice
+        );
+        Insert orderItem;
+
+        Freight__c changedFreight = [SELECT Id, Value__c FROM Freight__c LIMIT 1];
+        changedFreight.Value__c = 5;
+        Update changedFreight;
+
+        
+
+        OrderItem oldOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
+        orderItem.Quantity = 5;
+
+        Test.startTest();
+        
+        Update orderItem;
+        
+        Test.stopTest();
+
+        OrderItem newOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
+
+        Assert.areNotEqual(oldOrderItem.Final__c, newOrderItem.Final__c, 'The old Price( ' + oldOrderItem.Final__c + ') should be different from the new Price( ' + newOrderItem.Final__c + ')');
+    }
+
+    
 
 }
