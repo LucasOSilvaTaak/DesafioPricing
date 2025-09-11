@@ -24,7 +24,7 @@ public with sharing class TemplateDefaultFields {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
 				'Name' => 'Account - Teste ' + String.valueOf(countSObjectCreated),
-				'Cnpj__c' => '00.000.000/0001-0' + String.valueOf(countSObjectCreated),
+				'Cnpj__c' => '00.000.000/0001-' + (countSObjectCreated < 10 ? '0' : '') + String.valueOf(countSObjectCreated),
 				'Street__c' => String.valueOf(countSObjectCreated),
 				'Number__c' => Integer.valueOf(countSObjectCreated),
 				'CurrencyIsoCode' => 'BRL'
@@ -90,8 +90,12 @@ public with sharing class TemplateDefaultFields {
 	public class OrderDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
+				'Name' => 'Order ' + String.valueOf(countSObjectCreated),
 				'EffectiveDate' => Date.today().addDays(1),
-				'Status' => 'Draft'
+				'Status' => 'Draft',
+				'FreightType__c' => 'CIF',
+				'DeliveryDate__c' => Date.today().addDays(5),
+				'RepresentativeOrderNumber__c' => 'RepresentativeOrderNumber ' + String.valueOf(countSObjectCreated) 
 			};
 		}
 	}
@@ -150,6 +154,7 @@ public with sharing class TemplateDefaultFields {
 	public class PricebookEntryDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
+				'CurrencyIsoCode' => 'BRL',
 				'UnitPrice' => 100,
 				'IsActive' => true
 			};
@@ -190,7 +195,8 @@ public with sharing class TemplateDefaultFields {
 	public class PaymentConditionDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
-				'ExternalId__c' => 'Payment Condition Test ' + String.valueOf(countSObjectCreated)
+				'Name' => 'Name ' + String.valueOf(countSObjectCreated),
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated)
 			};
 		}
 	}
@@ -425,6 +431,29 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+	
+	public class ContractDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'StartDate' => Date.today().addDays(-1),
+				'ContractTerm' => 12
+
+			};
+		}
+	}
+
+	public class AccountAddressDefaults implements FieldDefaults{
+		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){
+			return new Map<String,Object>{
+				'Address__c' => 'Address ' + String.valueOf(countSObjectCreated),
+				'Code__c' => 'Code ' + String.valueOf(countSObjectCreated),
+				'CEP__c' => 'CEP' + String.valueOf(countSObjectCreated), 
+				'neighborhood__c' => 'Neighborhood' + String.valueOf(countSObjectCreated)
+
+			};
+		}
+	}
+
 
 
 }
