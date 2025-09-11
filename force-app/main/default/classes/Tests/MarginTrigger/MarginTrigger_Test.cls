@@ -73,6 +73,7 @@ private class MarginTrigger_Test {
                 Name = 'Account A',
                 AccountGroup__c = AccountGroupA.Id
         ));
+        insert AccountA;
 
 
         Margin__c MarginDefault = new Margin__c(

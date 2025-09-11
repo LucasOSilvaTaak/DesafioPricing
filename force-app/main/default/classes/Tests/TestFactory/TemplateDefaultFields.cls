@@ -26,7 +26,7 @@ public with sharing class TemplateDefaultFields {
 				'Name' => 'Account - Teste ' + String.valueOf(countSObjectCreated),
 				'Cnpj__c' => '00.000.000/0001-0' + String.valueOf(countSObjectCreated),
 				'Street__c' => String.valueOf(countSObjectCreated),
-				'Number__c' => String.valueOf(countSObjectCreated),
+				'Number__c' => Integer.valueOf(countSObjectCreated),
 				'CurrencyIsoCode' => 'BRL'
 			};
 		}
