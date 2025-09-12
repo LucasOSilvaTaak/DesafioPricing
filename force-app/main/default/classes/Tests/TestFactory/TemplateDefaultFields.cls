@@ -3,6 +3,7 @@ public with sharing class TemplateDefaultFields {
 		Map<String, Object> getFieldDefaults(Decimal countSObjectCreated);
 	}
 
+	/*
 	public class UserDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
@@ -19,6 +20,7 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+	*/
 
 	public class AccountDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
@@ -40,6 +42,7 @@ public with sharing class TemplateDefaultFields {
 		}
 	}
 
+	/*
 	public class AssetDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
@@ -86,6 +89,7 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+		*/
 
 	public class OrderDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
@@ -100,12 +104,14 @@ public with sharing class TemplateDefaultFields {
 		}
 	}
 
+	/*
 	public class OrderItemDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
 			};
 		}
 	}
+		
 
 	public class ProblemDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
@@ -138,7 +144,7 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
-
+	*/
 	public class Product2Defaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
@@ -151,6 +157,7 @@ public with sharing class TemplateDefaultFields {
 		}
 	}
 
+	/*
 	public class PricebookEntryDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
@@ -191,6 +198,7 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+		*/
 
 	public class PaymentConditionDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
@@ -201,6 +209,7 @@ public with sharing class TemplateDefaultFields {
 		}
 	}
 
+	/*
 	public class FormDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
@@ -372,6 +381,7 @@ public with sharing class TemplateDefaultFields {
 			};
 		}
 	}
+		*/
 
 	public class CityDefaults implements FieldDefaults{
 		public Map<String,Object> getFieldDefaults(Decimal countSObjectCreated){

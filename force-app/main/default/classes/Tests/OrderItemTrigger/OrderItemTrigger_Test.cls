@@ -1,5 +1,5 @@
 @isTest
-private class OrderItemTriggerTest {
+private class OrderItemTrigger_Test {
 
     @TestSetup
     static void makeData(){
@@ -164,7 +164,6 @@ private class OrderItemTriggerTest {
         );
         insert orderDefault;
 
-                System.debug('aAAAAAADADDAC');
 
     }
 
