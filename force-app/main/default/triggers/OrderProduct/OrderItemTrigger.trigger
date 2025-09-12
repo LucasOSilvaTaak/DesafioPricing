@@ -9,7 +9,7 @@ trigger OrderItemTrigger on OrderItem (before insert, before update) {
         Trigger.newMap
     );
 
-    if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
+    if(OrderItemTriggerHandler.IsTriggerEnabled()){
     
         switch on Trigger.operationType {
     

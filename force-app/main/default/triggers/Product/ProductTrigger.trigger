@@ -9,7 +9,7 @@ trigger ProductTrigger on Product2 (after insert, after update) {
         Trigger.newMap
     );
 
-    if(AssociatedLocationTriggerHandler.IsTriggerEnabled()){
+    if(ProductTriggerHandler.IsTriggerEnabled()){
    
         switch on Trigger.operationType {
    
