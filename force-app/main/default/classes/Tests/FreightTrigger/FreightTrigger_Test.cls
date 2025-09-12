@@ -218,5 +218,15 @@ public with sharing class FreightTrigger_Test {
         Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');
         
     }
+
+    @isTest
+    static void testTriggerEnabled(){
+        
+        FreightTriggerHandler.disableTrigger();
+        FreightTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, FreightTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
     
 }

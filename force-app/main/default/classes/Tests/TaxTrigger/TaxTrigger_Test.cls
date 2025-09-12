@@ -217,9 +217,17 @@ private class TaxTrigger_Test {
             }
         }   
 
-        Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');
-
-
-        
+        Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');   
     }
+
+        @isTest
+    static void testTriggerEnabled(){
+        
+        TaxTriggerHandler.disableTrigger();
+        TaxTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, TaxTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
+    
 }

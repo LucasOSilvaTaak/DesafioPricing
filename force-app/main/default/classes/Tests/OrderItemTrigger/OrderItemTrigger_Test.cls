@@ -262,6 +262,16 @@ private class OrderItemTrigger_Test {
         Assert.areNotEqual(oldOrderItem.Final__c, newOrderItem.Final__c, 'The old Price( ' + oldOrderItem.Final__c + ') should be different from the new Price( ' + newOrderItem.Final__c + ')');
     }
 
+     @isTest
+    static void testTriggerEnabled(){
+        
+        OrderItemTriggerHandler.disableTrigger();
+        OrderItemTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, OrderItemTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
+    
     
 
 }

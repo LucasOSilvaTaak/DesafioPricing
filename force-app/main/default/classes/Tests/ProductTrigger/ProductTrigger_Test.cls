@@ -89,4 +89,15 @@ private class ProductTrigger_Test {
         Assert.areNotEqual(pricebookEntry.UnitPrice, pricebookEntryUpdated.UnitPrice, 'PricebookEntry was not updated');
 
     }
+
+    @isTest
+    static void testTriggerEnabled(){
+        
+        ProductTriggerHandler.disableTrigger();
+        ProductTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, ProductTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
+    
 }

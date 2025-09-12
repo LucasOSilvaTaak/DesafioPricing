@@ -249,4 +249,15 @@ private class MarginTrigger_Test {
         Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');
         
     }
+
+    @isTest
+    static void testTriggerEnabled(){
+        
+        MarginTriggerHandler.disableTrigger();
+        MarginTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, MarginTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
+    
 }

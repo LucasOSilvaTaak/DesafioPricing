@@ -146,4 +146,15 @@ private class OrderTrigger_Test {
         Assert.areEqual(false, result.success, 'Cannot change order account after create');
         
     }
+
+    @isTest
+    static void testTriggerEnabled(){
+        
+        OrderTriggerHandler.disableTrigger();
+        OrderTriggerHandler.enableTrigger();
+
+        Assert.areEqual(true, OrderTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+
+    }
+    
 }
