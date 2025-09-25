@@ -116,7 +116,12 @@ global with sharing class OrderEndpoints {
 
         List<Order> orderList = (List<Order>) JSON.deserialize(request.requestBody.toString(), List<Order>.class);
     
-        if (orderList.size() > 0) delete orderList;
+
+        for (Order iOrder : orderList){
+            iOrder.DeletedOnExternal__c = true;
+        }
+
+        if (orderList.size() > 0) Update orderList;
 
 
         Map<String, Object> responseBody = new Map<String, Object>();
