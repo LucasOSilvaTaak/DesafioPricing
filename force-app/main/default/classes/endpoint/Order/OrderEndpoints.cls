@@ -31,7 +31,7 @@ global with sharing class OrderEndpoints {
 
         String jsonResponse = JSON.serializePretty(responseBody);
 
-        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'SALESFORCE', Endpoint__c = 'ORDER');
+        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'TOTVS', Endpoint__c = 'ORDER');
         Insert log;
 
         response.statusCode = 200;
@@ -96,7 +96,7 @@ global with sharing class OrderEndpoints {
 
         String jsonResponse = JSON.serializePretty(responseBody);
 
-        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'SALESFORCE', Endpoint__c = 'ORDER');
+        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'TOTVS', Endpoint__c = 'ORDER');
         Insert log;
 
         response.statusCode = 200;
@@ -126,7 +126,7 @@ global with sharing class OrderEndpoints {
 
         String jsonResponse = JSON.serializePretty(responseBody);
 
-        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'SALESFORCE', Endpoint__c = 'ORDER');
+        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'TOTVS', Endpoint__c = 'ORDER');
         Insert log;
 
         response.statusCode = 200;
