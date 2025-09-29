@@ -18,28 +18,43 @@ global with sharing class DataIntegrationFields {
 
 	global class OrderINData implements FieldData { // extends OrderBase
 		public String id;
-		public String externalId;
-		public String status;
+		public String clienteCode; //Order Account ExternalId
+		public String accountAddress; //Order Account ExternalId
+		public String conditionCode; //Payment conditiom
 		public Date effectiveDate;
-		public String accountExternalId;
-		public String pricebook2ExternalId;
-
+		public String freightType;
+		public Id distributionCenter;
+		public String orderNumber;
+		public Date deliveryDate;
+		public String deliveryDateERP; //DeliveryDate on ERP
+		public String status;
+		public String obs;
+		public String priority;//priority *dont have
+		public String representativeOrderNumber;//priority *dont have
 		public List<OrderItemINData> orderItemList {get; set;}
 
 		public Order deserialize() {
 			return new Order(
-				Id				= this.id,
-				ExternalId__c	= this.externalId,
-				Status			= this.status,
-				EffectiveDate	= this.effectiveDate,
-				Pricebook2		= new Pricebook2(ExternalId__c = this.pricebook2ExternalId),
-				Account			= new Account(ExternalId__c = this.accountExternalId)
+				Id								= this.id,
+				PaymentCondition__c				= this.conditionCode,
+				EffectiveDate					= this.effectiveDate,
+				DistributionCenter__c			= this.distributionCenter,
+				ExternalId__c					= this.orderNumber,
+				DeliveryDate__c					= this.deliveryDate,
+				Status							= this.status,
+				Observation__c					= this.obs,
+				FreightType__c					= this.freightType,
+				Account							= new Account(ExternalId__c = this.clienteCode),
+				RepresentativeOrderNumber__c	= this.representativeOrderNumber,
+				AccountAddress__c 				= this.accountAddress
+
 			);
 		}
 
 		public List<String> getRequiredFields() {
 			return new List<String>{
 				'ExternalId__c',
+				'PaymentCondition__c',
 				'EffectiveDate',
 				'Status'
 			};
@@ -47,7 +62,8 @@ global with sharing class DataIntegrationFields {
 		public List<String> getRequiredLookups() {
 			return new List<String>{
 				'AccountId',
-				'Pricebook2Id'
+				'DistributionCenter__c'
+
 			};
 		}
 
@@ -58,29 +74,32 @@ global with sharing class DataIntegrationFields {
 			return 'Id';
 		}
 		public String getExternalId() {
-			return this.externalId;
+			return this.orderNumber;
 		}
 	}
 	global class OrderItemINData implements FieldDataChild { // extends OrderItemBase
 		public String id;
-		public String externalId;
-		public Decimal quantity;
+		public String productCode; //Product Id
+		public String orderitemCode; //External ID
+		public Boolean totvsItem; //If it is a totvitem
+		public Date deliveryDate;
 		public Decimal unitPrice;
-		public String orderExternalId;
-		public String productExternalId;
-		public String pricebookEntryExternalId;
+		public Decimal motorPrice; //ListPrice
+		public Decimal quantity;
+		public String status;
+		public String OrderExternalId;
 
 		public OrderItem deserialize() {
 			OrderItem orderItem = new OrderItem(
-				ExternalId__c	= this.externalId,
-				Quantity		= this.quantity,
-				UnitPrice		= this.unitPrice
+				ExternalId__c	= this.orderitemCode,
+				UnitPrice		= this.unitPrice,
+				ListPrice		= this.motorPrice,
+				Quantity		= this.quantity
 			);
 
 			if (this.id == null || this.id == '') {
-				orderItem.Order				= new Order(ExternalId__c = this.orderExternalId);
-				orderItem.Product2			= new Product2(ExternalId__c = this.productExternalId);
-				orderItem.PricebookEntry	= new PricebookEntry(ExternalId__c = this.pricebookEntryExternalId);
+				orderItem.Order				= new Order(ExternalId__c = this.OrderExternalId);
+				orderItem.Product2			= new Product2(ExternalId__c = this.productCode);
 			}
 			else orderItem.Id = this.id;
 
@@ -91,14 +110,14 @@ global with sharing class DataIntegrationFields {
 			return new List<String>{
 				'UnitPrice',
 				'Quantity',
-				'ExternalId__c'
+				'ExternalId__c',
+				'ListPrice'
 			};
 		}
 		public List<String> getRequiredLookups() {
 			return new List<String>{
 				'OrderId',
-				'Product2Id',
-				'PricebookEntryId'
+				'Product2Id'
 			};
 		}
 
@@ -112,7 +131,7 @@ global with sharing class DataIntegrationFields {
 			return 'OrderId';
 		}
 		public String getParentKey() {
-			return this.orderExternalId;
+			return this.orderitemCode;
 		}
 	}
 

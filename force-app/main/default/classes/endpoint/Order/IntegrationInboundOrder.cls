@@ -44,8 +44,8 @@ global with sharing class IntegrationInboundOrder {
 			if (order.orderItemList != null) {
 				// Putting the Order's ExternalId parameter in the OrderItem
 				for (DataIntegrationFields.OrderItemINData orderItem : order.orderItemList) {
-					orderExternalIdToOrderItem.put(orderItem.externalId, order.externalId);
-					orderItem.orderExternalId = order.externalId;
+					orderExternalIdToOrderItem.put(orderItem.OrderExternalId, order.orderNumber);
+					orderItem.OrderExternalId = order.orderNumber;
 				}
 
 				orderItemToUpsertList.addAll(order.orderItemList);
@@ -77,8 +77,8 @@ global with sharing class IntegrationInboundOrder {
 		Set<String> orderExternalIdSet = new Set<String>();
 
 		for (DataIntegrationFields.OrderItemINData orderItemData : orderItemRequestList) {
-			orderItemExternalIdSet.add(orderItemData.externalId);
-			orderExternalIdSet.add(orderItemData.orderExternalId);
+			orderItemExternalIdSet.add(orderItemData.orderitemCode);
+			orderExternalIdSet.add(orderItemData.orderitemCode);
 		}
 
 		for (OrderItem orderItem : [
