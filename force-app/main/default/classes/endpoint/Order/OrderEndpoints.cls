@@ -35,15 +35,16 @@ global with sharing class OrderEndpoints {
         public Id productCode;
 
         //external id
-        public id orderitemCode;
+        public String orderitemCode;
 
-        //Order item inserted TOTVS
+        //Order item inserted from TOTVS
         public Boolean totvsItem;
 
         public Date deliveryDate;
 
         public Decimal unitPrice;
 
+        //ListPrice
         public Decimal motorPrice;
 
         public Decimal quantity;
@@ -79,29 +80,30 @@ global with sharing class OrderEndpoints {
         return ordersToUpsert;
     }
 
-    private static List<OrderItem> wrapOrderItem(List<OrderWrapper> wrappers) {
+    private static List<OrderItem> wrapOrderItem(
+            List<OrderWrapper> wrappers,
+            Map<String, Id> orderIdsByExternal) {
 
-        System.debug('wrappers: ' + wrappers);
         List<OrderItem> itemsToUpsert = new List<OrderItem>();
 
         for (OrderWrapper iOrderWrapper : wrappers) {
-            
             if (iOrderWrapper.orderItems == null) continue;
 
-            Id externalId = iOrderWrapper.orderNumber;
-
             for (OrderItemWrapper IOrderItemWrapper : iOrderWrapper.orderItems) {
-                
+
                 OrderItem tempOrderItem = new OrderItem();
 
-                tempOrderItem.ExternalId__c = externalId;
+                if (iOrderWrapper.orderNumber != null &&
+                    orderIdsByExternal.containsKey(iOrderWrapper.orderNumber)) {
+                    tempOrderItem.OrderId = orderIdsByExternal.get(iOrderWrapper.orderNumber);
+                }
 
                 if (IOrderItemWrapper.productCode != null) tempOrderItem.Product2Id = IOrderItemWrapper.productCode;
                 if (IOrderItemWrapper.orderitemCode != null) tempOrderItem.ExternalId__c = IOrderItemWrapper.orderitemCode;
                 if (IOrderItemWrapper.deliveryDate != null) tempOrderItem.EndDate = IOrderItemWrapper.deliveryDate;
                 if (IOrderItemWrapper.unitPrice != null) tempOrderItem.UnitPrice = IOrderItemWrapper.unitPrice;
-                if (IOrderItemWrapper.motorPrice != null) tempOrderItem.ListPrice= IOrderItemWrapper.motorPrice;
-                if (IOrderItemWrapper.quantity != null) tempOrderItem.Quantity= IOrderItemWrapper.quantity;
+                if (IOrderItemWrapper.motorPrice != null) tempOrderItem.ListPrice = IOrderItemWrapper.motorPrice;
+                if (IOrderItemWrapper.quantity != null) tempOrderItem.Quantity = IOrderItemWrapper.quantity;
 
                 itemsToUpsert.add(tempOrderItem);
             }
@@ -151,8 +153,15 @@ global with sharing class OrderEndpoints {
         List<Order> ordersToUpsert = wrapOrder(wrappers);
 
         if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
+       
+        Map<String, Id> orderIdsByExternal = new Map<String, Id>();
+        for (Order iOrders : ordersToUpsert) {
+            if (iOrders.ExternalId__c != null) {
+                orderIdsByExternal.put(iOrders.ExternalId__c, iOrders.Id);
+            }
+        }
 
-        List<OrderItem> itemsToUpsert = wrapOrderItem(wrappers);
+        List<OrderItem> itemsToUpsert = wrapOrderItem(wrappers, orderIdsByExternal);
     
         if (!itemsToUpsert.isEmpty()) Database.upsert(itemsToUpsert, OrderItem.ExternalId__c, true);
             
