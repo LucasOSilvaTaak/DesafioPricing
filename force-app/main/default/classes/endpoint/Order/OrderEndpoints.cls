@@ -80,9 +80,7 @@ global with sharing class OrderEndpoints {
         return ordersToUpsert;
     }
 
-    private static List<OrderItem> wrapOrderItem(
-            List<OrderWrapper> wrappers,
-            Map<String, Id> orderIdsByExternal) {
+    private static List<OrderItem> wrapOrderItem(List<OrderWrapper> wrappers,Map<String, Id> orderIdsByExternal) {
 
         List<OrderItem> itemsToUpsert = new List<OrderItem>();
 
@@ -184,66 +182,44 @@ global with sharing class OrderEndpoints {
     @HttpPut
     global static void putOrderSalesforce() {
 
-
         RestRequest request  = RestContext.request;
-        
         RestResponse response = RestContext.response;
 
-        List<Order> orderList = (List<Order>) JSON.deserialize(request.requestBody.toString(), List<Order>.class);
+        List<OrderWrapper> wrappers = (List<OrderWrapper>) JSON.deserialize(request.requestBody.toString(), List<OrderWrapper>.class);
 
-        List<Order> toUpdate = new List<Order>();
+        List<Order> ordersToUpdate = wrapOrder(wrappers);
 
-        Set<Id> orderids = new Set<Id>();
-
-        Set<String> orderExternalidsString = new Set<String> ();
-
-        for(Order iOrder : orderList){
-            
-            if (iOrder.Id != null) orderids.add(iOrder.Id);
-            
-            if(iOrder.ExternalId__c != null) orderExternalidsString.add(iOrder.ExternalId__c);
-        
+        if (!ordersToUpdate.isEmpty()) {
+            Database.upsert(ordersToUpdate, Order.ExternalId__c, true);
         }
 
-        List<Order> existingOrder = [
-            SELECT Id, ExternalId__c
-            FROM Order
-            WHERE Id IN :orderids
-            OR ExternalId__c IN :orderExternalidsString    
-        ];
-
-        for(Order iOrder : existingOrder){
-
-            for(Order iOrder2 : orderList){
-                if(iOrder.id == iOrder2.Id || iOrder.ExternalId__c == iOrder2.ExternalId__c){
-                    
-                    if(iOrder2.id == null) iOrder2.Id = iOrder.Id;
-
-                    toUpdate.add(iOrder2);
-                    break;
-                }
-
+        Map<String, Id> orderIdsByExternal = new Map<String, Id>();
+        for (Order o : ordersToUpdate) {
+            if (o.ExternalId__c != null) {
+                orderIdsByExternal.put(o.ExternalId__c, o.Id);
             }
         }
-    
-        if (toUpdate.size() > 0) update toUpdate;
+        List<OrderItem> itemsToUpdate = wrapOrderItem(wrappers, orderIdsByExternal);
 
+        if (!itemsToUpdate.isEmpty()) {
+            Database.upsert(itemsToUpdate, OrderItem.ExternalId__c, true);
+        }
 
-        Map<String, Object> responseBody = new Map<String, Object>();
-
-        responseBody.put('status', 'success');
-
+        Map<String, Object> responseBody = responseBody(ordersToUpdate, itemsToUpdate);
         String jsonResponse = JSON.serializePretty(responseBody);
 
-        ApiLog__c log = new ApiLog__c(Request__c = request.requestBody.toString() , Response__c = jsonResponse, From__c = 'TOTVS', Endpoint__c = 'ORDER');
-        Insert log;
+        insert new ApiLog__c(
+            Request__c  = request.requestBody.toString(),
+            Response__c = jsonResponse,
+            From__c     = 'TOTVS',
+            Endpoint__c = 'ORDER'
+        );
 
         response.statusCode = 200;
         response.addHeader('Content-Type', 'application/json');
-
         response.responseBody = Blob.valueOf(jsonResponse);
-  
     }
+
 
     @HttpDelete
     global static void deleteOrderSalesforce() {
@@ -253,10 +229,17 @@ global with sharing class OrderEndpoints {
         
         RestResponse response = RestContext.response;
 
-        List<Order> orderList = (List<Order>) JSON.deserialize(request.requestBody.toString(), List<Order>.class);
-    
-        if (orderList.size() > 0) delete orderList;
+        List<Id> orderItemListIds = (List<Id>) JSON.deserialize(request.requestBody.toString(), List<Id>.class);
+        Set <Id> orderItemListIdsSet = new Set<Id>(orderItemListIds);
 
+
+        List<OrderItem> orderList = [SELECT Id, ExternalId__c, isDeletedExternal__c FROM OrderItem WHERE Id IN :orderItemListIdsSet];
+    
+        for(OrderItem IorderItem : orderList){
+            IorderItem.isDeletedExternal__c = true;
+        }
+
+        Update orderList;
 
         Map<String, Object> responseBody = new Map<String, Object>();
 
