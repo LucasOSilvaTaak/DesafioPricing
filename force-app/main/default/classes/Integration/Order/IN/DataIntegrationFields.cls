@@ -23,8 +23,8 @@ global with sharing class DataIntegrationFields {
 		public String conditionCode; //Payment conditiom
 		public Date effectiveDate;
 		public String freightType;
-		public Id distributionCenter;
-		public String orderNumber;
+		public String distributionCenter;
+		public String orderNumber; //Order externalId
 		public Date deliveryDate;
 		public String deliveryDateERP; //DeliveryDate on ERP
 		public String status;
@@ -36,9 +36,9 @@ global with sharing class DataIntegrationFields {
 		public Order deserialize() {
 			return new Order(
 				Id								= this.id,
-				PaymentCondition__c				= this.conditionCode,
+				PaymentCondition__r				= new PaymentCondition__c(ExternalId__c = this.conditionCode),
 				EffectiveDate					= this.effectiveDate,
-				DistributionCenter__c			= this.distributionCenter,
+				DistributionCenter__r			= new DistributionCenter__c(ExternalId__c = this.distributionCenter),
 				ExternalId__c					= this.orderNumber,
 				DeliveryDate__c					= this.deliveryDate,
 				Status							= this.status,
@@ -46,7 +46,7 @@ global with sharing class DataIntegrationFields {
 				FreightType__c					= this.freightType,
 				Account							= new Account(ExternalId__c = this.clienteCode),
 				RepresentativeOrderNumber__c	= this.representativeOrderNumber,
-				AccountAddress__c 				= this.accountAddress
+				AccountAddress__r				= new AccountAddress__c(ExternalId__c = this.accountAddress)
 
 			);
 		}
@@ -54,7 +54,6 @@ global with sharing class DataIntegrationFields {
 		public List<String> getRequiredFields() {
 			return new List<String>{
 				'ExternalId__c',
-				'PaymentCondition__c',
 				'EffectiveDate',
 				'Status'
 			};
@@ -62,7 +61,10 @@ global with sharing class DataIntegrationFields {
 		public List<String> getRequiredLookups() {
 			return new List<String>{
 				'AccountId',
-				'DistributionCenter__c'
+				'DistributionCenter__c',
+				'AccountAddress__c',
+				'RepresentativeOrderNumber__c',
+				'PaymentCondition__c'
 
 			};
 		}
@@ -87,7 +89,7 @@ global with sharing class DataIntegrationFields {
 		public Decimal motorPrice; //ListPrice
 		public Decimal quantity;
 		public String status;
-		public String OrderExternalId;
+		public String orderExternalId;
 
 		public OrderItem deserialize() {
 			OrderItem orderItem = new OrderItem(
@@ -108,9 +110,9 @@ global with sharing class DataIntegrationFields {
 
 		public List<String> getRequiredFields() {
 			return new List<String>{
+				'ExternalId__c',
 				'UnitPrice',
 				'Quantity',
-				'ExternalId__c',
 				'ListPrice'
 			};
 		}
