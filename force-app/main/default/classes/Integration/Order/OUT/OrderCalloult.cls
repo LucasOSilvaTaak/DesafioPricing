@@ -1,99 +1,98 @@
-public with sharing class OrderCalloult {
+global with sharing class OrderCalloult {
 
+    public static CalloutIntegrationUtils.CalloutResponse processIntegration(Id orderId){
 
-	public static IntegrationUtils.CalloutResponse processIntegration(Id orderId){
+        Order parentOrder = [SELECT Id, ExternalId__c FROM Order WHERE Id = :orderId];
+        
+        List<Order> allOrders = new List<Order>{parentOrder};
+        
+        CalloutIntegrationUtils.CalloutResponse calloutResponse = sendOrder(allOrders);
 
-		Order parentOrder = [SELECT Id FROM Order WHERE Id = :orderId];
+        if (calloutResponse.success) {
+            
+            ResponseParameters resp = (ResponseParameters) calloutResponse.parsedResponse;
+            
+            Map<String, Order> orderMap = new Map<String, Order>();
+
+            for (Order order : allOrders) {
+                orderMap.put(order.ExternalId__c, order);
+            }
+
+            List<Order> AccountList = new List<Order>();
+
+            for (ResponseParametersWrapper respWrapper : resp.responses) {
+                if (orderMap.containsKey(respWrapper.SalesforceCode)) {
+                    Order order = orderMap.get(respWrapper.SalesforceCode);
+                    if (respWrapper.Error == 'TRUE') {
+                        //Error Treatments
+                    } else {
+                        //Success Treatments
+                    }
+                    
+                    AccountList.add(order);
+                }
+            }
+
+            if (!AccountList.isEmpty()) {
+                update AccountList;
+            }
+        }
+        
+        return calloutResponse;
+    }
+
+    public static CalloutIntegrationUtils.CalloutResponse sendOrder(List<Order> orders) {
+            
+        List<RequestParameters> request = new List<RequestParameters>();
 		
-		List<Order> allOrders = new List<Order>{parentOrder};
-		
-		IntegrationUtils.CalloutResponse calloutResponse = sendOrder(allOrders);
+        for (Order ord : orders) {
+            request.add(new RequestParameters(ord));
+        }
 
-		if (calloutResponse.success) {
-			
-			ResponseParameters resp = (ResponseParameters) calloutResponse.parsedResponse;
-			
-			Map<String, Order> orderMap = new Map<String, Order>();
+        String payload = JSON.serialize(request);
+        
+        String accessToken = '';
+        
+        String endPoint = (!Test.isRunningTest() ? 
+            'callout:HANA_Oncoprod/PreConta_SFOut' : 
+            'http://callout.My_Named_Credential.com/some/path');
 
-			for (Order order : allOrders) {
-				//ExternalKey
-				orderMap.put(order.ExternalId__c, order);
-			}
+        Map<String, String> headersMap = new Map<String, String>();
+        headersMap.put('Content-type', 'application/json');
+        headersMap.put('Authorization', 'Bearer ' + accessToken);
+        
+        CalloutIntegrationUtils.RequestResponseObject responseObject = CalloutIntegrationUtils.executeCallout(endPoint, payload, headersMap);
 
-			List<Order> AccountList = new List<Order>();
+        if (responseObject.success) {
 
-			for (ResponseParametersWrapper respWrapper : resp.responses) {
-				if (orderMap.containsKey(respWrapper.chaveSF)) {
-					Order order = orderMap.get(respWrapper.chaveSF);
-					if (respWrapper.erro == 'TRUE') {
-						//Error Treatments
-					} else {
-						//Success Treatments\
-					}
-					
-					AccountList.add(order);
-				}
-			}
+            HttpResponse response = responseObject.response;
 
-			if (!AccountList.isEmpty()) {
-				update AccountList;
-			}
-		}
-		
-		return calloutResponse;
-	}
-	public static IntegrationUtils.CalloutResponse sendOrder(List<Order> orders) {
-			
-		List<RequestParameters> request = new List<RequestParameters>();
+            try {
+                List<ResponseParametersWrapper> responses = 
+                    (List<ResponseParametersWrapper>) JSON.deserialize(response.getBody(), List<ResponseParametersWrapper>.class);
 
-		for (Order ord : orders) {
-			request.add(new RequestParameters(ord));
-		}
+                return new CalloutIntegrationUtils.CalloutResponse(new ResponseParameters(responses));
 
-		String payload = JSON.serialize(request);
-		
-		//Metodo para busca de Access Token, depende de cada projeto, podendo estar presente dentro de uma custom settings ou relacionado com outra requisição.
-		String accessToken = '';
-		
-		//Path geralmente cadastrado dentro de ua customSettings
-		String endPoint = (!Test.isRunningTest() ? 'callout:HANA_Oncoprod/PreConta_SFOut' : 'http://callout.My_Named_Credential.com/some/path');
-		Map<String, String> headersMap = new Map<String, String>();
-		headersMap.put('Content-type', 'application/json');
-		headersMap.put('Authorization', 'Bearer ' + accessToken);
-		
-		IntegrationUtils.RequestResponseObject responseObject = IntegrationUtils.executeCallout(endPoint, payload, headersMap);
-
-		if (responseObject.success) {
-
-			HttpResponse response = responseObject.response;
-
-			IntegrationUtils.WSLog('Conta', 'OUTBOUND', response.getBody(), payload, false);
-			try {
-
-				List<ResponseParametersWrapper> responses = (List<ResponseParametersWrapper>) JSON.deserialize(response.getBody(), List<ResponseParametersWrapper>.class);
-				return new IntegrationUtils.CalloutResponse(new ResponseParameters(responses));
-			} catch (Exception e) {
-				
-				String defaultErrorMessage = 'Malformatted HTTP Response Exception: ' + e.getMessage();
-
-				return new IntegrationUtils.CalloutResponse(defaultErrorMessage);
-			}
-		} else {
-			IntegrationUtils.WSLog('Ordem', 'OUTBOUND', responseObject.exceptionObject.getMessage(), payload, true);
-			return new IntegrationUtils.CalloutResponse(responseObject.exceptionObject.getMessage());
-		}
-	}
+            } catch (Exception e) {
+                
+                String defaultErrorMessage = 'Malformatted HTTP Response Exception: ' + e.getMessage();
+                return new CalloutIntegrationUtils.CalloutResponse(defaultErrorMessage);
+            }
+        } else {
+            return new CalloutIntegrationUtils.CalloutResponse(responseObject.exceptionObject.getMessage());
+        }
+    }
 
 	public class RequestParameters {
 		//Account Fields
-		public String AccountNumber;
+		public String orderNumber;
 		
-		public RequestParameters(Account acc) {
-			this.AccountNumber = acc.ExternalId__c;		
+		public RequestParameters(Order order) {
+			this.orderNumber = order.ExternalId__c;		
 		}
 	}
 
-	public class ResponseParameters {
+	public class ResponseParameters implements CalloutIntegrationUtils.CalloutResponseParsedData{
 		public List<ResponseParametersWrapper> responses;
 
 		public ResponseParameters(List<ResponseParametersWrapper> responses) {
@@ -107,4 +106,7 @@ public with sharing class OrderCalloult {
 		public String SalesforceCode;
 		public String ERPCode;
 	}
+
+
+
 }
