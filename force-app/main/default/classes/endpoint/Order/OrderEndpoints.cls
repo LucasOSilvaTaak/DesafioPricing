@@ -6,14 +6,14 @@ global with sharing class OrderEndpoints {
         public String clientCode;
         
         //payment condition
-        public String conditionCode;
+        public String paymentCode;
 
         public Date effectiveDate;
 
         public Id distributionCenter;
 
         //ExternalId
-        public string orderNumber;
+        public string orderCode;
 
         public Date deliveryDate;
 
@@ -65,11 +65,11 @@ global with sharing class OrderEndpoints {
 
                 tempOrder.AccountAddress__r = new AccountAddress__c(ExternalId__c = iOrderWrapper.clientCode);
             }
-            if (iOrderWrapper.conditionCode != null) tempOrder.PaymentCondition__c = iOrderWrapper.conditionCode;
+            if (iOrderWrapper.paymentCode != null) tempOrder.PaymentCondition__c = iOrderWrapper.paymentCode;
             if (iOrderWrapper.effectiveDate != null) tempOrder.EffectiveDate = iOrderWrapper.effectiveDate;
             if (iOrderWrapper.freightType != null) tempOrder.FreightType__c = iOrderWrapper.freightType;
             if (iOrderWrapper.distributionCenter != null) tempOrder.DistributionCenter__c = iOrderWrapper.distributionCenter;
-            if (iOrderWrapper.orderNumber != null) tempOrder.ExternalId__c = iOrderWrapper.orderNumber;
+            if (iOrderWrapper.orderCode != null) tempOrder.ExternalId__c = iOrderWrapper.orderCode;
             if (iOrderWrapper.deliveryDate != null) tempOrder.DeliveryDate__c = iOrderWrapper.deliveryDate;
             if (iOrderWrapper.obs != null) tempOrder.Observation__c = iOrderWrapper.obs;   
             if (iOrderWrapper.status != null) tempOrder.Status = iOrderWrapper.status;   
@@ -91,9 +91,9 @@ global with sharing class OrderEndpoints {
 
                 OrderItem tempOrderItem = new OrderItem();
 
-                if (iOrderWrapper.orderNumber != null &&
-                    orderIdsByExternal.containsKey(iOrderWrapper.orderNumber)) {
-                    tempOrderItem.OrderId = orderIdsByExternal.get(iOrderWrapper.orderNumber);
+                if (iOrderWrapper.orderCode != null &&
+                    orderIdsByExternal.containsKey(iOrderWrapper.orderCode)) {
+                    tempOrderItem.OrderId = orderIdsByExternal.get(iOrderWrapper.orderCode);
                 }
 
                 if (IOrderItemWrapper.productCode != null) tempOrderItem.Product2Id = IOrderItemWrapper.productCode;

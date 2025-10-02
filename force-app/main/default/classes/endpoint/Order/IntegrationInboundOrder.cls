@@ -1,19 +1,19 @@
 @RestResource(urlMapping='/upsertOrder/*')
 global with sharing class IntegrationInboundOrder {
 	@HttpPost
-	global static List<DataIntegrationFields.Response> upsertOrder(List<DataIntegrationFields.OrderINData> orderRequestList) {
-		System.debug('orderRequestList => ' + orderRequestList);
+	global static List<DataIntegrationFields.Response> upsertOrder(List<DataIntegrationFields.OrderINData> request) {
+		System.debug('orderRequestList => ' + request);
 		Boolean hasError = false;
 		Boolean hasDeleted = false;
 		String orderExternalIds = '';
 		List<Order> orderToUpsertList = new List<Order>();
 		Map<String, String> orderExternalIdToOrderItem = new Map<String, String>();
 		List<DataIntegrationFields.ResponseParent> orderResponseList = new List<DataIntegrationFields.ResponseParent>();
-		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = fillOrderExternalIdInOrderItem(orderRequestList, orderExternalIdToOrderItem);
-		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList = new Map<String, List<DataIntegrationFields.Response>>();
+		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = fillOrderExternalIdInOrderItem(request, orderExternalIdToOrderItem);
+		Map<String, List<DataIntegrationFields.Response>> orderItems = new Map<String, List<DataIntegrationFields.Response>>();
 
 		// Converting template to object list and validating required fields
-		orderExternalIds = FactoryDataIntegration.convertSObject(new Order(), 'IN', orderRequestList, orderResponseList, orderToUpsertList);
+		orderExternalIds = FactoryDataIntegration.convertSObject(new Order(), 'IN', request, orderResponseList, orderToUpsertList);
 		// Upserting records (Order)
 		hasError = IntegrationUtils.upsertRecords(
 			Database.upsert(orderToUpsertList, Order.ExternalId__c, false), orderResponseList, orderToUpsertList, Order.ExternalId__c
@@ -22,13 +22,13 @@ global with sharing class IntegrationInboundOrder {
 		// Mark OrderItem as deleted if not received
 		hasDeleted = deletedOrderItem(orderItemToUpsertList, false); // true => Apaga o OrderItem, false => Marca o OrderItem como deletado (Campo Boolean)
 		// Upserting OrderItems
-		if (!orderItemToUpsertList.isEmpty()) orderItemResponseList.putAll(upsertOrderItem(orderItemToUpsertList, orderExternalIdToOrderItem, hasDeleted));
+		if (!orderItemToUpsertList.isEmpty()) orderItems.putAll(upsertOrderItem(orderItemToUpsertList, orderExternalIdToOrderItem, hasDeleted));
 		// Fill response list with items
-		if (!orderItemResponseList.isEmpty()) hasError = fillResponseList(orderResponseList, orderItemResponseList);
+		if (!orderItems.isEmpty()) hasError = fillResponseList(orderResponseList, orderItems);
 
 		String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/upsertOrder/*';
 		String integrationLogId = IntegrationLog.createLog(
-			'Order', orderExternalIds, 'Inbound', JSON.serialize(orderRequestList), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
+			'Order', orderExternalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
 		);
 		if (integrationLogId != null) updateOrderWithIntegrationLogId(orderToUpsertList, integrationLogId, 'IN');
 
@@ -41,14 +41,14 @@ global with sharing class IntegrationInboundOrder {
 		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = new List<DataIntegrationFields.OrderItemINData>();
 
 		for (DataIntegrationFields.OrderINData order : orderRequestList){
-			if (order.orderItemList != null) {
+			if (order.orderItems != null) {
 				// Putting the Order's ExternalId parameter in the OrderItem
-				for (DataIntegrationFields.OrderItemINData orderItem : order.orderItemList) {
-					orderExternalIdToOrderItem.put(orderItem.OrderExternalId, order.orderNumber);
-					orderItem.OrderExternalId = order.orderNumber;
+				for (DataIntegrationFields.OrderItemINData orderItem : order.orderItems) {
+					orderExternalIdToOrderItem.put(orderItem.orderCode, order.orderCode);
+					orderItem.orderCode = order.orderCode;
 				}
 
-				orderItemToUpsertList.addAll(order.orderItemList);
+				orderItemToUpsertList.addAll(order.orderItems);
 			}
 		}
 
@@ -77,8 +77,8 @@ global with sharing class IntegrationInboundOrder {
 		Set<String> orderExternalIdSet = new Set<String>();
 
 		for (DataIntegrationFields.OrderItemINData orderItemData : orderItemRequestList) {
-			orderItemExternalIdSet.add(orderItemData.orderitemCode);
-			orderExternalIdSet.add(orderItemData.orderitemCode);
+			orderItemExternalIdSet.add(orderItemData.itemCode);
+			orderExternalIdSet.add(orderItemData.itemCode);
 		}
 
 		for (OrderItem orderItem : [

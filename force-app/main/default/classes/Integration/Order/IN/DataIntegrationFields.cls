@@ -18,35 +18,31 @@ global with sharing class DataIntegrationFields {
 
 	global class OrderINData implements FieldData { // extends OrderBase
 		public String id;
-		public String clienteCode; //Order Account ExternalId
-		public String accountAddress; //Order Account ExternalId
-		public String conditionCode; //Payment conditiom
+		public String accountCode; //Order Account ExternalId
+		public String orderCode; //Order Account ExternalId
+		public String paymentCode; //Payment conditiom
 		public Date effectiveDate;
+		public String addressCode;
 		public String freightType;
-		public String distributionCenter;
-		public String orderNumber; //Order externalId
+		public String distributionCenterCode;
 		public Date deliveryDate;
-		public String deliveryDateERP; //DeliveryDate on ERP
 		public String status;
 		public String obs;
-		public String priority;//priority *dont have
-		public String representativeOrderNumber;//priority *dont have
-		public List<OrderItemINData> orderItemList {get; set;}
+		public List<OrderItemINData> orderItems {get; set;}
 
 		public Order deserialize() {
 			return new Order(
 				Id								= this.id,
-				PaymentCondition__r				= new PaymentCondition__c(ExternalId__c = this.conditionCode),
+				PaymentCondition__r				= new PaymentCondition__c(ExternalId__c = this.paymentCode),
 				EffectiveDate					= this.effectiveDate,
-				DistributionCenter__r			= new DistributionCenter__c(ExternalId__c = this.distributionCenter),
-				ExternalId__c					= this.orderNumber,
+				DistributionCenter__r			= new DistributionCenter__c(ExternalId__c = this.distributionCenterCode),
+				ExternalId__c					= this.orderCode,
 				DeliveryDate__c					= this.deliveryDate,
 				Status							= this.status,
 				Observation__c					= this.obs,
 				FreightType__c					= this.freightType,
-				Account							= new Account(ExternalId__c = this.clienteCode),
-				RepresentativeOrderNumber__c	= this.representativeOrderNumber,
-				AccountAddress__r				= new AccountAddress__c(ExternalId__c = this.accountAddress)
+				Account							= new Account(ExternalId__c = this.accountCode),
+				AccountAddress__r				= new AccountAddress__c(ExternalId__c = this.addressCode)
 
 			);
 		}
@@ -63,7 +59,6 @@ global with sharing class DataIntegrationFields {
 				'AccountId',
 				'DistributionCenter__c',
 				'AccountAddress__c',
-				'RepresentativeOrderNumber__c',
 				'PaymentCondition__c'
 
 			};
@@ -76,31 +71,29 @@ global with sharing class DataIntegrationFields {
 			return 'Id';
 		}
 		public String getExternalId() {
-			return this.orderNumber;
+			return this.orderCode;
 		}
 	}
 	global class OrderItemINData implements FieldDataChild { // extends OrderItemBase
 		public String id;
 		public String productCode; //Product Id
-		public String orderitemCode; //External ID
+		public String itemCode; //External ID
 		public Boolean totvsItem; //If it is a totvitem
-		public Date deliveryDate;
 		public Decimal unitPrice;
-		public Decimal motorPrice; //ListPrice
+		public Decimal listPrice; //ListPrice
 		public Decimal quantity;
-		public String status;
-		public String orderExternalId;
+		public String orderCode;
 
 		public OrderItem deserialize() {
 			OrderItem orderItem = new OrderItem(
-				ExternalId__c	= this.orderitemCode,
+				ExternalId__c	= this.itemCode,
 				UnitPrice		= this.unitPrice,
-				ListPrice		= this.motorPrice,
+				ListPrice		= this.listPrice,
 				Quantity		= this.quantity
 			);
 
 			if (this.id == null || this.id == '') {
-				orderItem.Order				= new Order(ExternalId__c = this.OrderExternalId);
+				orderItem.Order				= new Order(ExternalId__c = this.OrderCode);
 				orderItem.Product2			= new Product2(ExternalId__c = this.productCode);
 			}
 			else orderItem.Id = this.id;
@@ -133,7 +126,7 @@ global with sharing class DataIntegrationFields {
 			return 'OrderId';
 		}
 		public String getParentKey() {
-			return this.orderitemCode;
+			return this.itemCode;
 		}
 	}
 
@@ -143,6 +136,7 @@ global with sharing class DataIntegrationFields {
 		public String sobjectType;
 		public Boolean hasError;
 		public String errorMessage;
+		
 
 		public void success(String salesforceId, String externalId, String sobjectType){
 			this.salesforceId	= salesforceId;

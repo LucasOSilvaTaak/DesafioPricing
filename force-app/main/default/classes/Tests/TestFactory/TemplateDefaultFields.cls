@@ -98,8 +98,8 @@ public with sharing class TemplateDefaultFields {
 				'EffectiveDate' => Date.today().addDays(1),
 				'Status' => 'Draft',
 				'FreightType__c' => 'CIF',
-				'DeliveryDate__c' => Date.today().addDays(5),
-				'RepresentativeOrderNumber__c' => 'RepresentativeOrderNumber ' + String.valueOf(countSObjectCreated) 
+				'DeliveryDate__c' => Date.today().addDays(5)
+				//'RepresentativeOrderNumber__c' => 'RepresentativeOrderNumber ' + String.valueOf(countSObjectCreated) 
 			};
 		}
 	}

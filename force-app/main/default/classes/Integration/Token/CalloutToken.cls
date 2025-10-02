@@ -23,12 +23,22 @@ public with sharing class CalloutToken {
             Id jobId = Metadata.Operations.enqueueDeployment(container, new SimpleDeployCallback());
         }
     }
+
+    public static String retrieveToken() {
+        Token__mdt tokenRecord = [
+            SELECT Value__c
+            FROM Token__mdt
+            WHERE DeveloperName = 'Default'
+            LIMIT 1
+        ];
+        return tokenRecord.Value__c;
+    
+    }
     
     public CalloutIntegrationUtils.CalloutResponse getToken() {
         String url = '';
-        String clientId = '';
+        String clientId = '3';
         String clientSecret = '';
-
         String grantType = 'password';
         String password = 'diogos12mNgSEsVp9Xn7whdPudhVXNJtB';
         String username = 'apidiogo.santos@taak.com.br';
