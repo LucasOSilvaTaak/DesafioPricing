@@ -1,13 +1,13 @@
 global with sharing class OrderCalloult {
 
-    public static CalloutIntegrationUtils.CalloutResponse processIntegration(Id orderId){
+    public static CalloutIntegrationUtils.CalloutResponse processIntegration(List<Id> orderIds){
 
         Order parentOrder = [
             SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
                 AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, RepresentativeOrderNumber__c, 
                 DeliveryDate__c, Status, Observation__c,
                 (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice FROM OrderItems)
-            FROM Order WHERE Id = :orderId
+            FROM Order WHERE Id in :orderIds
         ];
         
         List<Order> allOrders = new List<Order>{parentOrder};
@@ -43,6 +43,9 @@ global with sharing class OrderCalloult {
                 update AccountList;
             }
         }
+
+        
+
         
         return calloutResponse;
     }
@@ -64,6 +67,7 @@ global with sharing class OrderCalloult {
         
         String accessToken = CalloutToken.retrieveToken();
         
+        //String endPoint = 'https://empathetic-impala-m56ghx-dev-ed.trailblaze.my.salesforce.com/services/apexrest/upsertOrder/';
         String endPoint = 'https://curious-bear-cnl6iw-dev-ed.trailblaze.my.salesforce.com/services/apexrest/upsertOrder/';
 
         Map<String, String> headersMap = new Map<String, String>();
@@ -73,6 +77,19 @@ global with sharing class OrderCalloult {
         System.debug(payload);
         
         CalloutIntegrationUtils.RequestResponseObject responseObject = CalloutIntegrationUtils.executeCallout(endPoint, payload, headersMap);
+        
+
+        //Precisa testar o log
+        String externalIdList = '';
+        
+        for (Order iOrder : orders) {
+            if (iOrder.ExternalId__c != null) {
+                externalIdList += (String.isBlank(externalIdList) ? '' : ',') + iOrder.ExternalId__c;
+            }
+        }
+
+
+        IntegrationLog.createLog('Order', externalIdList, 'Outbound', payload, responseObject.response.getBody(), endPoint, !responseObject.success, false);
 
         if (responseObject.success) {
 
@@ -115,10 +132,10 @@ global with sharing class OrderCalloult {
             effectiveDate = order.EffectiveDate;
             addressCode = order.AccountAddress__r.ExternalId__c;
             freightType = order.FreightType__c;
-            distributionCenterCode = order.DistributionCenter__r.ExternalId__c;p
+            distributionCenterCode = order.DistributionCenter__r.ExternalId__c;
             deliveryDate = order.DeliveryDate__c;
-            status = order.Status;
             obs = order.Observation__c;
+            status = order.Status;
             
             orderItems = new List<OrderItemWrapper>();
             for(OrderItem orderItem : order.OrderItems) {

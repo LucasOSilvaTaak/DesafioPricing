@@ -26,7 +26,7 @@ global with sharing class DataIntegrationFields {
 		public String freightType;
 		public String distributionCenterCode;
 		public Date deliveryDate;
-		public String status;
+		public String status = 'Activated';
 		public String obs;
 		public List<OrderItemINData> orderItems {get; set;}
 
