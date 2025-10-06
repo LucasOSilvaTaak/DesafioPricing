@@ -1,6 +1,6 @@
 public with sharing class CalloutToken {
     
-    public void createToken() {
+    public static void createToken() {
 
         CalloutIntegrationUtils.CalloutResponse calloutResponse = getToken();
 
@@ -25,6 +25,8 @@ public with sharing class CalloutToken {
     }
 
     public static String retrieveToken() {
+        createToken();
+        
         Token__mdt tokenRecord = [
             SELECT Value__c
             FROM Token__mdt
@@ -35,15 +37,10 @@ public with sharing class CalloutToken {
     
     }
     
-    public CalloutIntegrationUtils.CalloutResponse getToken() {
-        String url = '';
-        String clientId = '3';
-        String clientSecret = '';
-        String grantType = 'password';
-        String password = 'diogos12mNgSEsVp9Xn7whdPudhVXNJtB';
-        String username = 'apidiogo.santos@taak.com.br';
+    public static CalloutIntegrationUtils.CalloutResponse getToken() {
+
         
-        String endpoint = url + '/services/oauth2/token?grant_type=' + grantType + '&client_id=' + clientId + '&client_secret=' + clientSecret + '&username=' + username + '&password=' + password;
+        String endpoint = tokenUrl();
 
         Map<String, String> headersMap = new Map<String, String>();
         headersMap.put('Content-type', 'application/json');
@@ -74,8 +71,21 @@ public with sharing class CalloutToken {
         public String api_instance_url;
     }
 
-public class SimpleDeployCallback implements Metadata.DeployCallback {
-    public void handleResult(Metadata.DeployResult result, Metadata.DeployCallbackContext context) {
+    public class SimpleDeployCallback implements Metadata.DeployCallback {
+        public void handleResult(Metadata.DeployResult result, Metadata.DeployCallbackContext context) {
+        }
     }
-}
+
+    public static string tokenUrl(){
+        Secrets__mdt secret = [
+            SELECT ClienteId__c, ClientSecret__c, GrantType__c, Password__c, Username__c, Url__c
+            FROM 
+            Secrets__mdt
+            WHERE DeveloperName = 'Default'
+            LIMIT 1
+        ];
+
+        return secret.Url__c + '/services/oauth2/token?grant_type=' + secret.GrantType__c + '&client_id='
+            + secret.ClienteId__c + '&client_secret=' + secret.ClientSecret__c + '&username=' + secret.Username__c + '&password=' + secret.Password__c;
+    }
 }
