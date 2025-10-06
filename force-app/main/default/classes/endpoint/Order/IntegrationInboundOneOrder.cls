@@ -39,6 +39,7 @@ global with sharing class IntegrationInboundOneOrder {
 
 	public static List<DataIntegrationFields.OrderItemINData> fillOrderExternalIdInOrderItem(List<DataIntegrationFields.OrderINData> orderRequestList,
 																							Map<String, String> orderExternalIdToOrderItem) {
+																								
 		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = new List<DataIntegrationFields.OrderItemINData>();
 
 		for (DataIntegrationFields.OrderINData order : orderRequestList){
