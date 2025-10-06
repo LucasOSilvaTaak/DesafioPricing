@@ -7,20 +7,23 @@ global with sharing class OrderEndpoints {
 
         for(Wrappers.OrderWrapper iOrder : orders){
 
-            if (iOrder.orderItems != null) continue;
+            if (iOrder.orderItems == null) continue;
             
             for(Wrappers.OrderItemWrapper iOrderItem : iOrder.orderItems){
                 
                 iOrderItem.orderCode = iOrder.orderCode;
 
-                itemsToUpsert.add(iOrderItem.deserialize());
 
+
+                itemsToUpsert.add(iOrderItem.deserialize());
+                
             }
         
         }
 
 
         return itemsToUpsert;
+
     }
     
 
@@ -32,8 +35,9 @@ global with sharing class OrderEndpoints {
         String orderExternalIds = '';
 
         List<Order> ordersToUpsert = new List<Order>();
+    
         List<OrderItem> itensToUpsert = new List<OrderItem>();
-        
+    
         List<String> externalIds = new List<String>();
 
         List<OrderResponse> orderResponseList = new List<OrderResponse>();
@@ -41,6 +45,7 @@ global with sharing class OrderEndpoints {
         String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/order/*';
 
         for (Wrappers.OrderWrapper iOrder : request) {
+
             externalIds.add(iOrder.orderCode);
             ordersToUpsert.add(iOrder.deserialize());
 
@@ -49,9 +54,9 @@ global with sharing class OrderEndpoints {
         Map<String, String> orderExternalIdToOrderItem = new Map<String, String>();
         
         if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
-        
+
         itensToUpsert = fillOrderItem(request);
-        
+
         if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
 
         for(Order iOrder : ordersToUpsert){
@@ -60,12 +65,27 @@ global with sharing class OrderEndpoints {
             
             tempResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
             
+            for(OrderItem iOrderItem : itensToUpsert){
+
+                if(iOrderItem.OrderId == iOrder.id){
+                    itemResponse tempItemResponse = new itemResponse();
+                    tempItemResponse.success(iOrderItem.Id, iOrderItem.ExternalId__c, iOrderItem.getSObjectType().getDescribe().getName());
+                    tempResponse.itens.add(tempItemResponse);
+                }
+            }
+
             orderResponseList.add(tempResponse);
 
         }
+
+        for(String str : externalIds){
+            orderExternalIds += str + ',';
+        }
+
+        orderExternalIds = orderExternalIds.removeEnd(',');
         
         String integrationLogId = IntegrationLog.createLog(
-            'Order', externalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
+            'Order', orderExternalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
             
         );
             
@@ -74,7 +94,7 @@ global with sharing class OrderEndpoints {
 
    
 	global class OrderResponse extends Response{
-        List<OrderItem> itens = new List<OrderItem>();
+        List<itemResponse> itens = new List<itemResponse>();
 	}
 
     global class itemResponse extends Response{

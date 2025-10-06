@@ -49,12 +49,12 @@ global with sharing class Wrappers {
 			OrderItem orderItem = new OrderItem(
 				ExternalId__c	= this.itemCode,
 				UnitPrice		= this.unitPrice,
-				ListPrice		= this.listPrice,
 				Quantity		= this.quantity
 			);
 
 			if (this.id == null || this.id == '') {
 				orderItem.Order				= new Order(ExternalId__c = this.OrderCode);
+				ListPrice					= this.listPrice;
 				orderItem.Product2			= new Product2(ExternalId__c = this.productCode);
 			}
 			else orderItem.Id = this.id;
