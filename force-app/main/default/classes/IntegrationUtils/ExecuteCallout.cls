@@ -21,14 +21,20 @@ public with sharing class ExecuteCallout {
         try{
 
             response = (new Http()).send(request);
+            
+            if(response.getStatus()  != 'OK'){
+            
+                throw new CalloutException('Response Exception: ' + response.getStatus());
+            
+            }
+            
             RequestResponse outResponse = new RequestResponse(response);
             return outResponse;
             
         }
         catch (Exception e){
             
-            RequestResponse outResponse = new RequestResponse(e);
-            
+            RequestResponse outResponse = new RequestResponse(response,e);
             return outResponse;
         
         }

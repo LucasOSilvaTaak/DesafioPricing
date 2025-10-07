@@ -1,6 +1,6 @@
 public with sharing class IntegrationLog {
 	public static Id createLog(String integrationName, String externalIdList, String recordTypeName, String payloadIN, String payloadOUT,
-								String endpoint, Boolean hasAnyErrors, Boolean hasDeleted){
+								String endpoint, Boolean hasAnyErrors, Boolean hasDeleted, String errorMassage){
 		System.debug('');
 		// Se os dados forem maiores que 100.000 TRUE, se não FALSE
 		Boolean attachmentIN = (payloadIN.length() > 130000);
@@ -15,7 +15,7 @@ public with sharing class IntegrationLog {
 
 		IntegrationLog__c log = createIntegrationLogRecord(
 			integrationName, externalIdList, recordTypeId, recordTypeName, attachmentIN, attachmentOUT, payloadIN, payloadOUT,
-			endpoint, hasAnyErrors, datetimeNow, hasDeleted
+			endpoint, hasAnyErrors, datetimeNow, hasDeleted, errorMassage
 		);
 
 		try { // Insere o log de integração e cria anexo se for necessario
@@ -36,7 +36,7 @@ public with sharing class IntegrationLog {
 
 	public static IntegrationLog__c createIntegrationLogRecord(String integrationName, String externalIdList, Id recordTypeId,
 									String recordTypeName, Boolean attachmentIN, Boolean attachmentOUT, String payloadIN,
-									String payloadOUT, String endpoint, Boolean hasAnyErrors, Datetime datetimeNow, Boolean hasDeleted) {
+									String payloadOUT, String endpoint, Boolean hasAnyErrors, Datetime datetimeNow, Boolean hasDeleted, String errorMassage) {
 		return new IntegrationLog__c(
 			Name = integrationName + ' ' + recordTypeName,
 			Endpoint__c = endpoint,
@@ -47,7 +47,7 @@ public with sharing class IntegrationLog {
 			PayloadOUT__c = (attachmentOUT ? '' : payloadOUT),
 			ExecutionDate__c = datetimeNow,
 			Status__c = (hasAnyErrors ? 'Error' : 'Success'),
-			ErrorMessage__c = '',
+			ErrorMessage__c = ErrorMassage,
 			HasDeleted__c = hasDeleted
 		);
 	}

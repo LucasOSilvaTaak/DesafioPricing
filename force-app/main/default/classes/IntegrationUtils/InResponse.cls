@@ -1,4 +1,4 @@
-global with sharing virtual class Response{
+global with sharing virtual class InResponse{
 
     public String salesforceId;
     public String externalCode;

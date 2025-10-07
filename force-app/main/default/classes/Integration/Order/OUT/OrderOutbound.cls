@@ -42,15 +42,16 @@ global with sharing class OrderOutbound {
         RequestResponse requestResponse = ExecuteCallout.executeCallout(endPoint, payload, headersMap);
         
         OutResponse outResponse;
+
         
         
         
-        if(requestResponse.success ){
+        if(requestResponse.exceptionObject == null || requestResponse.exceptionObject.getMessage() == ''){
             outResponse = new OutResponse(requestResponse);
             
         }
         else {
-            outResponse = new OutResponse(requestResponse.exceptionObject.getMessage());
+            outResponse = new OutResponse(requestResponse.exceptionObject.getMessage(), requestResponse);
             
         }
         
@@ -61,9 +62,9 @@ global with sharing class OrderOutbound {
                 externalIdList += (String.isBlank(externalIdList) ? '' : ',') + iOrder.ExternalId__c;
             }
         }
-        
-        IntegrationLog.createLog('Order', externalIdList, 'Outbound', payload, outResponse.response.response.getBody(), endPoint, !outResponse.success, false);
 
+
+        IntegrationLog.createLog('Order', externalIdList, 'Outbound', payload, outResponse.response.response.getBody(), endPoint, !outResponse.success, false, requestResponse.exceptionObject?.getMessage());
         
         return outResponse;
 

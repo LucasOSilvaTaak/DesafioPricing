@@ -1,6 +1,7 @@
-@RestResource(urlMapping='/order/*')
+@RestResource(urlMapping='/orders/*')
 global with sharing class OrderInbound {
 
+    
     private static List<OrderItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
         List<OrderItem> itemsToUpsert = new List<OrderItem>();
@@ -59,6 +60,8 @@ global with sharing class OrderInbound {
 
         if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
 
+        string errorMessage = '';
+
         for(Order iOrder : ordersToUpsert){
 
             OrderResponse tempResponse = new OrderResponse();
@@ -66,11 +69,24 @@ global with sharing class OrderInbound {
             tempResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
             
             for(OrderItem iOrderItem : itensToUpsert){
+                itemResponse tempItemResponse = new itemResponse();
 
                 if(iOrderItem.OrderId == iOrder.id){
-                    itemResponse tempItemResponse = new itemResponse();
                     tempItemResponse.success(iOrderItem.Id, iOrderItem.ExternalId__c, iOrderItem.getSObjectType().getDescribe().getName());
                     tempResponse.itens.add(tempItemResponse);
+                }
+                else{
+                    if(iOrder.id != null){
+                        tempItemResponse.error(iOrderItem.Id, iOrderItem.ExternalId__c, tempItemResponse.errorMessage , iOrderItem.getSObjectType().getDescribe().getName());
+
+                    }
+                    else{
+                        tempItemResponse.error(iOrderItem.ExternalId__c, tempItemResponse.errorMessage, iOrderItem.getSObjectType().getDescribe().getName());
+
+                    }
+
+                    errorMessage += tempItemResponse.errorMessage + '\n';
+
                 }
             }
 
@@ -85,7 +101,8 @@ global with sharing class OrderInbound {
         orderExternalIds = orderExternalIds.removeEnd(',');
         
         String integrationLogId = IntegrationLog.createLog(
-            'Order', orderExternalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
+            'Order', orderExternalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError,
+             hasDeleted, errorMessage
             
         );
             

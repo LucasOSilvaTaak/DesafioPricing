@@ -15,4 +15,10 @@
         this.response = null;
         this.exceptionObject = ex;
     }
+    
+    public RequestResponse(HttpResponse response, Exception ex){
+        this.success = false;
+        this.response = response;
+        this.exceptionObject = ex;
+    }
 }
