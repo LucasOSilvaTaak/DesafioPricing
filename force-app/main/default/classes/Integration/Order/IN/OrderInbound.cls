@@ -38,6 +38,7 @@ global with sharing class OrderInbound {
         List<Order> ordersToUpsert = new List<Order>();
     
         List<OrderItem> itensToUpsert = new List<OrderItem>();
+
     
         List<String> externalIds = new List<String>();
 
@@ -56,21 +57,54 @@ global with sharing class OrderInbound {
         
         if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
 
+        
+        Set<Id> foundOrders = new Set<Id>();
+        
+        for(Order iOrder : ordersToUpsert){
+            if(iOrder.id != null){
+                foundOrders.add(iOrder.Id);
+            }
+        }
+        
+        Set<Id> foundItens = new Set<Id>();
+        
+        for(OrderItem iItem : itensToUpsert){
+            if(iItem.id != null){
+                foundItens.add(iItem.Id);
+            }
+        }
+        
+        
+        
+        List <OrderItem> itensToDelete = [
+            SELECT Id, isDeletedExternal__c 
+            FROM OrderItem WHERE OrderId IN :foundOrders
+            AND ExternalId__c NOT IN :foundItens
+        ];
+        
+        for(OrderItem iItem : itensToDelete){
+            iItem.isDeletedExternal__c = true;
+        }
+        
+        
         itensToUpsert = fillOrderItem(request);
 
+        itensToUpsert.addAll(itensToDelete);
+
+        
         if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
-
+        
         string errorMessage = '';
-
+        
         for(Order iOrder : ordersToUpsert){
-
+            
             OrderResponse tempResponse = new OrderResponse();
             
             tempResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
             
             for(OrderItem iOrderItem : itensToUpsert){
                 itemResponse tempItemResponse = new itemResponse();
-
+                
                 if(iOrderItem.OrderId == iOrder.id){
                     tempItemResponse.success(iOrderItem.Id, iOrderItem.ExternalId__c, iOrderItem.getSObjectType().getDescribe().getName());
                     tempResponse.itens.add(tempItemResponse);
@@ -93,6 +127,7 @@ global with sharing class OrderInbound {
             orderResponseList.add(tempResponse);
 
         }
+
 
         for(String str : externalIds){
             orderExternalIds += str + ',';
