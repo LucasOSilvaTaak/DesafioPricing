@@ -5,10 +5,14 @@ global with sharing class OrderOutbound {
                 SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
                     AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, RepresentativeOrderNumber__c, 
                     DeliveryDate__c, Status, Observation__c,
-                    (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice FROM OrderItems)
+                    (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice 
+                        FROM OrderItems
+                        WHERE isDeletedExternal__c = false 
+                        AND ExternalId__c != null
+                    )
                 FROM Order
                 WHERE Id in :orderIds
-                AND isDeletedExternal__c = false 
+
             ];
 
         OutResponse response = sendCallout(orderList);
