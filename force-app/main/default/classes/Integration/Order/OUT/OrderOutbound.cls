@@ -6,7 +6,9 @@ global with sharing class OrderOutbound {
                     AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, RepresentativeOrderNumber__c, 
                     DeliveryDate__c, Status, Observation__c,
                     (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice FROM OrderItems)
-                FROM Order WHERE Id in :orderIds
+                FROM Order
+                WHERE Id in :orderIds
+                AND isDeletedExternal__c = false 
             ];
 
         OutResponse response = sendCallout(orderList);

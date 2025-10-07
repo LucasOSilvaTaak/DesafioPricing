@@ -8,6 +8,7 @@ global with sharing class OrderCalloult {
                 DeliveryDate__c, Status, Observation__c,
                 (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice FROM OrderItems)
             FROM Order WHERE Id in :orderIds
+            
         ];
         
         List<Order> allOrders = new List<Order>{parentOrder};
