@@ -1,5 +1,5 @@
 @RestResource(urlMapping='/order/*')
-global with sharing class OrderEndpoints {
+global with sharing class OrderInbound {
 
     private static List<OrderItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
@@ -93,11 +93,11 @@ global with sharing class OrderEndpoints {
     }
 
    
-	global class OrderResponse extends Response{
+	global class OrderResponse extends InResponse{
         List<itemResponse> itens = new List<itemResponse>();
 	}
 
-    global class itemResponse extends Response{
+    global class itemResponse extends InResponse{
 	}
 
 

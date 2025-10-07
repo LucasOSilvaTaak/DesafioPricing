@@ -7,7 +7,7 @@ public with sharing class IntegrationUtils {
 	public static Boolean upsertRecords(List<Database.UpsertResult> upsertResults, List<DataIntegrationFields.ResponseParent> responseList,
 										List<SObject> sobjectListToUpsert, Schema.SObjectField field) {
 		Boolean hasError = false;
-		for (DataIntegrationFields.Response response : responseList) hasError = response.hasError;
+		for (DataIntegrationFields.Response response : responseList) hasError = InResponse.hasError;
 
 		for (Integer i = 0; i < upsertResults.size(); i++) {
 			DataIntegrationFields.ResponseParent responseData = new DataIntegrationFields.ResponseParent();

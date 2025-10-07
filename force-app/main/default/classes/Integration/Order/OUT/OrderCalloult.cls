@@ -65,18 +65,18 @@ global with sharing class OrderCalloult {
 
         String payload = JSON.serialize(requestMap);
         
-        String accessToken = CalloutToken.retrieveToken();
+       //String accessToken = CalloutToken.retrieveToken();
         
         //String endPoint = 'https://empathetic-impala-m56ghx-dev-ed.trailblaze.my.salesforce.com/services/apexrest/upsertOrder/';
-        String endPoint = 'https://curious-bear-cnl6iw-dev-ed.trailblaze.my.salesforce.com/services/apexrest/upsertOrder/';
+        String endPoint = 'callout:ApiCredential/services/apexrest/upsertOrder/';
 
         Map<String, String> headersMap = new Map<String, String>();
         headersMap.put('Content-type', 'application/json');
-        headersMap.put('Authorization', 'Bearer ' + accessToken);
 
         System.debug(payload);
         
         CalloutIntegrationUtils.RequestResponseObject responseObject = CalloutIntegrationUtils.executeCallout(endPoint, payload, headersMap);
+        
         
 
         //Precisa testar o log

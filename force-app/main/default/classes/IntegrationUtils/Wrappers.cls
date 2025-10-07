@@ -32,6 +32,28 @@ global with sharing class Wrappers {
 			);
 		}
 
+		public void serialize(Order order){
+
+			accountCode = order.Account.ExternalId__c;
+            orderCode = order.ExternalId__c;
+            paymentCode = order.PaymentCondition__r.ExternalId__c;
+            effectiveDate = order.EffectiveDate;
+            addressCode = order.AccountAddress__r.ExternalId__c;
+            freightType = order.FreightType__c;
+            distributionCenterCode = order.DistributionCenter__r.ExternalId__c;
+            deliveryDate = order.DeliveryDate__c;
+            obs = order.Observation__c;
+            status = order.Status;
+            
+            orderItems = new List<OrderItemWrapper>();
+            for(OrderItem orderItem : order.OrderItems) {
+                OrderItemWrapper orderItemWrapper = new OrderItemWrapper();
+				orderItemWrapper.serialize(orderItem);
+                orderItems.add(orderItemWrapper);
+            }
+
+		}
+
     }
 
     public class OrderItemWrapper {
@@ -39,7 +61,7 @@ global with sharing class Wrappers {
         public String id;
 		public String productCode; //Product Id
 		public String itemCode; //External ID
-		public Boolean totvsItem; //If it is a totvitem
+		public Boolean totvsItem = true; //If it is a totvitem
 		public Decimal unitPrice;
 		public Decimal listPrice; //ListPrice
 		public Decimal quantity;
@@ -60,6 +82,16 @@ global with sharing class Wrappers {
 			else orderItem.Id = this.id;
 
 			return orderItem;
+		}
+
+		public void serialize(OrderItem orderItem){
+
+			itemCode = orderItem.ExternalId__c;
+			productCode = orderItem.Product2.ExternalId__c;
+			unitPrice = orderItem.UnitPrice;
+			quantity = orderItem.Quantity;
+			listPrice = orderItem.ListPrice;
+			
 		}
     }
 

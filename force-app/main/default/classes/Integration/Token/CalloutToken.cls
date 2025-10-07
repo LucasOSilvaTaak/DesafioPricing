@@ -48,7 +48,7 @@ public with sharing class CalloutToken {
         CalloutIntegrationUtils.RequestResponseObject responseObject = CalloutIntegrationUtils.executeCallout(endpoint, '', headersMap);
         HttpResponse response = responseObject.response;
 
-        ResponseParametersWrapper responses = (ResponseParametersWrapper) JSON.deserialize(response.getBody(), ResponseParametersWrapper.class);
+        ResponseParametersWrapper responses = (ResponseParametersWrapper) JSON.deserialize(InResponse.getBody(), ResponseParametersWrapper.class);
         
         return new CalloutIntegrationUtils.CalloutResponse(new ResponseParameters(responses));
     }
