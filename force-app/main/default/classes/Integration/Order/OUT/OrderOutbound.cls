@@ -5,7 +5,7 @@ global with sharing class OrderOutbound {
                 SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
                     AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, RepresentativeOrderNumber__c, 
                     DeliveryDate__c, Status, Observation__c,
-                    (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice 
+                      (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice 
                         FROM OrderItems
                         WHERE isDeletedExternal__c = false 
                         AND ExternalId__c != null
@@ -70,7 +70,11 @@ global with sharing class OrderOutbound {
         }
 
 
-        IntegrationLog.createLog('Order', externalIdList, 'Outbound', payload, outResponse.response.response.getBody(), endPoint, !outResponse.success, false, requestResponse.exceptionObject?.getMessage());
+        IntegrationLog.createLog(
+            'Order', externalIdList, 'Outbound', payload, 
+            outResponse.response.response.getBody(), endPoint, !outResponse.success, false,
+            requestResponse.exceptionObject?.getMessage()
+        );
         
         return outResponse;
 

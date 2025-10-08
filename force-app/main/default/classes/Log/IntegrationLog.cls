@@ -1,5 +1,5 @@
 public with sharing class IntegrationLog {
-	public static Id createLog(String integrationName, String externalIdList, String recordTypeName, String payloadIN, String payloadOUT,
+	public static void createLog(String integrationName, String externalIdList, String recordTypeName, String payloadIN, String payloadOUT,
 								String endpoint, Boolean hasAnyErrors, Boolean hasDeleted, String errorMassage){
 		System.debug('');
 		// Se os dados forem maiores que 100.000 TRUE, se não FALSE
@@ -31,7 +31,6 @@ public with sharing class IntegrationLog {
 			log.ErrorMessage__c = error.getMessage();
 		}
 
-		return log.Id;
 	}
 
 	public static IntegrationLog__c createIntegrationLogRecord(String integrationName, String externalIdList, Id recordTypeId,

@@ -46,6 +46,7 @@ global with sharing class Wrappers {
             status = order.Status;
             
             orderItems = new List<OrderItemWrapper>();
+			
             for(OrderItem orderItem : order.OrderItems) {
                 OrderItemWrapper orderItemWrapper = new OrderItemWrapper();
 				orderItemWrapper.serialize(orderItem);
@@ -71,13 +72,14 @@ global with sharing class Wrappers {
 			OrderItem orderItem = new OrderItem(
 				ExternalId__c	= this.itemCode,
 				UnitPrice		= this.unitPrice,
-				Quantity		= this.quantity
+				Quantity		= this.quantity,
+				TotvsItem__c	= this.totvsItem,
+				Product2		= new Product2(ExternalId__c = this.productCode)
 			);
 
 			if (this.id == null || this.id == '') {
 				orderItem.Order				= new Order(ExternalId__c = this.OrderCode);
-				ListPrice					= this.listPrice;
-				orderItem.Product2			= new Product2(ExternalId__c = this.productCode);
+				orderItem.ListPrice			= this.listPrice;
 			}
 			else orderItem.Id = this.id;
 

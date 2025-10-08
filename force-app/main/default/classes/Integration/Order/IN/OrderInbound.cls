@@ -1,32 +1,68 @@
 @RestResource(urlMapping='/orders/*')
 global with sharing class OrderInbound {
 
-    
-    private static List<OrderItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
+    private static List<OrderItem> fillOrderItem(List<Wrappers.OrderWrapper> orders, Map<String, OrderItem> existingItems) {
 
         List<OrderItem> itemsToUpsert = new List<OrderItem>();
 
         for(Wrappers.OrderWrapper iOrder : orders){
-
             if (iOrder.orderItems == null) continue;
-            
+
             for(Wrappers.OrderItemWrapper iOrderItem : iOrder.orderItems){
-                
                 iOrderItem.orderCode = iOrder.orderCode;
 
-
+                if (existingItems.containsKey(iOrderItem.itemCode)){
+                    iOrderItem.id = existingItems.get(iOrderItem.itemCode).Id;
+                } else {
+                    iOrderItem.id = null;
+                }
 
                 itemsToUpsert.add(iOrderItem.deserialize());
-                
+            }
+        }
+
+        return itemsToUpsert;
+    }
+
+    private static Map<String,OrderItem> getExistingOrders(List<Order> ordersToUpsert, List<Wrappers.OrderWrapper> request){
+
+        Map<String, OrderItem> existingItems = new Map<String, OrderItem>();
+
+        Set<Id> foundOrders = new Set<Id>();
+        for(Order iOrder : ordersToUpsert){
+            
+            if(iOrder.id != null){
+            
+                foundOrders.add(iOrder.Id);
+            
             }
         
         }
 
+        Set<String> externalIds = new Set<String>();
+        for(Wrappers.OrderWrapper iOrderWrapper : request){
+            
+            if(iOrderWrapper.orderItems == null) continue;
+            
+            for(Wrappers.OrderItemWrapper iItemWrapper : iOrderWrapper.orderItems){
+                externalIds.add(iItemWrapper.itemCode);
+            }
+        
+        }
 
-        return itemsToUpsert;
+        for(OrderItem item : [
+            
+            SELECT Id, ExternalId__c, OrderId
+            FROM OrderItem
+            WHERE OrderId IN :foundOrders
+            AND ExternalId__c IN :externalIds
+       
+        ]) {
+            existingItems.put(item.ExternalId__c, item);
+        }
 
+        return existingItems;
     }
-    
 
     @HttpPost
     global static List<OrderResponse> createOrder(List<Wrappers.OrderWrapper> request) {
@@ -34,124 +70,80 @@ global with sharing class OrderInbound {
         Boolean hasError = false;
         Boolean hasDeleted = false;
         String orderExternalIds = '';
+        String errorMessage = '';
 
         List<Order> ordersToUpsert = new List<Order>();
-    
         List<OrderItem> itensToUpsert = new List<OrderItem>();
-
-    
         List<String> externalIds = new List<String>();
-
         List<OrderResponse> orderResponseList = new List<OrderResponse>();
-
         String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/order/*';
 
         for (Wrappers.OrderWrapper iOrder : request) {
-
+           
             externalIds.add(iOrder.orderCode);
+        
             ordersToUpsert.add(iOrder.deserialize());
-
+        
         }
 
-        Map<String, String> orderExternalIdToOrderItem = new Map<String, String>();
-        
-        if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
+        try{
+           
+            if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
 
-        
-        Set<Id> foundOrders = new Set<Id>();
-        
-        for(Order iOrder : ordersToUpsert){
-            if(iOrder.id != null){
-                foundOrders.add(iOrder.Id);
+            Map<String, OrderItem> existingItems = getExistingOrders(ordersToUpsert, request);
+
+            itensToUpsert = fillOrderItem(request, existingItems);
+
+            if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
+
+            for(Order iOrder : ordersToUpsert){
+                OrderResponse tempOrderResponse = new OrderResponse();
+                tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
+
+                /* depois vejo como fazer isso retornar uma lista de itens e suas respostas
+                for(OrderItem iOrderItem : itensToUpsert){
+                    itemResponse tempItemResponse = new itemResponse();
+                    
+                    //if (iOrderItem.OrderId == iOrder.id) continue;
+                    
+                    tempItemResponse.success(
+                        iOrderItem.Id, 
+                        iOrderItem.ExternalId__c,
+                        iOrderItem.getSObjectType().getDescribe().getName()
+                    );
+                        
+                        
+                    tempOrderResponse.itens.add(tempItemResponse);
+                }
+                */
+                orderResponseList.add(tempOrderResponse);
+
             }
-        }
-        
-        Set<Id> foundItens = new Set<Id>();
-        
-        for(OrderItem iItem : itensToUpsert){
-            if(iItem.id != null){
-                foundItens.add(iItem.Id);
-            }
-        }
-        
-        
-        
-        List <OrderItem> itensToDelete = [
-            SELECT Id, isDeletedExternal__c 
-            FROM OrderItem WHERE OrderId IN :foundOrders
-            AND ExternalId__c NOT IN :foundItens
-        ];
-        
-        for(OrderItem iItem : itensToDelete){
-            iItem.isDeletedExternal__c = true;
-        }
-        
-        
-        itensToUpsert = fillOrderItem(request);
 
-        itensToUpsert.addAll(itensToDelete);
-
-        
-        if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
-        
-        string errorMessage = '';
-        
-        for(Order iOrder : ordersToUpsert){
-            
+        } catch (Exception e){
+           
+            hasError = true;
+            errorMessage = e.getMessage();
             OrderResponse tempResponse = new OrderResponse();
-            
-            tempResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
-            
-            for(OrderItem iOrderItem : itensToUpsert){
-                itemResponse tempItemResponse = new itemResponse();
-                
-                if(iOrderItem.OrderId == iOrder.id){
-                    tempItemResponse.success(iOrderItem.Id, iOrderItem.ExternalId__c, iOrderItem.getSObjectType().getDescribe().getName());
-                    tempResponse.itens.add(tempItemResponse);
-                }
-                else{
-                    if(iOrder.id != null){
-                        tempItemResponse.error(iOrderItem.Id, iOrderItem.ExternalId__c, tempItemResponse.errorMessage , iOrderItem.getSObjectType().getDescribe().getName());
-
-                    }
-                    else{
-                        tempItemResponse.error(iOrderItem.ExternalId__c, tempItemResponse.errorMessage, iOrderItem.getSObjectType().getDescribe().getName());
-
-                    }
-
-                    errorMessage += tempItemResponse.errorMessage + '\n';
-
-                }
-            }
-
+            tempResponse.error(null, errorMessage, 'Order');
             orderResponseList.add(tempResponse);
-
-        }
-
-
-        for(String str : externalIds){
-            orderExternalIds += str + ',';
-        }
-
-        orderExternalIds = orderExternalIds.removeEnd(',');
         
-        String integrationLogId = IntegrationLog.createLog(
-            'Order', orderExternalIds, 'Inbound', JSON.serialize(request), JSON.serialize(orderResponseList), endpoint, hasError,
-             hasDeleted, errorMessage
-            
+        }
+
+        orderExternalIds = String.join(externalIds, ',');
+
+        IntegrationLog.createLog(
+            'Order', orderExternalIds, 'Inbound', JSON.serialize(request),
+            JSON.serialize(orderResponseList), endpoint, hasError,
+            hasDeleted, errorMessage
         );
-            
+
         return orderResponseList;
     }
 
-   
-	global class OrderResponse extends InResponse{
-        List<itemResponse> itens = new List<itemResponse>();
-	}
+    global class OrderResponse extends InResponse{
+        //List<itemResponse> itens = new List<itemResponse>();
+    }
 
-    global class itemResponse extends InResponse{
-	}
-
-
-
+    global class itemResponse extends InResponse{}
 }
