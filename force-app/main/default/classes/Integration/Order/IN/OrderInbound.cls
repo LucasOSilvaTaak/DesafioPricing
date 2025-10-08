@@ -24,31 +24,47 @@ global with sharing class OrderInbound {
         return itemsToUpsert;
     }
 
-    private static Map<String,OrderItem> getExistingOrders(List<Order> ordersToUpsert, List<Wrappers.OrderWrapper> request){
+    private static Set<Id> getOrderIds(List<Order> ordersToUpsert){
 
-        Map<String, OrderItem> existingItems = new Map<String, OrderItem>();
+        Set<Id> orderIds = new Set<Id>();
 
-        Set<Id> foundOrders = new Set<Id>();
         for(Order iOrder : ordersToUpsert){
             
             if(iOrder.id != null){
             
-                foundOrders.add(iOrder.Id);
+                orderIds.add(iOrder.Id);
             
             }
         
         }
 
-        Set<String> externalIds = new Set<String>();
-        for(Wrappers.OrderWrapper iOrderWrapper : request){
+        return orderIds;
+    }
+
+    private static Set<String> getOrderExternalIds(List<Wrappers.OrderWrapper> ordersToUpsert){
+
+        Set<String> orderExternalIds = new Set<String>();
+
+        for(Wrappers.OrderWrapper iOrder : ordersToUpsert){
             
-            if(iOrderWrapper.orderItems == null) continue;
+           if(iOrder.orderItems == null) continue;
             
-            for(Wrappers.OrderItemWrapper iItemWrapper : iOrderWrapper.orderItems){
-                externalIds.add(iItemWrapper.itemCode);
+            for(Wrappers.OrderItemWrapper iItemWrapper : iOrder.orderItems){
+                orderExternalIds.add(iItemWrapper.itemCode);
             }
         
         }
+
+        return orderExternalIds;
+    }
+
+    private static Map<String,OrderItem> getExistingOrders(List<Order> ordersToUpsert, List<Wrappers.OrderWrapper> request){
+
+        Map<String, OrderItem> existingItems = new Map<String, OrderItem>();
+
+        Set<Id> foundOrders = getOrderIds(ordersToUpsert);
+
+        Set<String> externalIds = getOrderExternalIds(request);
 
         for(OrderItem item : [
             
@@ -62,6 +78,30 @@ global with sharing class OrderInbound {
         }
 
         return existingItems;
+    }
+
+    private static void DeleteItensNotFound (List<Order> ordersToUpsert, List<Wrappers.OrderWrapper> request){
+        
+        List<OrderItem> existingItems = new List<OrderItem>();
+
+        Set<Id> foundOrders = getOrderIds(ordersToUpsert);
+
+        Set<String> externalIds = getOrderExternalIds(request);
+
+        for(OrderItem item : [
+            
+            SELECT Id, ExternalId__c, OrderId
+            FROM OrderItem
+            WHERE OrderId IN :foundOrders
+            AND ExternalId__c not IN :externalIds
+       
+        ]) {
+            existingItems.add(item);
+        }
+
+        if (!existingItems.isEmpty()) {
+            Database.delete(existingItems, true);
+        }
     }
 
     @HttpPost
@@ -93,6 +133,8 @@ global with sharing class OrderInbound {
             Map<String, OrderItem> existingItems = getExistingOrders(ordersToUpsert, request);
 
             itensToUpsert = fillOrderItem(request, existingItems);
+            
+            DeleteItensNotFound(ordersToUpsert, request);
 
             if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
 
