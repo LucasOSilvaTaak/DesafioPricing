@@ -10,7 +10,7 @@ global with sharing class Wrappers {
 		public String freightType;
 		public String distributionCenterCode;
 		public Date deliveryDate;
-		public String status = 'Activated';
+		public String status;
 		public String obs;
 		public List<OrderItemWrapper> orderItems {get; set;}
 
@@ -46,7 +46,7 @@ global with sharing class Wrappers {
             status = order.Status;
             
             orderItems = new List<OrderItemWrapper>();
-			
+
             for(OrderItem orderItem : order.OrderItems) {
                 OrderItemWrapper orderItemWrapper = new OrderItemWrapper();
 				orderItemWrapper.serialize(orderItem);
