@@ -12,8 +12,11 @@ public with sharing class OrderTriggerHelper {
     
     public static void handleAfterUpdate(List<Order> oldList, List<Order> newList){
         
-        OrderTriggerUseCase.varifyOneItem(newList);
+        OrderTriggerUseCase.verifyOneItem(newList);
 
+        OrderTriggerUseCase.callApprovation(newList);
+
+        OrderTriggerUseCase.activateCallout(newList);
     
     }
 

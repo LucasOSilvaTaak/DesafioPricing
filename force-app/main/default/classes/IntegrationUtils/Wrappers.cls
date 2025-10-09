@@ -33,9 +33,8 @@ global with sharing class Wrappers {
 		}
 
 		public void serialize(Order order){
-
 			accountCode = order.Account.ExternalId__c;
-            orderCode = order.ExternalId__c;
+            orderCode = order.OrderNumber;
             paymentCode = order.PaymentCondition__r.ExternalId__c;
             effectiveDate = order.EffectiveDate;
             addressCode = order.AccountAddress__r.ExternalId__c;
@@ -93,6 +92,7 @@ global with sharing class Wrappers {
 			unitPrice = orderItem.UnitPrice;
 			quantity = orderItem.Quantity;
 			listPrice = orderItem.ListPrice;
+			orderCode = orderItem.OrderId;
 			
 		}
     }

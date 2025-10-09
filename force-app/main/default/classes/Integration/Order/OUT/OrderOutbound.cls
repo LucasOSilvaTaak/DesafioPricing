@@ -3,9 +3,10 @@ global with sharing class OrderOutbound {
     public static OutResponse orderCalloult(List<Id> orderIds){
             List<Order> orderList = [
                 SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
-                    AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, RepresentativeOrderNumber__c, 
-                    DeliveryDate__c, Status, Observation__c,
-                      (SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice 
+                    AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, 
+                    DeliveryDate__c, Status, Observation__c, OrderNumber,
+                    (
+                        SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice , OrderId
                         FROM OrderItems
                         WHERE isDeletedExternal__c = false 
                         AND ExternalId__c != null
@@ -26,14 +27,20 @@ global with sharing class OrderOutbound {
         List<Wrappers.OrderWrapper> orderWrapperList = new List<Wrappers.OrderWrapper>();
 
         for(Order iOrder : orderList){
+           
             Wrappers.OrderWrapper tempOrderWrapper = new Wrappers.OrderWrapper();
+           
             tempOrderWrapper.serialize(iOrder);
+
             orderWrapperList.add(tempOrderWrapper);
         }
 
         Map<String, List<Wrappers.OrderWrapper>> requestMap = new Map<String, List<Wrappers.OrderWrapper>>();
 
+
         requestMap.put('request', orderWrapperList);
+
+        
 
         String payload = JSON.serialize(requestMap);
         
@@ -48,18 +55,26 @@ global with sharing class OrderOutbound {
         RequestResponse requestResponse = ExecuteCallout.executeCallout(endPoint, payload, headersMap);
         
         OutResponse outResponse;
-
-        
         
         
         if(requestResponse.exceptionObject == null || requestResponse.exceptionObject.getMessage() == ''){
             outResponse = new OutResponse(requestResponse);
             
+            for(Order iOrder : orderList){
+                iOrder.Status = 'Integrated';
+            }
+            
         }
         else {
             outResponse = new OutResponse(requestResponse.exceptionObject.getMessage(), requestResponse);
             
+            for(Order iOrder : orderList){
+                iOrder.Status = 'Integration Error';
+            }
+            
         }
+        
+        update orderList;
         
         String externalIdList = '';
         
@@ -69,7 +84,7 @@ global with sharing class OrderOutbound {
             }
         }
 
-
+        
         IntegrationLog.createLog(
             'Order', externalIdList, 'Outbound', payload, 
             outResponse.response.response.getBody(), endPoint, !outResponse.success, false,

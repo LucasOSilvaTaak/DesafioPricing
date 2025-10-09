@@ -1,26 +1,4 @@
 public with sharing class OrderTriggerUseCase {
-    /*
-    private static void prepareCallout(List<Order> oldList, List<Order> newList){
-        Set<Id> setIds = new Set<Id>();
-      
-        for(Integer i = 0; i < newList.size(); i++){
-            System.debug(newList[i].Status);
-
-            if(newList[i].Status == 'Activated'){
-      
-                System.debug(newList[i].Status);
-      
-                setIds.add(newList[i].Id);
-      
-            }
-        }
-
-        if(setIds.size() > 0){
-            PrepareCallout.processIntegration(new List<Id>(setIds));
-        }
-        
-    }
-    */
 
     public static void stopAccountChange(List<Order> oldList, List<Order> newList){
         
@@ -36,7 +14,7 @@ public with sharing class OrderTriggerUseCase {
     }
 
     //Deve ter no minimo um item por ordem
-    public static void varifyOneItem(List<Order> newList){
+    public static void verifyOneItem(List<Order> newList){
 
         Set<Id> ordersId = new Set<Id>();
 
@@ -59,7 +37,7 @@ public with sharing class OrderTriggerUseCase {
 
         for(Order iOrder : newList){
 
-            if(iOrder.Status != 'Draft' && !orderMap.containsKey(iOrder.Id)  ){
+            if(iOrder.Status != 'New' && !orderMap.containsKey(iOrder.Id)  ){
                 iOrder.addError('The Order must have at least one item');
             }
         }
@@ -95,5 +73,78 @@ public with sharing class OrderTriggerUseCase {
             else 
                 iOrder.discount__c = 0;
         }
+    }
+
+    private static List<Order> varifyIfCallApprove(List<Order> newList){
+
+        List <Order>  toApprove = new List<Order>();
+
+        for(Order iOrder : newList){
+            if(iOrder.Status == 'Waiting Approval'){
+
+                if(iOrder.discount__c < 20) toApprove.add(iOrder);
+
+                else iOrder.addError('To be approved it need to be less than 20% of discount');
+                
+            }
+        }
+
+        return toApprove;
+
+    }
+
+    public static void callApprovation(List<Order> newList){
+
+        List<Order> toApprove = varifyIfCallApprove(newList);
+
+        List<approval.processSubmitRequest> approvalProcessSubmitRequestList = new List<approval.processSubmitRequest>();
+
+        for(Order iOrder : toApprove){
+
+            approval.processSubmitRequest request = new approval.processSubmitRequest();
+
+            request.setObjectId(iOrder.Id);
+            
+            request.setProcessDefinitionNameOrId(iOrder.Id);
+            
+            request.setProcessDefinitionNameOrId('OrderApproval');
+
+//            request.setSubmitterId(UserInfo.getUserId());
+
+            approvalProcessSubmitRequestList.add(Request);
+            
+
+        }
+
+        List<Approval.processResult> result = Approval.process(approvalProcessSubmitRequestList);
+
+    }
+
+    public static void activateCallout(List<Order> newList){
+
+        Set<Id> setIds = new Set<Id>();
+        
+        for(Integer i = 0; i < newList.size(); i++){
+            System.debug(newList[i].Status);
+
+            if(newList[i].Status == 'Approved'){
+        
+                System.debug(newList[i].Status);
+        
+                setIds.add(newList[i].Id);
+        
+            }
+        }
+
+        if(setIds.size() > 0){
+            processIntegration(new List<Id>(setIds));
+        }
+        
+    }
+
+
+    @Future(callout=true)
+    public static void processIntegration(List<Id> orderIds){
+        OrderOutbound.orderCalloult(orderIds);
     }
 }

@@ -4,6 +4,10 @@ public with sharing class ExecuteCallout {
         
         HttpRequest request = new HttpRequest(); 
 
+        System.debug('endpoint: ' + endpoint);
+        System.debug('payload: ' + payload);
+        System.debug('headers: ' + headers);
+        
         request.setMethod('POST');
         request.setTimeout(110000);
  
