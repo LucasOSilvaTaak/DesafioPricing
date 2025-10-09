@@ -274,9 +274,10 @@ public with sharing class OrderItemTriggerHelper {
         
             iOrderIten.NoMarginPrice__c = (iOrderIten.Product2.ProductionCost__c + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
         
-            iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+            iOrderIten.DiscountedPriceUnit__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+            iOrderIten.Final__c = iOrderIten.DiscountedPriceUnit__c * iOrderIten.Quantity;
         
-            iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
+            iOrderIten.Discount__c = 100 * ((iOrderIten.DiscountedPriceUnit__c - iOrderIten.UnitPrice)/iOrderIten.DiscountedPriceUnit__c);
 
         }
     } 
