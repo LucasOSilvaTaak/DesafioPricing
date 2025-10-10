@@ -34,7 +34,6 @@ public with sharing class OrderTriggerUseCase {
             orderMap.put(iOrderItem.OrderId, iOrderItem);
         }
 
-
         for(Order iOrder : newList){
 
             if(iOrder.Status != 'New' && !orderMap.containsKey(iOrder.Id)  ){
@@ -82,9 +81,9 @@ public with sharing class OrderTriggerUseCase {
         for(Order iOrder : newList){
             if(iOrder.Status == 'Waiting Approval'){
 
-                if(iOrder.discount__c < 20) toApprove.add(iOrder);
+                if(iOrder.discount__c < 20 ) toApprove.add(iOrder);
 
-                else iOrder.addError('To be approved it need to be less than 20% of discount');
+                else iOrder.addError('To be send to approvation it need to have less than 20% of discount');
                 
             }
         }
@@ -147,4 +146,52 @@ public with sharing class OrderTriggerUseCase {
     public static void processIntegration(List<Id> orderIds){
         OrderOutbound.orderCalloult(orderIds);
     }
+
+
+    public static void statusController(List<Order> oldList ,List<Order> newList){
+
+        for(Integer i = 0; i < newList.size(); i++){
+            statusRules(oldList[i], newList[i]);
+        }
+    }
+
+    private static void statusRules(Order oldOrder, Order newOrder){
+
+        System.debug(oldOrder.Status);
+        System.debug(newOrder.Status);
+
+        if(oldOrder.Status == 'New'){
+            if (newOrder.Status == 'Approved'){
+                newOrder.addError('Order must be send to waiting approval before approved');
+            }
+            else if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
+                newOrder.addError('Order must be Approved before integrated');
+            }
+
+        }
+
+        if(oldOrder.Status == 'Waiting Approval'){
+            if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
+                newOrder.addError('Order must be Approved before integrated');
+
+            }
+        }
+        
+        if(oldOrder.Status == 'Integration Error'){
+            if (newOrder.Status != 'New'){
+                newOrder.addError('You need to redo your order before integrate it again, send it to new');
+
+            }
+        }
+        
+        if(oldOrder.Status == 'Integrated'){
+            if (newOrder.Status != 'New'){
+                newOrder.addError('You need to redo your order before integrate it again, send it to new');
+
+            }
+        }
+
+    }
+
+
 }

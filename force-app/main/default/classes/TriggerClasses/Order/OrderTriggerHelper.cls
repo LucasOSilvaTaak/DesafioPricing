@@ -4,6 +4,8 @@ public with sharing class OrderTriggerHelper {
         
         OrderTriggerUseCase.stopAccountChange(oldList, newList);
         
+        OrderTriggerUseCase.statusController(oldList, newList);
+
         OrderTriggerUseCase.updateDiscount(newList);
 
         
