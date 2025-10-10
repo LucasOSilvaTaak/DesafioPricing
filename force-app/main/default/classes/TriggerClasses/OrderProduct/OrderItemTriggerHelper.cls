@@ -165,7 +165,7 @@ public with sharing class OrderItemTriggerHelper {
         List<OrderItem> changedList = new List<OrderItem>();
         for(OrderItem iOrderProduct : records){
         
-            if(iOrderProduct.Order.Status != 'New') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
+            if(iOrderProduct.Order.Status != 'New' && iOrderProduct.Order.Status != 'Integration Error') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
             else{
                 changedList.add(iOrderProduct);
             }

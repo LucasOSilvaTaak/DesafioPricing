@@ -23,7 +23,7 @@ global with sharing class Wrappers {
 				DistributionCenter__r			= new DistributionCenter__c(ExternalId__c = this.distributionCenterCode),
 				ExternalId__c					= this.orderCode,
 				DeliveryDate__c					= this.deliveryDate,
-				Status							= this.status,
+				Status							= 'New',
 				Observation__c					= this.obs,
 				FreightType__c					= this.freightType,
 				Account							= new Account(ExternalId__c = this.accountCode),
@@ -87,7 +87,7 @@ global with sharing class Wrappers {
 
 		public void serialize(OrderItem orderItem){
 
-			itemCode = orderItem.ExternalId__c;
+			itemCode = orderItem.OrderItemNumber;
 			productCode = orderItem.Product2.ExternalId__c;
 			unitPrice = orderItem.UnitPrice;
 			quantity = orderItem.Quantity;

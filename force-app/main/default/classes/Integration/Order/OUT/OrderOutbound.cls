@@ -1,5 +1,6 @@
 global with sharing class OrderOutbound {
 
+    @AuraEnabled
     public static OutResponse orderCalloult(List<Id> orderIds){
             List<Order> orderList = [
                 SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 

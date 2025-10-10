@@ -142,7 +142,8 @@ global with sharing class OrderInbound {
                 OrderResponse tempOrderResponse = new OrderResponse();
                 tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
 
-                /* depois vejo como fazer isso retornar uma lista de itens e suas respostas
+                iOrder.Status = 'Integrated';
+
                 for(OrderItem iOrderItem : itensToUpsert){
                     itemResponse tempItemResponse = new itemResponse();
                     
@@ -155,14 +156,18 @@ global with sharing class OrderInbound {
                     );
                         
                         
-                    tempOrderResponse.itens.add(tempItemResponse);
+                    //tempOrderResponse.itens.add(tempItemResponse);
                 }
-                */
+
+                
                 orderResponseList.add(tempOrderResponse);
-
+                
             }
-
-        } catch (Exception e){
+            
+            update ordersToUpsert;
+            
+        } 
+        catch (Exception e){
            
             hasError = true;
             errorMessage = e.getMessage();

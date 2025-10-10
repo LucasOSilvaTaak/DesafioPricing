@@ -160,35 +160,48 @@ public with sharing class OrderTriggerUseCase {
         System.debug(oldOrder.Status);
         System.debug(newOrder.Status);
 
+        if(oldOrder.Status == newOrder.Status ){
+            return;
+        }
+
         if(oldOrder.Status == 'New'){
-            if (newOrder.Status == 'Approved'){
+            /*if (newOrder.Status == 'Approved'){
                 newOrder.addError('Order must be send to waiting approval before approved');
             }
             else if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
                 newOrder.addError('Order must be Approved before integrated');
             }
-
+            */
         }
 
-        if(oldOrder.Status == 'Waiting Approval'){
-            if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
+        else if(oldOrder.Status == 'Waiting Approval'){
+           /* if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
                 newOrder.addError('Order must be Approved before integrated');
 
             }
+                */
         }
         
-        if(oldOrder.Status == 'Integration Error'){
+        else if(oldOrder.Status == 'Integration Error'){
+            /*if (newOrder.Status != 'Waiting Approval' ){
+                newOrder.addError('You need to redo your order before integrate it again');
+
+            }
+                */
+        }
+        
+        else if(oldOrder.Status == 'Integrated'){
             if (newOrder.Status != 'New'){
                 newOrder.addError('You need to redo your order before integrate it again, send it to new');
 
             }
         }
-        
-        if(oldOrder.Status == 'Integrated'){
-            if (newOrder.Status != 'New'){
-                newOrder.addError('You need to redo your order before integrate it again, send it to new');
 
-            }
+        else if(oldOrder.Status == 'Approved'){
+            /*if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
+                newOrder.addError('Wait for the integration process to finish before change the status');
+
+            }*/
         }
 
     }
