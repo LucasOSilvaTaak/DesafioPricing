@@ -1,16 +1,15 @@
 global with sharing class OrderOutbound {
 
-    @AuraEnabled
-    public static OutResponse orderCalloult(List<Id> orderIds){
+    @InvocableMethod
+    public static List<String> orderCalloult(List<Id> orderIds){
             List<Order> orderList = [
                 SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
                     AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, 
                     DeliveryDate__c, Status, Observation__c, OrderNumber,
                     (
-                        SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice , OrderId
+                        SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice , OrderId, OrderItemNumber
                         FROM OrderItems
                         WHERE isDeletedExternal__c = false 
-                        AND ExternalId__c != null
                     )
                 FROM Order
                 WHERE Id in :orderIds
@@ -19,7 +18,10 @@ global with sharing class OrderOutbound {
 
         OutResponse response = sendCallout(orderList);
 
-        return response;
+        List<String> responseList = new List<String>();
+        responseList.add(response.response.response.getBody());
+
+        return responseList;
 
     }
 

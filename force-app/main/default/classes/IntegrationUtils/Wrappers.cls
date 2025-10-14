@@ -54,6 +54,34 @@ global with sharing class Wrappers {
 
 		}
 
+		public Set<String> getRequiredFields() {
+			return new Set<String>{
+				'ExternalId__c',
+				'EffectiveDate',
+				'Status'
+			};
+		}
+		public Set<String> getRequiredLookups() {
+			return new Set<String>{
+				'AccountId',
+				'DistributionCenter__c',
+				'AccountAddress__c',
+				'PaymentCondition__c'
+
+			};
+		}
+
+		public String getFieldKey() {
+			return 'ExternalId__c';
+		}
+		public String getFieldId() {
+			return 'Id';
+		}
+		public String getExternalId() {
+			return this.orderCode;
+		}
+		
+
     }
 
     public class OrderItemWrapper {
@@ -72,7 +100,7 @@ global with sharing class Wrappers {
 				ExternalId__c	= this.itemCode,
 				UnitPrice		= this.unitPrice,
 				Quantity		= this.quantity,
-				TotvsItem__c	= this.totvsItem,
+				TotvsItem__c	= false,
 				Product2		= new Product2(ExternalId__c = this.productCode)
 			);
 
@@ -95,6 +123,34 @@ global with sharing class Wrappers {
 			orderCode = orderItem.OrderId;
 			
 		}
+
+		public Set<String> getRequiredFields() {
+			return new Set<String>{
+				'ExternalId__c',
+				'UnitPrice',
+				'Quantity',
+				'ListPrice'
+			};
+		}
+		
+		public Set<String> getRequiredLookups() {
+			return new Set<String>{
+				'OrderId',
+				'Product2Id'
+			};
+		}
+
+		public String getFieldId() {
+			return id;
+		}
+		public String getFieldExternal() {
+			return itemCode;
+		}
+		public String getParentId() {
+			return orderCode;
+		}
+
+
     }
 
 
