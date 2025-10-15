@@ -81,10 +81,7 @@ public with sharing class OrderTriggerUseCase {
         for(Order iOrder : newList){
             if(iOrder.Status == 'Waiting Approval'){
 
-                if(iOrder.discount__c < 20 ) toApprove.add(iOrder);
-
-                else iOrder.addError('To be send to approvation it need to have less than 20% of discount');
-                
+                toApprove.add(iOrder);                
             }
         }
 
@@ -99,14 +96,21 @@ public with sharing class OrderTriggerUseCase {
         List<approval.processSubmitRequest> approvalProcessSubmitRequestList = new List<approval.processSubmitRequest>();
 
         for(Order iOrder : toApprove){
-
+            
             approval.processSubmitRequest request = new approval.processSubmitRequest();
 
             request.setObjectId(iOrder.Id);
             
             request.setProcessDefinitionNameOrId(iOrder.Id);
             
-            request.setProcessDefinitionNameOrId('OrderApproval');
+            if(iOrder.Discount__c > 20){
+                System.debug('Manual');
+                request.setProcessDefinitionNameOrId('OrderApproval');
+            }
+            else{
+                System.debug('Auto');
+                request.setProcessDefinitionNameOrId('OrderAutoApproval');
+            }
 
 //            request.setSubmitterId(UserInfo.getUserId());
 

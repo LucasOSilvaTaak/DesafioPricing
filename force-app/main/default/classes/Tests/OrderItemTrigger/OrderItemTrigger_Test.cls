@@ -159,7 +159,8 @@ private class OrderItemTrigger_Test {
                 DistributionCenter__c = distributionCenterA.Id,
                 Pricebook2Id = pricebookId,
                 AccountAddress__c = AccountAddressDefault.Id,
-                Contact__c = contactDefault.Id
+                Contact__c = contactDefault.Id,
+                Status = 'New'
             )
         );
         insert orderDefault;
@@ -171,24 +172,25 @@ private class OrderItemTrigger_Test {
     static void testCreatingOrderItem() {
         Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
         Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
-
-        // Recuperar o PricebookEntry correspondente
+ 
         PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
-                            FROM PricebookEntry 
-                            WHERE Pricebook2Id = :order.Pricebook2Id 
-                            AND Product2Id = :product.Id 
-                            LIMIT 1];
+                    FROM PricebookEntry 
+                    WHERE Pricebook2Id = :order.Pricebook2Id 
+                    AND Product2Id = :product.Id 
+                    LIMIT 1
+        ];
 
         OrderItem orderItem = new OrderItem(
             OrderId = order.Id,
-            PricebookEntryId = pricebookEntry.Id,
             Quantity = 2,
+            Product2Id = product.Id,
+            PricebookEntryId = pricebookEntry.Id,
             UnitPrice = pricebookEntry.UnitPrice
         );
 
         Test.startTest();
 
-        Database.SaveResult result = Database.insert(orderItem, false);
+            Database.SaveResult result = Database.insert(orderItem, false);
 
         Test.stopTest();
 

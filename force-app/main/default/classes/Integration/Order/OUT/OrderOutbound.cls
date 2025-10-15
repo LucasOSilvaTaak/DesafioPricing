@@ -89,8 +89,8 @@ global with sharing class OrderOutbound {
 
         
         IntegrationLog.createLog(
-            'Order', externalIdList, 'Outbound', payload, 
-            outResponse.response.response.getBody(), endPoint, !outResponse.success, false,
+            'Order', externalIdList, 'Outbound',outResponse.response.response.getBody() , 
+            payload, endPoint, !outResponse.success, false,
             requestResponse.exceptionObject?.getMessage()
         );
         

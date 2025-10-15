@@ -61,7 +61,7 @@ global with sharing class Wrappers {
 				'Status'
 			};
 		}
-		public Set<String> getRequiredLookups() {
+		/*public Set<String> getRequiredLookups() {
 			return new Set<String>{
 				'AccountId',
 				'DistributionCenter__c',
@@ -69,6 +69,32 @@ global with sharing class Wrappers {
 				'PaymentCondition__c'
 
 			};
+		}
+		*/
+
+		public Set<String> verifyRequiredLookups() {
+			
+			Set<String> missingFields = new Set<String>();
+
+			if(accountCode == null || accountCode == ''){
+
+				missingFields.add('Account');
+
+			}
+			
+			if(distributionCenterCode == null || distributionCenterCode == ''){
+				missingFields.add('DistributionCenter__c');
+			}
+
+			if(addressCode == null || addressCode == ''){
+				missingFields.add('AccountAddress__c');
+			}	
+
+			if(paymentCode == null  || paymentCode == ''){
+				missingFields.add('PaymentCondition__c');
+			}
+
+			return missingFields;
 		}
 
 		public String getFieldKey() {
@@ -131,14 +157,34 @@ global with sharing class Wrappers {
 				'Quantity',
 				'ListPrice'
 			};
-		}
-		
+			}
+			
+		/*
 		public Set<String> getRequiredLookups() {
 			return new Set<String>{
 				'OrderId',
 				'Product2Id'
 			};
 		}
+		*/
+
+		public Set<String> verifyRequiredLookups() {
+			
+			Set<String> missingFields = new Set<String>();
+
+			if(orderCode == null || orderCode == ''){
+				missingFields.add('OrderId');
+			}
+
+			if(productCode == null || productCode == ''){
+				
+				missingFields.add('Product2Id');
+
+			}
+
+			return missingFields;
+		}
+
 
 		public String getFieldId() {
 			return id;

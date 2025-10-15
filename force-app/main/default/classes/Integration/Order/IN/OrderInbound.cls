@@ -1,6 +1,10 @@
 @RestResource(urlMapping='/orders/*')
 global with sharing class OrderInbound {
 
+    global class OrderRequestWrapper {
+        public List<Wrappers.OrderWrapper> request;
+    }
+
     private class FilledItem {
         public OrderItem items;
         public String externalId;
@@ -34,6 +38,9 @@ global with sharing class OrderInbound {
             Set<String> allFields = iOrder.getRequiredFields();
 
             Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(deserializedOrder, allFields);
+
+            missingFields.addAll(iOrder.VerifyRequiredLookups());
+
 
             if(!missingFields.isEmpty()){
 
@@ -75,6 +82,8 @@ global with sharing class OrderInbound {
                 Set<String> allFields = iOrderItem.getRequiredFields();
 
                 Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(desirializedItem, allFields);
+
+                missingFields.addAll(iOrderItem.VerifyRequiredLookups());
 
                 if(!missingFields.isEmpty()){
 
@@ -150,8 +159,31 @@ global with sharing class OrderInbound {
         return existingItems;
     }
 
-    @HttpPost
-    global static List<InResponse> createOrder(List<Wrappers.OrderWrapper> request) {
+@HttpPost
+global static List<InResponse> createOrder() {
+
+    RestRequest req = RestContext.request;
+    OrderRequestWrapper body;
+
+    try {
+        body = (OrderRequestWrapper) JSON.deserialize(
+            req.requestBody.toString(),
+            OrderRequestWrapper.class
+        );
+        
+    } catch (Exception e) {
+        InResponse errorResponse = new InResponse();
+        errorResponse.error(null, 'Erro no formato do JSON recebido: ' + e.getMessage(), 'Order');
+        return new List<InResponse>{ errorResponse };
+    }
+
+    if (body == null || body.request == null || body.request.isEmpty()) {
+        InResponse errorResponse = new InResponse();
+        errorResponse.error(null, 'Campo "request" ausente ou vazio no JSON', 'Order');
+        return new List<InResponse>{ errorResponse };
+    }
+
+    List<Wrappers.OrderWrapper> request = body.request;
 
         Boolean hasError = false;
         Boolean hasDeleted = false;
@@ -161,7 +193,7 @@ global with sharing class OrderInbound {
         List<OrderItem> itensToUpsert = new List<OrderItem>();
         List<String> externalIds = new List<String>();
         List<InResponse> orderResponseList = new List<InResponse>();
-        String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/order/*';
+        String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/orders/*';
 
         List<FilledOrder> filledOrderList = new List<FilledOrder>();
         List<FilledItem> filledItemList = new List<FilledItem>();
@@ -230,7 +262,7 @@ global with sharing class OrderInbound {
         catch (Exception e){
            
             hasError = true;
-            errorMessage = e.getMessage();
+            errorMessage = 'A error has happend: ' + e.getMessage();
             OrderResponse tempResponse = new OrderResponse();
             tempResponse.error(null, errorMessage, 'Order');
             orderResponseList.add(tempResponse);
