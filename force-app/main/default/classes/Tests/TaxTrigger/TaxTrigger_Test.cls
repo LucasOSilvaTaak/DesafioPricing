@@ -220,7 +220,7 @@ private class TaxTrigger_Test {
         Assert.areEqual(hasFailed, true, 'Program should not allow insersion of duplicated records in same batch');   
     }
 
-        @isTest
+    @isTest
     static void testTriggerEnabled(){
         
         TaxTriggerHandler.disableTrigger();

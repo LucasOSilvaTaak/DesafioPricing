@@ -1,9 +1,10 @@
+
 @isTest
-private class OrderItemTrigger_Test {
+private class OrderCallout_Test {
+
 
     @TestSetup
     static void makeData(){
-        
         TestFactorySObject testFactory = TestFactorySObject.getInstance();
         
         Id pricebookId = TestFactorySObject.getStandardPricebookId();
@@ -96,6 +97,13 @@ private class OrderItemTrigger_Test {
         ));
         insert AccountA;
 
+        Account AccountB = (Account) testFactory.createSObject(
+            new Account(
+                Name = 'Account B',
+                AccountGroup__c = AccountGroupA.Id
+        ));
+        insert AccountB;
+
 
         Margin__c MarginDefault = new Margin__c(
             Name = 'Margin Default',
@@ -153,7 +161,6 @@ private class OrderItemTrigger_Test {
             new Order (
                 Name = 'Order A',
                 AccountId = AccountA.Id,
-                ContractId = contractDefault.Id,
                 PaymentCondition__c = paymentConditionDefault.Id,
                 DistributionCenter__c = distributionCenterA.Id,
                 Pricebook2Id = pricebookId,
@@ -162,117 +169,43 @@ private class OrderItemTrigger_Test {
                 Status = 'New'
             )
         );
+
         insert orderDefault;
 
-
-    }
-
-    @isTest
-    static void testCreatingOrderItem() {
-        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
-        Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
- 
-        PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
-                    FROM PricebookEntry 
-                    WHERE Pricebook2Id = :order.Pricebook2Id 
-                    AND Product2Id = :product.Id 
-                    LIMIT 1
+        PricebookEntry pricebookEntry = [
+                SELECT Id, UnitPrice 
+                FROM PricebookEntry 
+                WHERE Pricebook2Id = :orderDefault.Pricebook2Id 
+                AND Product2Id = :productList[0].Id 
+                LIMIT 1
         ];
 
-        OrderItem orderItem = new OrderItem(
-            OrderId = order.Id,
+        OrderItem orderItemDefault = new OrderItem(
+            OrderId = orderDefault.Id,
             Quantity = 2,
-            Product2Id = product.Id,
+            Product2Id = productList[0].Id,
             PricebookEntryId = pricebookEntry.Id,
             UnitPrice = pricebookEntry.UnitPrice
         );
 
-        Test.startTest();
+        insert orderItemDefault;
 
-            Database.SaveResult result = Database.insert(orderItem, false);
 
-        Test.stopTest();
-
-        Assert.areEqual(true, result.success, 'Product have all parameters so it should have been created');
     }
-    
-    @isTest
-    static void testCreatingOrderItemFailed() {
-        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product B' LIMIT 1];
-        Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
-
-        // Recuperar o PricebookEntry correspondente
-        PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
-                            FROM PricebookEntry 
-                            WHERE Pricebook2Id = :order.Pricebook2Id 
-                            AND Product2Id = :product.Id 
-                            LIMIT 1];
-
-        OrderItem orderItem = new OrderItem(
-            OrderId = order.Id,
-            PricebookEntryId = pricebookEntry.Id,
-            Quantity = 2,
-            UnitPrice = pricebookEntry.UnitPrice
-        );
-
-        Test.startTest();
-        Database.SaveResult result = Database.insert(orderItem, false);
-        Test.stopTest();
-
-        Assert.areEqual(false, result.success, 'Product dont have a margin, tax and Freight, so should not be created');
-    }
-
 
     @isTest
-    static void testUpdateOrderItem() {
-        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Product A' LIMIT 1];
-        Order order = [SELECT Id, Pricebook2Id FROM Order WHERE Name = 'Order A' LIMIT 1];
+    static void calloutTest(){
 
-        // Recuperar o PricebookEntry correspondente
-        PricebookEntry pricebookEntry = [SELECT Id, UnitPrice 
-                            FROM PricebookEntry 
-                            WHERE Pricebook2Id = :order.Pricebook2Id 
-                            AND Product2Id = :product.Id 
-                            LIMIT 1];
+        Order order = [select Id from Order where Name = 'Order A' limit 1];
 
-        OrderItem orderItem = new OrderItem(
-            OrderId = order.Id,
-            PricebookEntryId = pricebookEntry.Id,
-            Quantity = 2,
-            UnitPrice = pricebookEntry.UnitPrice
-        );
-        Insert orderItem;
+        List<Id> orderIds = new List<Id>{order.Id};
 
-        Freight__c changedFreight = [SELECT Id, Value__c FROM Freight__c LIMIT 1];
-        changedFreight.Value__c = 5;
-        Update changedFreight;
-
-        
-
-        OrderItem oldOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
-        orderItem.Quantity = 5;
 
         Test.startTest();
         
-        Update orderItem;
-        
+            OrderOutbound.orderCalloult(orderIds);
+
         Test.stopTest();
 
-        OrderItem newOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
-
-        Assert.areNotEqual(oldOrderItem.Final__c, newOrderItem.Final__c, 'The old Price( ' + oldOrderItem.Final__c + ') should be different from the new Price( ' + newOrderItem.Final__c + ')');
     }
-
-     @isTest
-    static void testTriggerEnabled(){
-        
-        OrderItemTriggerHandler.disableTrigger();
-        OrderItemTriggerHandler.enableTrigger();
-
-        Assert.areEqual(true, OrderItemTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
-
-    }
-    
-    
-
 }

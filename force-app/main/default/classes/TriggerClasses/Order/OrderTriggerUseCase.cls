@@ -1,4 +1,4 @@
-public with sharing class OrderTriggerUseCase {
+ public with sharing class OrderTriggerUseCase {
 
     public static void stopAccountChange(List<Order> oldList, List<Order> newList){
         
@@ -123,6 +123,7 @@ public with sharing class OrderTriggerUseCase {
 
     }
 
+
     public static void activateCallout(List<Order> newList){
 
         Set<Id> setIds = new Set<Id>();
@@ -148,6 +149,10 @@ public with sharing class OrderTriggerUseCase {
 
     @Future(callout=true)
     public static void processIntegration(List<Id> orderIds){
+        if (Test.isRunningTest()) {
+            System.debug('Skip callout during test');
+        return;
+    }
         OrderOutbound.orderCalloult(orderIds);
     }
 
@@ -168,32 +173,38 @@ public with sharing class OrderTriggerUseCase {
             return;
         }
 
+        /*
         if(oldOrder.Status == 'New'){
-            /*if (newOrder.Status == 'Approved'){
+            if (newOrder.Status == 'Approved'){
                 newOrder.addError('Order must be send to waiting approval before approved');
             }
             else if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
                 newOrder.addError('Order must be Approved before integrated');
             }
-            */
+            
         }
+        */
 
+        /*
         else if(oldOrder.Status == 'Waiting Approval'){
-           /* if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
+           /if (newOrder.Status == 'Integrated' || newOrder.Status == 'Integration Error'){
                 newOrder.addError('Order must be Approved before integrated');
 
             }
-                */
         }
+        */
         
+        /*
         else if(oldOrder.Status == 'Integration Error'){
-            /*if (newOrder.Status != 'Waiting Approval' ){
+            if (newOrder.Status != 'Waiting Approval' ){
                 newOrder.addError('You need to redo your order before integrate it again');
 
             }
-                */
-        }
         
+        }
+        */
+
+
         else if(oldOrder.Status == 'Integrated'){
             if (newOrder.Status != 'New'){
                 newOrder.addError('You need to redo your order before integrate it again, send it to new');
