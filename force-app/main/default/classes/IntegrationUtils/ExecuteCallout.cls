@@ -23,8 +23,12 @@ public with sharing class ExecuteCallout {
         HttpResponse response;
 
         try{
-
+            
             response = (new Http()).send(request);
+
+            System.debug('response' + response);
+            System.debug('response' + response.getBody());
+            System.debug('response' + response.getStatusCode());
             
             if(response.getStatus()  != 'OK'){
             

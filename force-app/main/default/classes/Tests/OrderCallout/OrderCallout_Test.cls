@@ -192,6 +192,25 @@ private class OrderCallout_Test {
 
 
     }
+    
+    private class orderCalloutMock implements HttpCalloutMock{
+        
+        public HTTPResponse respond(HTTPRequest req) {
+            Order orderMock = [SELECT Id, OrderNumber FROM Order WHERE Name = 'Order A' LIMIT 1];
+            OrderItem orderItemMock = [SELECT Id, OrderItemNumber FROM OrderItem WHERE OrderId = :orderMock.Id LIMIT 1];
+
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setBody('[ '+
+                '{ "sobjectType": "Order","salesforceId": "'+ orderMock.Id +'","hasError": false,"externalCode": "'+ orderMock.OrderNumber +'","errorMessage": null},' +
+                '{ "sobjectType": "Order Item","salesforceId": "'+ orderItemMock.Id + '","hasError": false,"externalCode": "'+ orderItemMock.OrderItemNumber +'","errorMessage": null}'
+            + ']');
+            res.setStatusCode(200);
+            res.setStatus('OK');
+            return res;
+        }
+    
+    }
 
     @isTest
     static void calloutTest(){
@@ -201,11 +220,19 @@ private class OrderCallout_Test {
         List<Id> orderIds = new List<Id>{order.Id};
 
 
+        Test.setMock(HttpCalloutMock.class, new OrderCalloutMock());
+
         Test.startTest();
-        
+
             OrderOutbound.orderCalloult(orderIds);
 
         Test.stopTest();
+
+        Order afterOrder = [SELECT Id, Status, OrderNumber FROM Order WHERE Name = 'Order A' LIMIT 1];
+        OrderItem afterItem = [SELECT Id, Quantity FROM OrderItem WHERE OrderId = :afterOrder.Id LIMIT 1];
+
+        
+        System.assertEquals('Integrated', afterOrder.Status, 'O status da Order deve ser integrated.');
 
     }
 }

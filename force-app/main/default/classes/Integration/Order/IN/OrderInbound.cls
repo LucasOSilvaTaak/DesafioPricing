@@ -146,12 +146,8 @@ global with sharing class OrderInbound {
         for(OrderItem item : [
             SELECT Id, ExternalId__c, OrderId
             FROM OrderItem
-            WHERE (OrderId NOT IN :foundOrders
-            AND ExternalId__c IN :externalIds ) 
-            OR (ListPrice != null
-            AND ExternalId__c IN :externalIds )
-            OR (OrderId IN :foundOrders
-            AND ExternalId__c NOT IN :externalIds )
+            WHERE ExternalId__c IN :externalIds 
+
         ]) {
             existingItems.add(item);
         }
