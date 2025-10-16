@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>isDeletedExternal__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Show if was deled on external system</description>
+    <label>Is Deleted On Externally</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

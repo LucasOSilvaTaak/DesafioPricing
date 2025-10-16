@@ -5,6 +5,7 @@
     <columns>ProductionCost__c</columns>
     <columns>ProductHierarchy__c</columns>
     <columns>PRODUCT2.ACTIVE</columns>
+    <columns>ExternalId__c</columns>
     <filterScope>Everything</filterScope>
     <label>All Products</label>
 </ListView>

@@ -1,14 +1,32 @@
 public with sharing class OrderTriggerHelper {
 
-    public static void handleUpdateOrder(List<Order> oldList, List<Order> newList){
-        for(Integer i = 0; i < newList.size(); i++){
+    public static void handleBeforeUpdate(List<Order> oldList, List<Order> newList){
         
-            if(oldList[i].AccountId != newList[i].AccountId) {
+        OrderTriggerUseCase.stopAccountChange(oldList, newList);
         
-                newList[i].addError('The Account cannot be changed');
+        OrderTriggerUseCase.statusController(oldList, newList);
+
+        OrderTriggerUseCase.updateDiscount(newList);
+
         
-            }
-        }
+    }
+    
+    
+    public static void handleAfterUpdate(List<Order> oldList, List<Order> newList){
+        
+        OrderTriggerUseCase.verifyOneItem(newList);
+
+        OrderTriggerUseCase.callApprovation(newList);
+
+        OrderTriggerUseCase.activateCallout(newList);
+    
     }
 
+
+
+
+
+
+
+    
 }

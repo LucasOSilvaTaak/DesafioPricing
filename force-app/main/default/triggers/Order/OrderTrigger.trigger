@@ -1,4 +1,4 @@
-trigger OrderTrigger on Order (before update) {
+trigger OrderTrigger on Order (before update, after update) {
    
     System.debug('Order Trigger Start => ' + Trigger.operationType);
    
@@ -12,18 +12,20 @@ trigger OrderTrigger on Order (before update) {
     if(OrderTriggerHandler.isTriggerEnabled()){
     
         switch on Trigger.operationType {
-    
-            /*when BEFORE_INSERT{
-    
-                handler.BeforeInsert();
-    
-            }*/
-        
+
             when BEFORE_UPDATE{
         
                 handler.beforeUpdate();
         
             }
+            when AFTER_UPDATE{
+        
+                handler.afterUpdate();
+            
+            }
+
+
+
         }
     }
 }

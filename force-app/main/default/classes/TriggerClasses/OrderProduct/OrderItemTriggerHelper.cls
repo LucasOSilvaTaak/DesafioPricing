@@ -1,3 +1,4 @@
+
 public with sharing class OrderItemTriggerHelper {
     
     public static void handleBeforeInsert(List<OrderItem> newList){
@@ -165,7 +166,7 @@ public with sharing class OrderItemTriggerHelper {
         List<OrderItem> changedList = new List<OrderItem>();
         for(OrderItem iOrderProduct : records){
         
-            if(iOrderProduct.Order.Status != 'Draft') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
+            if(iOrderProduct.Order.Status != 'New' && iOrderProduct.Order.Status != 'Integration Error') iOrderProduct.addError('You can only change the value of the order product when the order is in draft status');
             else{
                 changedList.add(iOrderProduct);
             }
@@ -274,9 +275,10 @@ public with sharing class OrderItemTriggerHelper {
         
             iOrderIten.NoMarginPrice__c = (iOrderIten.Product2.ProductionCost__c + iOrderIten.CostFreight__c) * (1 + iOrderIten.TaxPercentage__c/100);
         
-            iOrderIten.Final__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+            iOrderIten.DiscountedPriceUnit__c = iOrderIten.NoMarginPrice__c * (1 + iOrderIten.MarginPercentage__c/100);
+            iOrderIten.Final__c = iOrderIten.DiscountedPriceUnit__c * iOrderIten.Quantity;
         
-            iOrderIten.Discount__c = (iOrderIten.Final__c - iOrderIten.UnitPrice)/iOrderIten.Final__c;
+            iOrderIten.Discount__c = 100 * ((iOrderIten.DiscountedPriceUnit__c - iOrderIten.UnitPrice)/iOrderIten.DiscountedPriceUnit__c);
 
         }
     } 

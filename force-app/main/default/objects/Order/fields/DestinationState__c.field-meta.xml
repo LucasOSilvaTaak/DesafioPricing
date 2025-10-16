@@ -4,7 +4,7 @@
     <description>Wich state is the order</description>
     <inlineHelpText>Choose on the picklist the state of the order</inlineHelpText>
     <label>DestinationState</label>
-    <required>true</required>
+    <required>false</required>
     <trackHistory>false</trackHistory>
     <type>Picklist</type>
     <valueSet>

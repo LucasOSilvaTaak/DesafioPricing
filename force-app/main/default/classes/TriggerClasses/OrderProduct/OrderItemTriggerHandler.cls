@@ -46,7 +46,7 @@ public with sharing class OrderItemTriggerHandler {
 
     public void beforeInsert(){
     
-        OrderItemTriggerHelper.handleBeforeInsert(newRecordList);
+         OrderItemTriggerHelper.handleBeforeInsert(newRecordList);
     
     }
 
