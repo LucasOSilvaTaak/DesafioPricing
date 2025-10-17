@@ -222,10 +222,10 @@ public with sharing class FreightTrigger_Test {
     @isTest
     static void testTriggerEnabled(){
         
-        FreightTriggerHandler.disableTrigger();
-        FreightTriggerHandler.enableTrigger();
+        DevUserTriggerHandler.disableTrigger();
+        DevUserTriggerHandler.enableTrigger();
 
-        Assert.areEqual(true, FreightTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
+        Assert.areEqual(true, DevUserTriggerHandler.isTriggerEnabled(), 'Trigger should be enabled');
 
     }
     

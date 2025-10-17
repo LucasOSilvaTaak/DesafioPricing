@@ -1,4 +1,4 @@
-global with sharing class Wrappers {
+global with sharing class Wrapper {
  global class OrderWrapper {
         
 		public String id;

@@ -9,7 +9,7 @@ trigger TaxTrigger on Tax__c (before insert, before update) {
         Trigger.newMap
     );
 
-    if(FreightTriggerHandler.isTriggerEnabled()){
+    if(DevUserTriggerHandler.isTriggerEnabled()){
    
         switch on Trigger.operationType {
    

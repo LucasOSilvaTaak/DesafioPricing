@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Api_Only_Rule</fullName>
+    <active>true</active>
+    <description>is is from a external system only api can change</description>
+    <errorConditionFormula>AND($Profile.Name = &quot;adm&quot;,  TotvsItem__c = true)</errorConditionFormula>
+    <errorMessage>Cannot change from salesforce items from external</errorMessage>
+</ValidationRule>

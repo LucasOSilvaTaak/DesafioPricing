@@ -1,103 +1,27 @@
-global with sharing class OrderOutbound {
+global with sharing class DevUserUpdateProcessor implements Database.Batchable<DevUser__c>, Database.AllowsCallouts {
 
-    @InvocableMethod
-    public static List<String> orderCalloult(List<Id> orderIds){
-            List<Order> orderList = [
-                SELECT Id, Account.ExternalId__c, ExternalId__c, order.PaymentCondition__r.ExternalId__c, EffectiveDate, 
-                    AccountAddress__r.ExternalId__c, FreightType__c, DistributionCenter__r.ExternalId__c, 
-                    DeliveryDate__c, Status, Observation__c, OrderNumber,
-                    (
-                        SELECT ExternalId__c, Product2.ExternalId__c, Quantity, UnitPrice, TotvsItem__c, ListPrice , OrderId, OrderItemNumber
-                        FROM OrderItems
-                        WHERE isDeletedExternal__c = false 
-                    )
-                FROM Order
-                WHERE Id in :orderIds
+    private Set<String> logins;
+    private List<DevUser__c> toUpdate = new List<DevUser__c>();
 
-            ];
-
-        OutResponse response = sendCallout(orderList);
-
-        List<String> responseList = new List<String>();
-        responseList.add(response.response.response.getBody());
-
-        return responseList;
-
+    global DevUserUpdateProcessor(Set<String> logins){
+        this.logins = logins;
     }
 
-    public static OutResponse sendCallout(List<Order> orderList){
-        
-        List<Wrappers.OrderWrapper> orderWrapperList = new List<Wrappers.OrderWrapper>();
-
-        for(Order iOrder : orderList){
-           
-            Wrappers.OrderWrapper tempOrderWrapper = new Wrappers.OrderWrapper();
-           
-            tempOrderWrapper.serialize(iOrder);
-
-            orderWrapperList.add(tempOrderWrapper);
-        }
-
-        Map<String, List<Wrappers.OrderWrapper>> requestMap = new Map<String, List<Wrappers.OrderWrapper>>();
-
-
-        requestMap.put('request', orderWrapperList);
-
-        
-
-        String payload = JSON.serialize(requestMap);
-        
-        String endPoint = 'callout:ApiCredential/services/apexrest/upsertOrder/';
-
-        System.debug(payload);
-        System.debug(endPoint);
-
-        Map<String, String> headersMap = new Map<String, String>();
-        headersMap.put('Content-type', 'application/json');
-        
-        RequestResponse requestResponse = ExecuteCallout.executeCallout(endPoint, payload, headersMap);
-        
-        OutResponse outResponse;
-        
-        
-        if(requestResponse.exceptionObject == null || requestResponse.exceptionObject.getMessage() == ''){
-            outResponse = new OutResponse(requestResponse);
-            
-            for(Order iOrder : orderList){
-                iOrder.Status = 'Integrated';
-            }
-            
-        }
-        else {
-            outResponse = new OutResponse(requestResponse.exceptionObject.getMessage(), requestResponse);
-            
-            for(Order iOrder : orderList){
-                iOrder.Status = 'Integration Error';
-            }
-            
-        }
-        
-        update orderList;
-        
-        String externalIdList = '';
-        
-        for (Order iOrder : orderList) {
-            if (iOrder.ExternalId__c != null) {
-                externalIdList += (String.isBlank(externalIdList) ? '' : ',') + iOrder.ExternalId__c;
-            }
-        }
-
-        
-        IntegrationLog.createLog(
-            'Order', externalIdList, 'Outbound',outResponse.response.response.getBody() , 
-            payload, endPoint, !outResponse.success, false,
-            requestResponse.exceptionObject?.getMessage()
-        );
-        
-        return outResponse;
-
+    global Database.QueryLocator start(Database.BatchableContext bc){
+        return Database.getQueryLocator([SELECT Id, Login__c FROM DevUser__c WHERE Login__c IN :logins]);
     }
 
-     
+    global void execute(Database.BatchableContext bc, List<DevUser__c> scope){
+        List<DevUser__c> updatedUsers = GetLoginsToUpdate.getValues(scope);
 
+        toUpdate.addAll(updatedUsers);
+    }
+
+    global void finish(Database.BatchableContext bc){
+        if(!toUpdate.isEmpty()){
+
+            System.enqueueJob(new DevUserUpdateAfterCalloutQueueable(toUpdate));
+            
+        }
+    }
 }

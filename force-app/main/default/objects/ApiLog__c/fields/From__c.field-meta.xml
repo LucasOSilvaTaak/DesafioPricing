@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>From__c</fullName>
+    <description>Where is the request From</description>
+    <label>From</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>SALESFORCE</fullName>
+                <default>false</default>
+                <label>SALESFORCE</label>
+            </value>
+            <value>
+                <fullName>TOTVS</fullName>
+                <default>false</default>
+                <label>TOTVS</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
