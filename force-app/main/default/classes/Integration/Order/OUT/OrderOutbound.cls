@@ -1,9 +1,9 @@
-global with sharing class DevUserUpdateProcessor implements Database.Batchable<DevUser__c>, Database.AllowsCallouts {
+global with sharing class DevUserInsertBatch implements Database.Batchable<DevUser__c>, Database.AllowsCallouts {
 
     private Set<String> logins;
     private List<DevUser__c> toUpdate = new List<DevUser__c>();
 
-    global DevUserUpdateProcessor(Set<String> logins){
+    global DevUserInsertBatch(Set<String> logins){
         this.logins = logins;
     }
 

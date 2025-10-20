@@ -212,24 +212,25 @@ global static List<InResponse> createOrder() {
 
             }
             
-            if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
-
-
+            
+            
             //Preenche os itens
             filledItemList = fillOrderItem(passedRequest);
-
+            
             for (FilledItem iFilledItem : filledItemList) {
-
+                
                 if (!iFilledItem.hasError) {
-
+                    
                     itensToUpsert.add(iFilledItem.items);
-
+                    
                 }
-
+                
             }
-                        
+            
             List<OrderItem> toDelete = getExistingItems(ordersToUpsert, passedRequest);
-
+            
+            if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
+            
             if (!toDelete.isEmpty()) Database.delete(toDelete, true);
             
             if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
