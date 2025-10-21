@@ -5,47 +5,27 @@ global with sharing class OrderInbound {
         public List<Wrappers.OrderWrapper> request;
     }
 
-    private class FilledItem {
-        public OrderItem items;
-        public String externalId;
-        public Boolean hasError = false;
-        public String errorMessage = '';
-    }
-
-    private class FilledOrder {
-        public Order order;
-        public Wrappers.OrderWrapper wrapper;
-        public Boolean hasError;
-        public String externalId;
-        public String errorMessage;
-
-        public FilledOrder(){
-            hasError = false;
-            errorMessage = '';
-        }
-    }
-
-    private static List<FilledOrder> fillOrder(List<Wrappers.OrderWrapper> request) {
+    private static List<FilledObjects.FilledOrder> fillOrder(List<Wrappers.OrderWrapper> request) {
         
-        List<FilledOrder> filledOrdersList = new List<FilledOrder>();
+        List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
+
+
 
         for (Wrappers.OrderWrapper iOrder : request) {
                 
-            FilledOrder filledOrder = new FilledOrder();
+            FilledObjects.FilledOrder filledOrder = new FilledObjects.FilledOrder();
 
-            Order deserializedOrder = iOrder.deserialize();
+            Order deserializedOrder = (Order) iOrder.deserialize();
             
             Set<String> allFields = iOrder.getRequiredFields();
 
             Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(deserializedOrder, allFields);
 
-            missingFields.addAll(iOrder.VerifyRequiredLookups());
-
 
             if(!missingFields.isEmpty()){
 
                 filledOrder.hasError = true;
-                filledOrder.errorMessage = 'Missing required fields: ' + String.join(new List<String>(missingFields), ', ');
+                filledOrder.errorMessage = 'Missing required fields on order with order code "' + iOrder.OrderCode + '"  : ' + String.join(new List<String>(missingFields), ', ');
             
             }
 
@@ -57,15 +37,51 @@ global with sharing class OrderInbound {
             
         }
 
+        Wrappers.OrderWrapper tempOrder = new Wrappers.OrderWrapper();
+
+        for (String key : tempOrder.getRequiredLookups().keySet()) {
+
+            String field = tempOrder.getRequiredLookups().get(key);
+
+            Set<String> externalIds = VerifyFields.getAllExternalIds(field);
+
+            for (FilledObjects.FilledOrder iFilledOrder : filledOrdersList) {
+
+                Map<String, Object> wrapperMap = 
+                    (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(iFilledOrder.wrapper));
+
+                Object lookupValue = wrapperMap.get(key);
+
+                if (!VerifyFields.verifyLookupFields(externalIds, String.valueOf(lookupValue))) {
+
+                    iFilledOrder.hasError = true;
+
+                    iFilledOrder.errorMessage += ' Invalid lookup field on order with order code "' +
+                        iFilledOrder.wrapper.getExternalId() + '" : ' + field + '. ';
+                }
+            }
+        }
+
         return filledOrdersList;
 
     }
 
-    private static List<FilledItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
+    private static Boolean verifyHasErrors(List<FilledObjects.FilledObject> objects){
+        
+        for(FilledObjects.FilledObject iObject : objects){
+            if(iObject.hasError){
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    private static List<FilledObjects.FilledItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
         
-        List<FilledItem> filledItemList = new List<FilledItem>();
-
+        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
 
         for(Wrappers.OrderWrapper iOrder : orders){
             
@@ -73,35 +89,60 @@ global with sharing class OrderInbound {
 
             for(Wrappers.OrderItemWrapper iOrderItem : iOrder.orderItems){
                 
-                FilledItem filledItem = new FilledItem();
+                FilledObjects.FilledItem filledItem = new FilledObjects.FilledItem();
                                 
                 iOrderItem.orderCode = iOrder.orderCode;
 
-                OrderItem desirializedItem = iOrderItem.deserialize();
+                OrderItem desirializedItem = (OrderItem)iOrderItem.deserialize();
 
                 Set<String> allFields = iOrderItem.getRequiredFields();
 
                 Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(desirializedItem, allFields);
 
-                missingFields.addAll(iOrderItem.VerifyRequiredLookups());
-
                 if(!missingFields.isEmpty()){
 
                     filledItem.hasError = true;
-                    filledItem.errorMessage = 'Missing required fields: ' + String.join(new List<String>(missingFields), ', ');
-
+                    filledItem.errorMessage = 'Missing required fields on order with item code "' + iOrderItem.itemCode + '" : ' + String.join(new List<String>(missingFields), ', ');
                 }
                 
                 filledItem.items = desirializedItem;
         
                 filledItem.externalId = iOrderItem.itemCode;
 
+                filledItem.wrapper = iOrderItem;
                 
                 filledItemList.add(filledItem);
                 
 
             }
+            
         }
+
+        Wrappers.OrderItemWrapper tempOrderItem = new Wrappers.OrderItemWrapper();
+        
+        for (String key : tempOrderItem.getRequiredLookups().keySet()) {
+
+            String field = tempOrderItem.getRequiredLookups().get(key);
+
+            Set<String> externalIds = VerifyFields.getAllExternalIds(field);
+
+            for (FilledObjects.FilledItem iFilledItem : filledItemList) {
+
+                Map<String, Object> wrapperMap = 
+                    (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(iFilledItem.wrapper));
+
+                Object lookupValue = wrapperMap.get(key);
+
+                if (!VerifyFields.verifyLookupFields(externalIds, String.valueOf(lookupValue))) {
+
+                    iFilledItem.hasError = true;
+
+                    iFilledItem.errorMessage += ' Invalid lookup field on Order Item with order code "' +
+                        iFilledItem.wrapper.getExternalId() + '" : ' + field + '. ';
+                }
+            }
+        }
+
 
         return filledItemList;
     }
@@ -162,21 +203,16 @@ global static List<InResponse> createOrder() {
     OrderRequestWrapper body;
 
     try {
-        body = (OrderRequestWrapper) JSON.deserialize(
-            req.requestBody.toString(),
-            OrderRequestWrapper.class
-        );
+        body = (OrderRequestWrapper) JSON.deserialize(req.requestBody.toString(),
+            OrderRequestWrapper.class);
         
     } catch (Exception e) {
+       
         InResponse errorResponse = new InResponse();
         errorResponse.error(null, 'Erro no formato do JSON recebido: ' + e.getMessage(), 'Order');
+    
         return new List<InResponse>{ errorResponse };
-    }
-
-    if (body == null || body.request == null || body.request.isEmpty()) {
-        InResponse errorResponse = new InResponse();
-        errorResponse.error(null, 'Campo "request" ausente ou vazio no JSON', 'Order');
-        return new List<InResponse>{ errorResponse };
+    
     }
 
     List<Wrappers.OrderWrapper> request = body.request;
@@ -189,142 +225,151 @@ global static List<InResponse> createOrder() {
         List<OrderItem> itensToUpsert = new List<OrderItem>();
         List<String> externalIds = new List<String>();
         List<InResponse> orderResponseList = new List<InResponse>();
+        List<FilledObjects.FilledOrder> filledOrderList = new List<FilledObjects.FilledOrder>();
+        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
+
         String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/orders/*';
 
-        List<FilledOrder> filledOrderList = new List<FilledOrder>();
-        List<FilledItem> filledItemList = new List<FilledItem>();
-
+        Savepoint savePoint = Database.setSavepoint();
         
         try{
 
-
             filledOrderList = fillOrder(request);            
             
-            List<Wrappers.OrderWrapper> passedRequest = new List<Wrappers.OrderWrapper>();
-
-            for (FilledOrder iFilledOrder : filledOrderList) {
+            for (FilledObjects.FilledOrder iFilledOrder : filledOrderList) {
                 if (!iFilledOrder.hasError) {
 
-                    passedRequest.add(iFilledOrder.wrapper);
                     ordersToUpsert.add(iFilledOrder.order);
 
                 }
 
             }
             
-            if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
-
-
+            
+            
             //Preenche os itens
-            filledItemList = fillOrderItem(passedRequest);
-
-            for (FilledItem iFilledItem : filledItemList) {
-
+            filledItemList = fillOrderItem(request);
+            
+            for (FilledObjects.FilledItem iFilledItem : filledItemList) {
+                
                 if (!iFilledItem.hasError) {
-
+                    
                     itensToUpsert.add(iFilledItem.items);
+                    
+                }
+                
+            }
+            
+            List<OrderItem> toDelete = getExistingItems(ordersToUpsert, request);
+            
+            if(!verifyHasErrors(filledOrderList) && !verifyHasErrors(filledItemList)){
+                
+                if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
+            
+                if (!toDelete.isEmpty()) Database.delete(toDelete, true);
+                
+                if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
+
+                for(Order iOrder : ordersToUpsert){
+                    OrderResponse tempOrderResponse = new OrderResponse();
+                    tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
+
+                    iOrder.Status = 'Integrated';
+                                    
+                }
+
+
+                for(OrderItem iOrderItem : itensToUpsert){
+                    orderResponse tempItemResponse = new orderResponse();
+                    tempItemResponse.success(
+                        iOrderItem.Id, 
+                        iOrderItem.ExternalId__c,
+                        iOrderItem.getSObjectType().getDescribe().getName()
+                    );
 
                 }
 
+                update ordersToUpsert;
             }
-                        
-            List<OrderItem> toDelete = getExistingItems(ordersToUpsert, passedRequest);
-
-            if (!toDelete.isEmpty()) Database.delete(toDelete, true);
             
-            if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
-
-             for(Order iOrder : ordersToUpsert){
-                OrderResponse tempOrderResponse = new OrderResponse();
-                tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
-
-                iOrder.Status = 'Integrated';
-                                
-            }
-
-
-            for(OrderItem iOrderItem : itensToUpsert){
-                orderResponse tempItemResponse = new orderResponse();
-                tempItemResponse.success(
-                    iOrderItem.Id, 
-                    iOrderItem.ExternalId__c,
-                    iOrderItem.getSObjectType().getDescribe().getName()
-                );
-
-            }
-
-            update ordersToUpsert;
+            else hasError = true;
+            
+            
         } 
         catch (Exception e){
            
             hasError = true;
             errorMessage = 'A error has happend: ' + e.getMessage();
-            OrderResponse tempResponse = new OrderResponse();
-            tempResponse.error(null, errorMessage, 'Order');
-            orderResponseList.add(tempResponse);
         
+            Database.rollback(savePoint);
+            
         }
 
         String orderExternalIds = '';
-        if (!hasError){
-            for( Wrappers.OrderWrapper iOrder : request ){
 
-                if(iOrder.orderCode == null || iOrder.orderCode == '') continue;
-                externalIds.add(iOrder.orderCode);
+        for( Wrappers.OrderWrapper iOrder : request ){
+
+            if(iOrder.orderCode == null || iOrder.orderCode == '') continue;
+            externalIds.add(iOrder.orderCode);
+
+        }
+
+
+
+        for(FilledObjects.FilledOrder iFilledOrder : filledOrderList ){
+            OrderResponse tempResponse = new OrderResponse();
+
+            if(hasError){
+                tempResponse.error(
+                    iFilledOrder.order.ExternalId__c,
+                    String.isNotBlank(errorMessage) &&  String.isBlank(iFilledOrder.errorMessage) ? 
+                        errorMessage : iFilledOrder.errorMessage,
+                    'Order'
+
+                );
+                orderResponseList.add(tempResponse);
             }
-
-            for(FilledOrder iFilledOrder : filledOrderList ){
-                OrderResponse tempResponse = new OrderResponse();
-
-                if(iFilledOrder.hasError){
-                    tempResponse.error(
-                        iFilledOrder.order.ExternalId__c,
-                        iFilledOrder.errorMessage,
-                        'Order'
-                    );
-                    orderResponseList.add(tempResponse);
-                }
-                else{
-                    
-                    tempResponse.success(
-                        iFilledOrder.order.Id,
-                        iFilledOrder.order.ExternalId__c,
-                        'Order'
-                    );
-
-                    orderResponseList.add((InResponse)tempResponse);
+            else{
                 
-                }
-            }
+                tempResponse.success(
+                    iFilledOrder.order.Id,
+                    iFilledOrder.order.ExternalId__c,
+                    'Order'
+                );
 
-            for(FilledItem iFilledOrder : filledItemList ){
-                ItemResponse tempResponse = new ItemResponse();
-
-                if(iFilledOrder.hasError){
-                    tempResponse.error(
-                        iFilledOrder.items.ExternalId__c,
-                        iFilledOrder.externalId,
-                        iFilledOrder.errorMessage,
-                        'Order Item'
-                    );
-                    orderResponseList.add((InResponse) tempResponse);
-                }
-                else{
-                    
-                    tempResponse.success(
-                        iFilledOrder.items.Id,
-                        iFilledOrder.externalId,
-                        'Order Item'
-                    );
-
-                    orderResponseList.add(tempResponse);
-                
-                }
+                orderResponseList.add((InResponse)tempResponse);
+            
             }
         }
-       
 
-        
+        for(FilledObjects.FilledItem iFilledItem : filledItemList ){
+            ItemResponse tempResponse = new ItemResponse();
+
+            if(hasError){
+                
+                tempResponse.error(
+                    iFilledItem.externalId,
+                    String.isNotBlank(errorMessage) &&  String.isBlank(iFilledItem.errorMessage) ?
+                        errorMessage :  iFilledItem.errorMessage,
+                    'Order Item'
+                );
+                orderResponseList.add((InResponse) tempResponse);
+            
+            }
+            else{
+                
+                tempResponse.success(
+                    iFilledItem.items.Id,
+                    iFilledItem.externalId,
+                    'Order Item'
+                );
+
+                orderResponseList.add(tempResponse);
+            
+            }
+        }
+    
+       
         orderExternalIds = String.join(externalIds, ',');
 
         IntegrationLog.createLog(
@@ -333,6 +378,8 @@ global static List<InResponse> createOrder() {
             hasDeleted, errorMessage
         );
 
+        RestContext.response.statusCode = hasError ? 400 : 200;
+        
         return orderResponseList;
     }
 

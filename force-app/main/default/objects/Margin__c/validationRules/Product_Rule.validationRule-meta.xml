@@ -7,5 +7,5 @@
     AND(NOT(ISBLANK(ProductHierarchy__c)), NOT (ISBLANK(Product__c))),
     AND(ISBLANK(ProductHierarchy__c),ISBLANK(Product__c))
 )</errorConditionFormula>
-    <errorMessage>You need a product to have a hierarchy or a hierarchy to have a product and only one can be select at time</errorMessage>
+    <errorMessage>You need to select a product hierarchy or a product and only one at time</errorMessage>
 </ValidationRule>

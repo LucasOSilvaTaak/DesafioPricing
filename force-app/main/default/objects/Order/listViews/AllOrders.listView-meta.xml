@@ -8,6 +8,8 @@
     <columns>ORDERS.STATUS</columns>
     <columns>CONTRACT.CONTRACT_NUMBER</columns>
     <columns>ExternalId__c</columns>
+    <columns>ORDERS.CREATED_DATE</columns>
+    <columns>ORDERS.LAST_UPDATE</columns>
     <filterScope>Everything</filterScope>
     <label>All Orders</label>
 </ListView>

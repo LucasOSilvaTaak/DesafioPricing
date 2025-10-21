@@ -1,4 +1,4 @@
-public with sharing class FreightTriggerHandler {
+public with sharing class DevUserTriggerHandler {
     
     private static Boolean isEnabled;
     
@@ -31,7 +31,7 @@ public with sharing class FreightTriggerHandler {
 	Map<Id, Freight__c> oldRecordMap { get; set; }
 	Map<Id, Freight__c> newRecordMap { get; set; }
     
-    public FreightTriggerHandler(		
+    public DevUserTriggerHandler(		
         List<Freight__c> oldRecordList,
 		List<Freight__c> newRecordList,
 		Map<Id, Freight__c> oldRecordMap,
@@ -52,7 +52,7 @@ public with sharing class FreightTriggerHandler {
     
     }
     
-    public void beforeUpdate(){
+    public void afterInsert(){
     
         FreightTriggerHelper.HandleUpdateFreight(oldRecordList, newRecordList);
     
