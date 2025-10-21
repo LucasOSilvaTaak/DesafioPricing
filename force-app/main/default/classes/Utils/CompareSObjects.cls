@@ -1,6 +1,5 @@
 public with sharing class CompareSObjects {
 
-    //COMPARA DOIS SOBJECTS COM BASE NOS CAMPOS INFORMADOS
     public static Boolean equals(SObject record1, SObject record2, Set<String> fields){
         
         Map<String,Object> fieldMap1 = record1.getPopulatedFieldsAsMap();
