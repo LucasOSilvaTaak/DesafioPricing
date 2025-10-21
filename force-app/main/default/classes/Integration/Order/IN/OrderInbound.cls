@@ -28,7 +28,7 @@ global with sharing class OrderInbound {
             }
 
             filledOrder.wrapper = iOrder;
-            filledOrder.order = deserializedOrder;
+            filledOrder.record = deserializedOrder;
             filledOrder.externalId = iOrder.orderCode;
 
             filledOrdersList.add(filledOrder);
@@ -103,7 +103,7 @@ global with sharing class OrderInbound {
                     filledItem.errorMessage = 'Missing required fields on order with item code "' + iOrderItem.itemCode + '" : ' + String.join(new List<String>(missingFields), ', ');
                 }
                 
-                filledItem.items = desirializedItem;
+                filledItem.record = desirializedItem;
         
                 filledItem.externalId = iOrderItem.itemCode;
 
@@ -243,7 +243,7 @@ global static List<InResponse> createOrder() {
             for (FilledObjects.FilledOrder iFilledOrder : filledOrderList) {
                 if (!iFilledOrder.hasError) {
 
-                    ordersToUpsert.add(iFilledOrder.order);
+                    ordersToUpsert.add((Order) iFilledOrder.record);
 
                 }
 
@@ -258,7 +258,7 @@ global static List<InResponse> createOrder() {
                 
                 if (!iFilledItem.hasError) {
                     
-                    itensToUpsert.add(iFilledItem.items);
+                    itensToUpsert.add((OrderItem) iFilledItem.record);
                     
                 }
                 
@@ -325,7 +325,7 @@ global static List<InResponse> createOrder() {
 
             if(hasError){
                 tempResponse.error(
-                    iFilledOrder.order.ExternalId__c,
+                    (String) iFilledOrder.record.get('ExternalId__c'),
                     String.isNotBlank(errorMessage) &&  String.isBlank(iFilledOrder.errorMessage) ? 
                         errorMessage : iFilledOrder.errorMessage,
                     'Order'
@@ -336,8 +336,8 @@ global static List<InResponse> createOrder() {
             else{
                 
                 tempResponse.success(
-                    iFilledOrder.order.Id,
-                    iFilledOrder.order.ExternalId__c,
+                    iFilledOrder.record.Id,
+                    (String) iFilledOrder.record.get('ExternalId__c'),
                     'Order'
                 );
 
@@ -363,7 +363,7 @@ global static List<InResponse> createOrder() {
             else{
                 
                 tempResponse.success(
-                    iFilledItem.items.Id,
+                    iFilledItem.record.Id,
                     iFilledItem.externalId,
                     'Order Item'
                 );
