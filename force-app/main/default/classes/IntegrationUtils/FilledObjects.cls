@@ -17,7 +17,9 @@ public with sharing virtual class FilledObjects {
     }
         
     public class FilledItem extends FilledObject {
+        
         public OrderItem items;
+        
         public Wrappers.OrderItemWrapper wrapper;
 
         public FilledItem(){
@@ -26,7 +28,9 @@ public with sharing virtual class FilledObjects {
     }
 
     public class FilledOrder extends FilledObject{
+       
         public Order order;
+       
         public Wrappers.OrderWrapper wrapper;
 
         public FilledOrder(){

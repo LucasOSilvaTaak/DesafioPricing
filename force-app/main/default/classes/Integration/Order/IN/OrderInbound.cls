@@ -9,8 +9,6 @@ global with sharing class OrderInbound {
         
         List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
 
-
-
         for (Wrappers.OrderWrapper iOrder : request) {
                 
             FilledObjects.FilledOrder filledOrder = new FilledObjects.FilledOrder();
@@ -167,8 +165,11 @@ global with sharing class OrderInbound {
         for(Wrappers.OrderWrapper iOrder : ordersToUpsert){
             
             if(iOrder.orderItems == null) continue;
+           
             for(Wrappers.OrderItemWrapper iItemWrapper : iOrder.orderItems){
+          
                 orderExternalIds.add(iItemWrapper.itemCode);
+           
             }
         
         }
@@ -200,13 +201,16 @@ global with sharing class OrderInbound {
 global static List<InResponse> createOrder() {
 
     RestRequest req = RestContext.request;
+    
     OrderRequestWrapper body;
 
     try {
+       
         body = (OrderRequestWrapper) JSON.deserialize(req.requestBody.toString(),
             OrderRequestWrapper.class);
         
-    } catch (Exception e) {
+    } 
+    catch (Exception e) {
        
         InResponse errorResponse = new InResponse();
         errorResponse.error(null, 'Erro no formato do JSON recebido: ' + e.getMessage(), 'Order');
@@ -372,13 +376,19 @@ global static List<InResponse> createOrder() {
        
         orderExternalIds = String.join(externalIds, ',');
 
-        IntegrationLog.createLog(
-            'Order', orderExternalIds, 'Inbound', JSON.serialize(request),
-            JSON.serialize(orderResponseList), endpoint, hasError,
-            hasDeleted, errorMessage
-        );
-
         RestContext.response.statusCode = hasError ? 400 : 200;
+
+        IntegrationLogsBuilder.LogBuilder logBuilder = new IntegrationLogsBuilder.LogBuilder();
+        logBuilder.setEndpoint(endpoint)
+            .setPayloadIN(JSON.serialize(request))
+            .setPayloadOUT(JSON.serialize(orderResponseList))
+            .setExternalIdList(orderExternalIds)
+            .setHasAnyErrors(hasError)
+            .setIntegrationName('Inbound', 'Order')
+            .setErrorMessage(errorMessage)
+            .setHasDeleted(hasDeleted)
+            .insertBuild();
+
         
         return orderResponseList;
     }
