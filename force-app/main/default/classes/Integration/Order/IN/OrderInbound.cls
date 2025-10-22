@@ -7,31 +7,14 @@ global with sharing class OrderInbound {
 
     private static List<FilledObjects.FilledOrder> fillOrder(List<Wrappers.OrderWrapper> request) {
         
+        List <FilledObjects.FilledObject> filledList = FilledObjectHelper.verifyRequiredFields(request);
+
         List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
 
-        for (Wrappers.OrderWrapper iOrder : request) {
-                
-            FilledObjects.FilledOrder filledOrder = new FilledObjects.FilledOrder();
-
-            Order deserializedOrder = (Order) iOrder.deserialize();
-            
-            Set<String> allFields = iOrder.getRequiredFields();
-
-            Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(deserializedOrder, allFields);
-
-
-            if(!missingFields.isEmpty()){
-
-                filledOrder.hasError = true;
-                filledOrder.errorMessage = 'Missing required fields on order with order code "' + iOrder.OrderCode + '"  : ' + String.join(new List<String>(missingFields), ', ');
-            
-            }
-
-            filledOrder.wrapper = iOrder;
-            filledOrder.record = deserializedOrder;
-            filledOrder.externalId = iOrder.orderCode;
-
-            filledOrdersList.add(filledOrder);
+        System.debug(filledList.size());
+        for(FilledObjects.FilledObject iFilledObject : filledList){
+            System.debug(iFilledObject);
+            filledOrdersList.add( (FilledObjects.FilledOrder) iFilledObject);
             
         }
 
@@ -64,55 +47,27 @@ global with sharing class OrderInbound {
 
     }
 
-    private static Boolean verifyHasErrors(List<FilledObjects.FilledObject> objects){
-        
-        for(FilledObjects.FilledObject iObject : objects){
-            if(iObject.hasError){
-                return true;
-            }
-        }
-
-        return false;
-
-    }
-
     private static List<FilledObjects.FilledItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
+        System.debug('orders size: ' + orders.size());
         
-        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
-
+        List<Wrappers.OrderItemWrapper> allItemWrapper = new List<Wrappers.OrderItemWrapper>();
+        
         for(Wrappers.OrderWrapper iOrder : orders){
             
             if (iOrder.orderItems == null) continue;
-
-            for(Wrappers.OrderItemWrapper iOrderItem : iOrder.orderItems){
-                
-                FilledObjects.FilledItem filledItem = new FilledObjects.FilledItem();
-                                
-                iOrderItem.orderCode = iOrder.orderCode;
-
-                OrderItem desirializedItem = (OrderItem)iOrderItem.deserialize();
-
-                Set<String> allFields = iOrderItem.getRequiredFields();
-
-                Set<String> missingFields = VerifyRequiredFields.verifyRequiredFields(desirializedItem, allFields);
-
-                if(!missingFields.isEmpty()){
-
-                    filledItem.hasError = true;
-                    filledItem.errorMessage = 'Missing required fields on order with item code "' + iOrderItem.itemCode + '" : ' + String.join(new List<String>(missingFields), ', ');
-                }
-                
-                filledItem.record = desirializedItem;
+            
+            allItemWrapper.addAll(iOrder.orderItems);
+            
+        }
         
-                filledItem.externalId = iOrderItem.itemCode;
+        List<FilledObjects.FilledObject> FilledObjectsList = FilledObjectHelper.verifyRequiredFields(allItemWrapper);
+        
+        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
 
-                filledItem.wrapper = iOrderItem;
-                
-                filledItemList.add(filledItem);
-                
+        for (FilledObjects.FilledObject iFilledObject : FilledObjectsList) {
 
-            }
+            filledItemList.add( (FilledObjects.FilledItem) iFilledObject);
             
         }
 
@@ -221,177 +176,175 @@ global static List<InResponse> createOrder() {
 
     List<Wrappers.OrderWrapper> request = body.request;
 
-        Boolean hasError = false;
-        Boolean hasDeleted = false;
-        String errorMessage = '';
+    Boolean hasError = false;
+    Boolean hasDeleted = false;
+    String errorMessage = '';
 
-        List<Order> ordersToUpsert = new List<Order>();
-        List<OrderItem> itensToUpsert = new List<OrderItem>();
-        List<String> externalIds = new List<String>();
-        List<InResponse> orderResponseList = new List<InResponse>();
-        List<FilledObjects.FilledOrder> filledOrderList = new List<FilledObjects.FilledOrder>();
-        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
+    List<Order> ordersToUpsert = new List<Order>();
+    List<OrderItem> itensToUpsert = new List<OrderItem>();
+    List<String> externalIds = new List<String>();
+    List<InResponse> orderResponseList = new List<InResponse>();
+    List<FilledObjects.FilledOrder> filledOrderList = new List<FilledObjects.FilledOrder>();
+    List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
 
-        String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/orders/*';
+    String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/orders/*';
 
-        Savepoint savePoint = Database.setSavepoint();
+    Savepoint savePoint = Database.setSavepoint();
         
-        try{
+    try{
 
-            filledOrderList = fillOrder(request);            
-            
-            for (FilledObjects.FilledOrder iFilledOrder : filledOrderList) {
-                if (!iFilledOrder.hasError) {
-
-                    ordersToUpsert.add((Order) iFilledOrder.record);
-
-                }
-
-            }
-            
-            
-            
-            //Preenche os itens
-            filledItemList = fillOrderItem(request);
-            
-            for (FilledObjects.FilledItem iFilledItem : filledItemList) {
-                
-                if (!iFilledItem.hasError) {
-                    
-                    itensToUpsert.add((OrderItem) iFilledItem.record);
-                    
-                }
-                
-            }
-            
-            List<OrderItem> toDelete = getExistingItems(ordersToUpsert, request);
-            
-            if(!verifyHasErrors(filledOrderList) && !verifyHasErrors(filledItemList)){
-                
-                if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
-            
-                if (!toDelete.isEmpty()) Database.delete(toDelete, true);
-                
-                if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
-
-                for(Order iOrder : ordersToUpsert){
-                    OrderResponse tempOrderResponse = new OrderResponse();
-                    tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
-
-                    iOrder.Status = 'Integrated';
-                                    
-                }
-
-
-                for(OrderItem iOrderItem : itensToUpsert){
-                    orderResponse tempItemResponse = new orderResponse();
-                    tempItemResponse.success(
-                        iOrderItem.Id, 
-                        iOrderItem.ExternalId__c,
-                        iOrderItem.getSObjectType().getDescribe().getName()
-                    );
-
-                }
-
-                update ordersToUpsert;
-            }
-            
-            else hasError = true;
-            
-            
-        } 
-        catch (Exception e){
-           
-            hasError = true;
-            errorMessage = 'A error has happend: ' + e.getMessage();
+        filledOrderList = fillOrder(request);            
         
-            Database.rollback(savePoint);
+        for (FilledObjects.FilledOrder iFilledOrder : filledOrderList) {
             
-        }
+            if (!iFilledOrder.hasError) {
 
-        String orderExternalIds = '';
+                ordersToUpsert.add((Order) iFilledOrder.record);
 
-        for( Wrappers.OrderWrapper iOrder : request ){
-
-            if(iOrder.orderCode == null || iOrder.orderCode == '') continue;
-            externalIds.add(iOrder.orderCode);
-
-        }
-
-
-
-        for(FilledObjects.FilledOrder iFilledOrder : filledOrderList ){
-            OrderResponse tempResponse = new OrderResponse();
-
-            if(hasError){
-                tempResponse.error(
-                    (String) iFilledOrder.record.get('ExternalId__c'),
-                    String.isNotBlank(errorMessage) &&  String.isBlank(iFilledOrder.errorMessage) ? 
-                        errorMessage : iFilledOrder.errorMessage,
-                    'Order'
-
-                );
-                orderResponseList.add(tempResponse);
             }
-            else{
+
+        }
+        
+        filledItemList = fillOrderItem(request);
+        
+        for (FilledObjects.FilledItem iFilledItem : filledItemList) {
+            
+            if (!iFilledItem.hasError) {
                 
-                tempResponse.success(
-                    iFilledOrder.record.Id,
-                    (String) iFilledOrder.record.get('ExternalId__c'),
-                    'Order'
-                );
-
-                orderResponseList.add((InResponse)tempResponse);
-            
-            }
-        }
-
-        for(FilledObjects.FilledItem iFilledItem : filledItemList ){
-            ItemResponse tempResponse = new ItemResponse();
-
-            if(hasError){
+                itensToUpsert.add((OrderItem) iFilledItem.record);
                 
-                tempResponse.error(
-                    iFilledItem.externalId,
-                    String.isNotBlank(errorMessage) &&  String.isBlank(iFilledItem.errorMessage) ?
-                        errorMessage :  iFilledItem.errorMessage,
-                    'Order Item'
-                );
-                orderResponseList.add((InResponse) tempResponse);
-            
             }
-            else{
-                
-                tempResponse.success(
-                    iFilledItem.record.Id,
-                    iFilledItem.externalId,
-                    'Order Item'
+            
+        }
+        
+        List<OrderItem> itemsToDelete = getExistingItems(ordersToUpsert, request);
+        
+        if(!FilledObjectHelper.verifyHasErrors(filledOrderList) && !FilledObjectHelper.verifyHasErrors(filledItemList)){
+            
+            if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
+        
+            if (!toDelete.isEmpty()) Database.delete(itemsToDelete, true);
+            
+            if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
+
+            for(Order iOrder : ordersToUpsert){
+                OrderResponse tempOrderResponse = new OrderResponse();
+                tempOrderResponse.success(iOrder.Id, iOrder.ExternalId__c, iOrder.getSObjectType().getDescribe().getName());
+
+                iOrder.Status = 'Integrated';
+                                
+            }
+
+
+            for(OrderItem iOrderItem : itensToUpsert){
+                orderResponse tempItemResponse = new orderResponse();
+                tempItemResponse.success(
+                    iOrderItem.Id, 
+                    iOrderItem.ExternalId__c,
+                    iOrderItem.getSObjectType().getDescribe().getName()
                 );
 
-                orderResponseList.add(tempResponse);
-            
             }
+
+            update ordersToUpsert;
         }
+        
+        else hasError = true;
+        
+        
+    } 
+    catch (Exception e){
+        
+        hasError = true;
+        errorMessage = 'A error has happend: ' + e.getMessage();
     
-       
-        orderExternalIds = String.join(externalIds, ',');
+        Database.rollback(savePoint);
+        
+    }
 
-        RestContext.response.statusCode = hasError ? 400 : 200;
+    String orderExternalIds = '';
 
-        IntegrationLogsBuilder.LogBuilder logBuilder = new IntegrationLogsBuilder.LogBuilder();
-        logBuilder.setEndpoint(endpoint)
-            .setPayloadIN(JSON.serialize(request))
-            .setPayloadOUT(JSON.serialize(orderResponseList))
-            .setExternalIdList(orderExternalIds)
-            .setHasAnyErrors(hasError)
-            .setIntegrationName('Inbound', 'Order')
-            .setErrorMessage(errorMessage)
-            .setHasDeleted(hasDeleted)
-            .insertBuild();
+    for( Wrappers.OrderWrapper iOrder : request ){
+
+        if(iOrder.orderCode == null || iOrder.orderCode == '') continue;
+        externalIds.add(iOrder.orderCode);
+
+    }
+
+
+
+    for(FilledObjects.FilledOrder iFilledOrder : filledOrderList ){
+        OrderResponse tempResponse = new OrderResponse();
+
+        if(hasError){
+            tempResponse.error(
+                (String) iFilledOrder.record.get('ExternalId__c'),
+                String.isNotBlank(errorMessage) &&  String.isBlank(iFilledOrder.errorMessage) ? 
+                    errorMessage : iFilledOrder.errorMessage,
+                'Order'
+
+            );
+            orderResponseList.add(tempResponse);
+        }
+        else{
+            
+            tempResponse.success(
+                iFilledOrder.record.Id,
+                (String) iFilledOrder.record.get('ExternalId__c'),
+                'Order'
+            );
+
+            orderResponseList.add((InResponse)tempResponse);
+        
+        }
+    }
+
+    for(FilledObjects.FilledItem iFilledItem : filledItemList ){
+        ItemResponse tempResponse = new ItemResponse();
+
+        if(hasError){
+            
+            tempResponse.error(
+                iFilledItem.externalId,
+                String.isNotBlank(errorMessage) &&  String.isBlank(iFilledItem.errorMessage) ?
+                    errorMessage :  iFilledItem.errorMessage,
+                'Order Item'
+            );
+            orderResponseList.add((InResponse) tempResponse);
+        
+        }
+        else{
+            
+            tempResponse.success(
+                iFilledItem.record.Id,
+                iFilledItem.externalId,
+                'Order Item'
+            );
+
+            orderResponseList.add(tempResponse);
+        
+        }
+    }
+    
+    
+    orderExternalIds = String.join(externalIds, ',');
+
+    RestContext.response.statusCode = hasError ? 400 : 200;
+
+    IntegrationLogsBuilder.LogBuilder logBuilder = new IntegrationLogsBuilder.LogBuilder();
+    logBuilder.setEndpoint(endpoint)
+        .setPayloadIN(JSON.serialize(request))
+        .setPayloadOUT(JSON.serialize(orderResponseList))
+        .setExternalIdList(orderExternalIds)
+        .setHasAnyErrors(hasError)
+        .setIntegrationName('Inbound', 'Order')
+        .setErrorMessage(errorMessage)
+        .setHasDeleted(hasDeleted)
+        .insertBuild();
 
         
-        return orderResponseList;
-    }
+    return orderResponseList;
+}
 
     global class OrderResponse extends InResponse{
         //List<itemResponse> itens = new List<itemResponse>();

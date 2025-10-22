@@ -1,6 +1,6 @@
-global with sharing class Wrappers {
+public with sharing class Wrappers {
 
-	global interface Wrapper {
+	public interface Wrapper {
 		void serialize(SObject record);
 		SObject deserialize();
 		String getFieldKey();
@@ -8,10 +8,12 @@ global with sharing class Wrappers {
 		String getExternalId();
 		Set<String> getRequiredFields();
 		Map<String, String> getRequiredLookups();
+		FilledObjects.FilledObject newFilledObject();
+
 	}
 
 
-	global class OrderWrapper implements Wrapper {
+	public class OrderWrapper implements Wrapper {
         
 		public String id;
 		public String accountCode;
@@ -24,7 +26,19 @@ global with sharing class Wrappers {
 		public Date deliveryDate;
 		public String status;
 		public String obs;
-		public List<OrderItemWrapper> orderItems {get; set;}
+		public List<Wrappers.OrderItemWrapper> orderItems {
+			get{
+
+				for (Wrappers.OrderItemWrapper iItemWrapper : orderItems){
+					
+					iItemWrapper.orderCode = this.orderCode;
+				}
+
+				return orderItems;
+				
+			} 
+			set ;
+		}
 
 		public SObject deserialize() {
 			
@@ -63,7 +77,9 @@ global with sharing class Wrappers {
 			for (OrderItem iOrderItem : order.OrderItems) {
 			
 				OrderItemWrapper iItemWrapper = new OrderItemWrapper();
-			
+				
+				iItemWrapper.itemCode = iOrderItem.ExternalId__c;
+
 				iItemWrapper.serialize(iOrderItem);
 			
 				orderItems.add(iItemWrapper);
@@ -75,7 +91,8 @@ global with sharing class Wrappers {
 			return new Set<String>{
 				'ExternalId__c',
 				'EffectiveDate',
-				'Status'
+				'Status',
+				'FreightType__c'
 			};
 		}
 
@@ -91,9 +108,14 @@ global with sharing class Wrappers {
 		public String getFieldKey() { return 'ExternalId__c'; }
 		public String getFieldId() { return 'Id'; }
 		public String getExternalId() { return this.orderCode; }
+
+		public FilledObjects.FilledObject newFilledObject() {
+    		return new FilledObjects.FilledOrder();
+		}
+
 	}
 
-	global class OrderItemWrapper implements Wrapper {
+	public class OrderItemWrapper implements Wrapper {
         
 		public String id;
 		public String productCode;
@@ -150,7 +172,7 @@ global with sharing class Wrappers {
 		public Set<String> getRequiredFields() {
 			return new Set<String>{
 				'ExternalId__c',
-				'UnitPrice',
+				'UnitPrice', 
 				'Quantity',
 				'ListPrice'
 			};
@@ -161,5 +183,10 @@ global with sharing class Wrappers {
 				'productCode' => 'Product2'
 			};
 		}
+
+		public FilledObjects.FilledObject newFilledObject() {
+    		return new FilledObjects.FilledItem();
+		}
+
 	}
 }
