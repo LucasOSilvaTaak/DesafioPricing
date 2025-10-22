@@ -1,5 +1,7 @@
 public with sharing class Wrappers {
 
+	public 
+
 	public interface Wrapper {
 		void serialize(SObject record);
 		SObject deserialize();
@@ -8,7 +10,6 @@ public with sharing class Wrappers {
 		String getExternalId();
 		Set<String> getRequiredFields();
 		Map<String, String> getRequiredLookups();
-		FilledObjects.FilledObject newFilledObject();
 
 	}
 
@@ -109,10 +110,6 @@ public with sharing class Wrappers {
 		public String getFieldId() { return 'Id'; }
 		public String getExternalId() { return this.orderCode; }
 
-		public FilledObjects.FilledObject newFilledObject() {
-    		return new FilledObjects.FilledOrder();
-		}
-
 	}
 
 	public class OrderItemWrapper implements Wrapper {
@@ -182,10 +179,6 @@ public with sharing class Wrappers {
 			return new Map<String, String>{
 				'productCode' => 'Product2'
 			};
-		}
-
-		public FilledObjects.FilledObject newFilledObject() {
-    		return new FilledObjects.FilledItem();
 		}
 
 	}

@@ -11,9 +11,8 @@ global with sharing class OrderInbound {
 
         List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
 
-        System.debug(filledList.size());
         for(FilledObjects.FilledObject iFilledObject : filledList){
-            System.debug(iFilledObject);
+           
             filledOrdersList.add( (FilledObjects.FilledOrder) iFilledObject);
             
         }
@@ -223,7 +222,7 @@ global static List<InResponse> createOrder() {
             
             if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
         
-            if (!toDelete.isEmpty()) Database.delete(itemsToDelete, true);
+            if (!itemsToDelete.isEmpty()) Database.delete(itemsToDelete, true);
             
             if (!itensToUpsert.isEmpty()) Database.upsert(itensToUpsert, OrderItem.ExternalId__c, true);
 

@@ -1,12 +1,19 @@
 public with sharing class FilledObjectHelper {
 
+    private static Map<String, Type> filledObjectsMap = new Map<String, Type>{
+        'Order' => FilledObjects.FilledOrder.class,
+        'OrderItem' => FilledObjects.FilledItem.class
+    };
+
     public static List<FilledObjects.FilledObject> verifyRequiredFields (List<Wrappers.Wrapper> request){
         
         List<FilledObjects.FilledObject> filledList = new List<FilledObjects.FilledObject>();
 
         for (Wrappers.Wrapper iWrapper : request) {
-                
-            FilledObjects.FilledObject filledObject = iWrapper.newFilledObject();
+            
+            String type =  iWrapper.deserialize().getSObjectType().getDescribe().getName();
+
+            FilledObjects.FilledObject filledObject = (FilledObjects.FilledObject) filledObjectsMap.get(type).newInstance();
 
             SObject deserializedOrder = iWrapper.deserialize();
             
