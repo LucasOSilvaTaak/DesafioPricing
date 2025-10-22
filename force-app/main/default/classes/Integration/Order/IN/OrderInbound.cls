@@ -175,6 +175,13 @@ global static List<InResponse> createOrder() {
 
     List<Wrappers.OrderWrapper> request = body.request;
 
+    if (request == null || request.isEmpty()) {
+        InResponse errorResponse = new InResponse();
+        errorResponse.error(null, 'No order found.', 'Order');
+    
+        return new List<InResponse>{ errorResponse };
+    }
+
     Boolean hasError = false;
     Boolean hasDeleted = false;
     String errorMessage = '';

@@ -9,9 +9,11 @@ public with sharing class FilledObjectHelper {
         
         List<FilledObjects.FilledObject> filledList = new List<FilledObjects.FilledObject>();
 
+        String type;
+
         for (Wrappers.Wrapper iWrapper : request) {
             
-            String type =  iWrapper.deserialize().getSObjectType().getDescribe().getName();
+            type = String.isEmpty(type) ? iWrapper.deserialize().getSObjectType().getDescribe().getName() : type;
 
             FilledObjects.FilledObject filledObject = (FilledObjects.FilledObject) filledObjectsMap.get(type).newInstance();
 
