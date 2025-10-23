@@ -7,40 +7,14 @@ global with sharing class OrderInbound {
 
     private static List<FilledObjects.FilledOrder> fillOrder(List<Wrappers.OrderWrapper> request) {
         
-        List <FilledObjects.FilledObject> filledList = FilledObjectHelper.verifyRequiredFields(request);
+        List <FilledObjects.FilledObject> filledList = FilledObjectServices.processRequiredFieldValidation(request);
 
+        filledList =  FilledObjectServices.processRequiredLookUpsValidation(filledList);
+        
         List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
 
-        for(FilledObjects.FilledObject iFilledObject : filledList){
-           
+        for(FilledObjects.FilledObject iFilledObject : filledList)
             filledOrdersList.add( (FilledObjects.FilledOrder) iFilledObject);
-            
-        }
-
-        Wrappers.OrderWrapper tempOrder = new Wrappers.OrderWrapper();
-
-        for (String key : tempOrder.getRequiredLookups().keySet()) {
-
-            String field = tempOrder.getRequiredLookups().get(key);
-
-            Set<String> externalIds = VerifyFields.getAllExternalIds(field);
-
-            for (FilledObjects.FilledOrder iFilledOrder : filledOrdersList) {
-
-                Map<String, Object> wrapperMap = 
-                    (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(iFilledOrder.wrapper));
-
-                Object lookupValue = wrapperMap.get(key);
-
-                if (!VerifyFields.verifyLookupFields(externalIds, String.valueOf(lookupValue))) {
-
-                    iFilledOrder.hasError = true;
-
-                    iFilledOrder.errorMessage += ' Invalid lookup field on order with order code "' +
-                        iFilledOrder.wrapper.getExternalId() + '" : ' + field + '. ';
-                }
-            }
-        }
 
         return filledOrdersList;
 
@@ -60,39 +34,17 @@ global with sharing class OrderInbound {
             
         }
         
-        List<FilledObjects.FilledObject> FilledObjectsList = FilledObjectHelper.verifyRequiredFields(allItemWrapper);
-        
+        List<FilledObjects.FilledObject> filledObjectsList = FilledObjectServices.processRequiredFieldValidation(allItemWrapper);
+        filledObjectsList = FilledObjectServices.processRequiredLookUpsValidation(filledObjectsList);
+
+
         List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
 
-        for (FilledObjects.FilledObject iFilledObject : FilledObjectsList) {
+        for (FilledObjects.FilledObject iFilledObject : filledObjectsList) {
 
             filledItemList.add( (FilledObjects.FilledItem) iFilledObject);
             
-        }
 
-        Wrappers.OrderItemWrapper tempOrderItem = new Wrappers.OrderItemWrapper();
-        
-        for (String key : tempOrderItem.getRequiredLookups().keySet()) {
-
-            String field = tempOrderItem.getRequiredLookups().get(key);
-
-            Set<String> externalIds = VerifyFields.getAllExternalIds(field);
-
-            for (FilledObjects.FilledItem iFilledItem : filledItemList) {
-
-                Map<String, Object> wrapperMap = 
-                    (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(iFilledItem.wrapper));
-
-                Object lookupValue = wrapperMap.get(key);
-
-                if (!VerifyFields.verifyLookupFields(externalIds, String.valueOf(lookupValue))) {
-
-                    iFilledItem.hasError = true;
-
-                    iFilledItem.errorMessage += ' Invalid lookup field on Order Item with order code "' +
-                        iFilledItem.wrapper.getExternalId() + '" : ' + field + '. ';
-                }
-            }
         }
 
 
@@ -225,7 +177,7 @@ global static List<InResponse> createOrder() {
         
         List<OrderItem> itemsToDelete = getExistingItems(ordersToUpsert, request);
         
-        if(!FilledObjectHelper.verifyHasErrors(filledOrderList) && !FilledObjectHelper.verifyHasErrors(filledItemList)){
+        if(!FilledObjectServices.verifyHasErrors(filledOrderList) && !FilledObjectServices.verifyHasErrors(filledItemList)){
             
             if (!ordersToUpsert.isEmpty()) Database.upsert(ordersToUpsert, Order.ExternalId__c, true);
         

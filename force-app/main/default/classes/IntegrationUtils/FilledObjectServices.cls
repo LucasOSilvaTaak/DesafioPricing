@@ -1,11 +1,11 @@
-public with sharing class FilledObjectHelper {
+public with sharing class FilledObjectServices {
 
     private static Map<String, Type> filledObjectsMap = new Map<String, Type>{
         'Order' => FilledObjects.FilledOrder.class,
         'OrderItem' => FilledObjects.FilledItem.class
     };
 
-    public static List<FilledObjects.FilledObject> verifyRequiredFields (List<Wrappers.Wrapper> request){
+    public static List<FilledObjects.FilledObject> processRequiredFieldValidation (List<Wrappers.Wrapper> request){
         
         List<FilledObjects.FilledObject> filledList = new List<FilledObjects.FilledObject>();
 
@@ -52,5 +52,37 @@ public with sharing class FilledObjectHelper {
 
         return false;
 
+    }
+
+    public static List<FilledObjects.FilledObject> processRequiredLookUpsValidation(List<FilledObjects.FilledObject> filledObjectList){
+
+        Wrappers.Wrapper tempWrapper = filledObjectList[0].wrapper;
+
+        String type;
+
+        for (String key : tempWrapper.getRequiredLookups().keySet()) {
+
+            String field = tempWrapper.getRequiredLookups().get(key);
+
+            Set<String> externalIds = VerifyFields.getAllExternalIds(field);
+
+            for (FilledObjects.FilledObject iFilledObjects : filledObjectList) {
+
+                Map<String, Object> wrapperMap = 
+                    (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(iFilledObjects.wrapper));
+
+                Object lookupValue = wrapperMap.get(key);
+
+                if (!VerifyFields.verifyLookupFields(externalIds, String.valueOf(lookupValue))) {
+
+                    iFilledObjects.hasError = true;
+
+                    iFilledObjects.errorMessage += ' Invalid lookup field on order with order code "' +
+                        iFilledObjects.wrapper.getExternalId() + '" : ' + field + '. ';
+                }
+            }
+        }
+
+        return filledObjectList;
     }
 }
