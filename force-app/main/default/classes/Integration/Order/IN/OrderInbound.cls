@@ -50,11 +50,11 @@ global with sharing class OrderInbound {
         return filledItemList;
     }
 
-    private static Set<String> getItensExternalIds(List<Wrappers.OrderWrapper> ordersToUpsert){
+    private static Set<String> getItensExternalIds(List<Wrappers.OrderWrapper> ordersWrapper){
 
         Set<String> orderExternalIds = new Set<String>();
 
-        for(Wrappers.OrderWrapper iOrder : ordersToUpsert){
+        for(Wrappers.OrderWrapper iOrder : ordersWrapper){
             
             if(iOrder.orderItems == null) continue;
            
@@ -69,11 +69,14 @@ global with sharing class OrderInbound {
         return orderExternalIds;
     }
 
-    private static List<OrderItem> getExistingItems(List<Order> ordersToUpsert, List<Wrappers.OrderWrapper> request){
+    private static List<OrderItem> getExistingItems(List<Wrappers.OrderWrapper> request){
 
         List<OrderItem> existingItems = new List<OrderItem>();
 
-        Set<Id> foundOrders = GetIdsFromList.getSObjectIds(ordersToUpsert);
+        List<Wrappers.OrderItemWrapper> allItemsWrappers = new List<Wrappers.OrderItemWrapper>();
+
+        for(Wrappers.OrderWrapper iOrderWrapper : request)
+            allItemsWrappers.addAll(iOrderWrapper.orderItems);
 
         Set<String> externalIds = getItensExternalIds(request);
 
@@ -161,7 +164,7 @@ global static List<InResponse> createOrder() {
             
         }
         
-        List<OrderItem> itemsToDelete = getExistingItems(ordersToUpsert, request);
+        List<OrderItem> itemsToDelete = getExistingItems(request);
         
         if(!FilledObjectServices.verifyHasErrors(filledOrderList) && !FilledObjectServices.verifyHasErrors(filledItemList)){
             
