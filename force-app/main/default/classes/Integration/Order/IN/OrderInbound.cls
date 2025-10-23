@@ -22,7 +22,6 @@ global with sharing class OrderInbound {
 
     private static List<FilledObjects.FilledItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
-        System.debug('orders size: ' + orders.size());
         
         List<Wrappers.OrderItemWrapper> allItemWrapper = new List<Wrappers.OrderItemWrapper>();
         
@@ -51,19 +50,6 @@ global with sharing class OrderInbound {
         return filledItemList;
     }
 
-    private static Set<Id> getOrderIds(List<Order> ordersToUpsert){
-
-        Set<Id> orderIds = new Set<Id>();
-
-        for(Order iOrder : ordersToUpsert){
-                
-            orderIds.add(iOrder.Id);  
-            
-        }
-
-        return orderIds;
-    }
-
     private static Set<String> getItensExternalIds(List<Wrappers.OrderWrapper> ordersToUpsert){
 
         Set<String> orderExternalIds = new Set<String>();
@@ -87,7 +73,7 @@ global with sharing class OrderInbound {
 
         List<OrderItem> existingItems = new List<OrderItem>();
 
-        Set<Id> foundOrders = getOrderIds(ordersToUpsert);
+        Set<Id> foundOrders = GetIdsFromList.getSObjectIds(ordersToUpsert);
 
         Set<String> externalIds = getItensExternalIds(request);
 
