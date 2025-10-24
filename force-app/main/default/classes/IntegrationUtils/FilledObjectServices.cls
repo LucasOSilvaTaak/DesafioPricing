@@ -85,4 +85,49 @@ public with sharing class FilledObjectServices {
 
         return filledObjectList;
     }
+
+    public static List<FilledObjects.FilledObject> processRequiredsFullValidation(List<Wrappers.Wrapper> wrapperList){
+        
+        List<FilledObjects.FilledObject> filledList = new List<FilledObjects.FilledObject>();
+
+        filledList = processRequiredFieldValidation(wrapperList);
+
+        filledList = processRequiredLookUpsValidation(filledList);
+
+        return filledList;
+
+    }
+
+    public static List<SObject> getAllSobjects (List<FilledObjects.FilledObject>  filledObjects){
+
+        List<SObject> sobjects = new List<SObject>();
+
+
+        for(FilledObjects.FilledObject iFilledObject : filledObjects)
+            sobjects.add(iFilledObject.record);
+
+        return sobjects;
+    }
+
+    public static List<Wrappers.Wrapper> getAllWrappers (List<FilledObjects.FilledObject>  filledObjects){
+
+        List<Wrappers.Wrapper> wrappers = new List<Wrappers.Wrapper>();
+
+        for(FilledObjects.FilledObject iFilledObject : filledObjects)
+            wrappers.add(iFilledObject.wrapper);
+
+        return wrappers;
+    }
+
+    public static List<String> getAllExternalIds (List<FilledObjects.FilledObject>  filledObjects){
+
+        List<String> externalIds = new List<String>();
+
+        for( FilledObjects.FilledObject iFilledObject : filledObjects)  
+            externalIds.add(iFilledObject.externalId);
+        
+
+        return externalIds;
+
+    }
 }

@@ -1,6 +1,6 @@
-public with sharing virtual class FilledObjects {
+public with sharing abstract class FilledObjects {
     
-    public with sharing virtual class FilledObject {
+    public with sharing abstract class FilledObject {
         
         public String externalId {get; set;}
         public Boolean hasError {get; set;}

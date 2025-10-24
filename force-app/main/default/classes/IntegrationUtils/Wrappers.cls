@@ -27,6 +27,7 @@ public with sharing class Wrappers {
 		public Date deliveryDate;
 		public String status;
 		public String obs;
+		
 		public List<Wrappers.OrderItemWrapper> orderItems {
 			get{
 

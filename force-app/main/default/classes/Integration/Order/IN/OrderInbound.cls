@@ -5,26 +5,11 @@ global with sharing class OrderInbound {
         public List<Wrappers.OrderWrapper> request;
     }
 
-    private static List<FilledObjects.FilledOrder> fillOrder(List<Wrappers.OrderWrapper> request) {
-        
-        List <FilledObjects.FilledObject> filledList = FilledObjectServices.processRequiredFieldValidation(request);
-
-        filledList =  FilledObjectServices.processRequiredLookUpsValidation(filledList);
-        
-        List<FilledObjects.FilledOrder> filledOrdersList = new List<FilledObjects.FilledOrder>();
-
-        for(FilledObjects.FilledObject iFilledObject : filledList)
-            filledOrdersList.add( (FilledObjects.FilledOrder) iFilledObject);
-
-        return filledOrdersList;
-
-    }
-
-    private static List<FilledObjects.FilledItem> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
+    private static List<FilledObjects.FilledObject> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
 
         
         List<Wrappers.OrderItemWrapper> allItemWrapper = new List<Wrappers.OrderItemWrapper>();
-        
+
         for(Wrappers.OrderWrapper iOrder : orders){
             
             if (iOrder.orderItems == null) continue;
@@ -34,20 +19,10 @@ global with sharing class OrderInbound {
         }
         
         List<FilledObjects.FilledObject> filledObjectsList = FilledObjectServices.processRequiredFieldValidation(allItemWrapper);
+        
         filledObjectsList = FilledObjectServices.processRequiredLookUpsValidation(filledObjectsList);
 
-
-        List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
-
-        for (FilledObjects.FilledObject iFilledObject : filledObjectsList) {
-
-            filledItemList.add( (FilledObjects.FilledItem) iFilledObject);
-            
-
-        }
-
-
-        return filledItemList;
+        return filledObjectsList;
     }
 
     private static Set<String> getItensExternalIds(List<Wrappers.OrderWrapper> ordersWrapper){
@@ -69,28 +44,6 @@ global with sharing class OrderInbound {
         return orderExternalIds;
     }
 
-    private static List<OrderItem> getExistingItems(List<Wrappers.OrderWrapper> request){
-
-        List<OrderItem> existingItems = new List<OrderItem>();
-
-        List<Wrappers.OrderItemWrapper> allItemsWrappers = new List<Wrappers.OrderItemWrapper>();
-
-        for(Wrappers.OrderWrapper iOrderWrapper : request)
-            allItemsWrappers.addAll(iOrderWrapper.orderItems);
-
-        Set<String> externalIds = getItensExternalIds(request);
-
-        for(OrderItem item : [
-            SELECT Id, ExternalId__c, OrderId
-            FROM OrderItem
-            WHERE ExternalId__c IN :externalIds 
-
-        ]) {
-            existingItems.add(item);
-        }
-
-        return existingItems;
-    }
 
 @HttpPost
 global static List<InResponse> createOrder() {
@@ -129,10 +82,11 @@ global static List<InResponse> createOrder() {
 
     List<Order> ordersToUpsert = new List<Order>();
     List<OrderItem> itensToUpsert = new List<OrderItem>();
+    List<OrderItem> itemsToDelete = new List<OrderItem>();
     List<String> externalIds = new List<String>();
     List<InResponse> orderResponseList = new List<InResponse>();
-    List<FilledObjects.FilledOrder> filledOrderList = new List<FilledObjects.FilledOrder>();
-    List<FilledObjects.FilledItem> filledItemList = new List<FilledObjects.FilledItem>();
+    List<FilledObjects.FilledObject> filledOrderList = new List<FilledObjects.FilledObject>();
+    List<FilledObjects.FilledObject> filledItemList = new List<FilledObjects.FilledObject>();
 
     String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/orders/*';
 
@@ -140,31 +94,33 @@ global static List<InResponse> createOrder() {
         
     try{
 
-        filledOrderList = fillOrder(request);            
         
-        for (FilledObjects.FilledOrder iFilledOrder : filledOrderList) {
-            
-            if (!iFilledOrder.hasError) {
+        
+        filledOrderList = FilledObjectServices.processRequiredsFullValidation(request);        
+        
+        ordersToUpsert = FilledObjectServices.getAllSobjects(filledOrderList);
+        
+        system.debug('ordersToUpsert: ' + ordersToUpsert.size());
+        
+        List<Wrappers.OrderItemWrapper> allItemsWrappers = new List<Wrappers.OrderItemWrapper>();
+        
+        for (FilledObjects.FilledObject iFilledOrder : filledOrderList) {
 
-                ordersToUpsert.add((Order) iFilledOrder.record);
-
-            }
+            Wrappers.OrderWrapper orderWrapper = (Wrappers.OrderWrapper) iFilledOrder.wrapper;
+                
+            allItemsWrappers.addAll(orderWrapper.orderItems);
 
         }
         
-        filledItemList = fillOrderItem(request);
+        filledItemList = FilledObjectServices.processRequiredsFullValidation(allItemsWrappers);
         
-        for (FilledObjects.FilledItem iFilledItem : filledItemList) {
-            
-            if (!iFilledItem.hasError) {
+        itensToUpsert = FilledObjectServices.getAllSobjects(filledItemList);
                 
-                itensToUpsert.add((OrderItem) iFilledItem.record);
-                
-            }
-            
-        }
-        
-        List<OrderItem> itemsToDelete = getExistingItems(request);
+        for(OrderItem iOrderItem : [SELECT Id, ExternalId__c, OrderId FROM OrderItem WHERE 
+             Order.ExternalId__c IN : WrappersService.getAllExternalIds(request)
+        ]) 
+            itemsToDelete.add(iOrderItem);     
+
         
         if(!FilledObjectServices.verifyHasErrors(filledOrderList) && !FilledObjectServices.verifyHasErrors(filledItemList)){
             
@@ -220,7 +176,7 @@ global static List<InResponse> createOrder() {
 
 
 
-    for(FilledObjects.FilledOrder iFilledOrder : filledOrderList ){
+    for(FilledObjects.FilledObject iFilledOrder : filledOrderList ){
         OrderResponse tempResponse = new OrderResponse();
 
         if(hasError){
@@ -246,7 +202,7 @@ global static List<InResponse> createOrder() {
         }
     }
 
-    for(FilledObjects.FilledItem iFilledItem : filledItemList ){
+    for(FilledObjects.FilledObject iFilledItem : filledItemList ){
         ItemResponse tempResponse = new ItemResponse();
 
         if(hasError){
