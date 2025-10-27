@@ -13,7 +13,7 @@ public with sharing class FilledObjectServices {
 
         for (Wrappers.Wrapper iWrapper : request) {
             
-            type = String.isEmpty(type) ? iWrapper.deserialize().getSObjectType().getDescribe().getName() : type;
+            type = type ?? iWrapper.deserialize().getSObjectType().getDescribe().getName();
 
             FilledObjects.FilledObject filledObject = (FilledObjects.FilledObject) filledObjectsMap.get(type).newInstance();
 
