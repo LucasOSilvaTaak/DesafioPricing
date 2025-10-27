@@ -41,14 +41,6 @@ public with sharing class GetLoginsToUpdate {
                 errorMessage = 'Error: ' + response.getStatusCode();
                 
             }
-            /*
-    
-            IntegrationLog.createLog(
-                'DevUser', devUserWrapped?.id , 'Outbound', JSON.serialize(request.getBody()),
-                JSON.serialize(response.getBody()), endpoint, hasError,
-                false, errorMessage
-            );
-            */
         }
 
         return devUsers;

@@ -11,6 +11,10 @@ global with sharing class DeleteOldOrdersBatch implements Database.Batchable<Ord
     }
 
     global void execute(Database.BatchableContext bc, List<Order> scope){
+        for(Order iOrder : scope){
+            iOrder.Status = 'New';
+        }
+        update scope;
         delete scope;
     }
 
