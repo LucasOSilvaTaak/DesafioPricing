@@ -34,6 +34,8 @@ private class DeleteOldLogsSchedule_Test {
 
         System.Assert.areEqual(0, logs.size(), 'O log deveria ter sido deletada');
         
+        
+
     }
 
 }

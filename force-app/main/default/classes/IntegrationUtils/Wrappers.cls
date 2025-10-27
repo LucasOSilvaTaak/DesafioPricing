@@ -1,7 +1,5 @@
 public with sharing class Wrappers {
 
-	public 
-
 	public interface Wrapper {
 		void serialize(SObject record);
 		SObject deserialize();
@@ -27,7 +25,7 @@ public with sharing class Wrappers {
 		public Date deliveryDate;
 		public String status;
 		public String obs;
-		
+
 		public List<Wrappers.OrderItemWrapper> orderItems {
 			get{
 
@@ -100,7 +98,7 @@ public with sharing class Wrappers {
 
 		public Map<String, String> getRequiredLookups() {
 			return new Map<String, String>{
-				'AccountCode' => 'Account',
+				'accountCode' => 'Account',
 				'distributionCenterCode' => 'DistributionCenter__c',
 				'addressCode' => 'AccountAddress__c',
 				'paymentCode' => 'PaymentCondition__c'

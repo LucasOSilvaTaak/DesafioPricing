@@ -13,11 +13,14 @@ private class OrderInbound_Test {
         List<Product2> productList = new List<Product2>{
             (Product2) testFactory.createSObject(new Product2(
                 Name = 'Product A',
+                ExternalId__c = 'ascac',
                 ProductHierarchy__c = productHierarchy.Id
+                
 
             )),
             (Product2) testFactory.createSObject(new Product2(
                 Name = 'Product B',
+                ExternalId__c = 'asfda',
                 ProductHierarchy__c = productHierarchy.Id
 
             ))
@@ -77,7 +80,8 @@ private class OrderInbound_Test {
         
         DistributionCenter__c distributionCenterA = (DistributionCenter__c) testFactory.createSObject(
             new DistributionCenter__c(
-                Name = 'Distribution Center A'
+                Name = 'Distribution Center A',
+                ExternalId__c = '13131dsa'
             )
         );
         insert distributionCenterA;
@@ -91,6 +95,7 @@ private class OrderInbound_Test {
         Account AccountA = (Account) testFactory.createSObject(
             new Account(
                 Name = 'Account A',
+                ExternalId__c = 'asda1',
                 AccountGroup__c = AccountGroupA.Id
         ));
         insert AccountA;
@@ -98,6 +103,7 @@ private class OrderInbound_Test {
         Account AccountB = (Account) testFactory.createSObject(
             new Account(
                 Name = 'Account B',
+                ExternalId__c = 'wa2asfa',
                 AccountGroup__c = AccountGroupA.Id
         ));
         insert AccountB;
@@ -141,13 +147,18 @@ private class OrderInbound_Test {
         );
         insert contractDefault;
 
-        PaymentCondition__c paymentConditionDefault = (PaymentCondition__c) testFactory.createSObject(new PaymentCondition__c());
+        PaymentCondition__c paymentConditionDefault = (PaymentCondition__c) testFactory.createSObject(new PaymentCondition__c(
+            ExternalId__c = '1'
+
+        ));
         insert paymentConditionDefault;
 
         AccountAddress__c AccountAddressDefault = (AccountAddress__c) testFactory.createSObject(
             new AccountAddress__c(
                 Account__c = AccountA.Id,
-                City__c = cityList[0].Id
+                City__c = cityList[0].Id,
+                ExternalId__c = '1'
+
             )
         );
         insert AccountAddressDefault;
@@ -161,26 +172,73 @@ private class OrderInbound_Test {
 
 
     @isTest
-    static void myUnitTest() {
+    static void inboundTest() {
 
-        Account accountDefault = [SELECT Id FROM Account WHERE Name = 'Account A' LIMIT 1];
+        TestFactorySObject testFactory = TestFactorySObject.getInstance();
 
-        PaymentCode__c paymentConditionDefault = [SELECT Id FROM PaymentCondition__c LIMIT 1];
+        Account accountDefault = [SELECT Id, ExternalId__c FROM Account WHERE Name = 'Account A' LIMIT 1];
 
+        PaymentCondition__c paymentConditionDefault = [SELECT Id, ExternalId__c FROM PaymentCondition__c LIMIT 1];
 
-        Order orderDefault = (Order) testFactory.createSObject(
-            new Order (
-                Name = 'Order A',
-                AccountId = accountDefault.Id,
-                PaymentCondition__c = paymentConditionDefault.Id,
-                DistributionCenter__c = distributionCenterA.Id,
-                Pricebook2Id = pricebookId,
-                AccountAddress__c = AccountAddressDefault.Id,
-                Contact__c = contactDefault.Id,
-                Status = 'New'
-            )
-        );
-        insert orderDefault;
+        Product2 productA = [SELECT Id, ExternalId__c FROM Product2 WHERE Name = 'Product A' LIMIT 1];
+
+        AccountAddress__c AccountAddressDefault = [SELECT Id, ExternalId__c FROM AccountAddress__c LIMIT 1];
+
+        DistributionCenter__c distributionCenterA = [SELECT Id, ExternalId__c FROM DistributionCenter__c LIMIT 1];
+
+        Wrappers.OrderItemWrapper orderItemWrapper = new Wrappers.OrderItemWrapper();
+        orderItemWrapper.itemCode = 'Item A';
+        orderItemWrapper.productCode = productA.ExternalId__c;
+        orderItemWrapper.unitPrice = 1;
+        orderItemWrapper.quantity = 1;
+        orderItemWrapper.listPrice = 1;
+        orderItemWrapper.orderCode = 'Order A';
+        orderItemWrapper.totvsItem = true;
+
+        Wrappers.OrderWrapper orderWrapper = new Wrappers.OrderWrapper();
+        orderWrapper.orderCode = 'Order A';
+        orderWrapper.orderItems = new List<Wrappers.OrderItemWrapper>();
+        orderWrapper.orderItems.add(orderItemWrapper);
+        orderWrapper.accountCode = accountDefault.ExternalId__c;
+        orderWrapper.paymentCode = paymentConditionDefault.ExternalId__c;
+        orderWrapper.distributionCenterCode = distributionCenterA.ExternalId__c;
+        orderWrapper.addressCode = AccountAddressDefault.ExternalId__c;
+        orderWrapper.freightType = 'Cif';
+        orderWrapper.obs = 'Test';
+        orderWrapper.status = 'New';
+        orderWrapper.effectiveDate = Date.today();
+        orderWrapper.deliveryDate = Date.today();
+
+        System.debug('Order: ' + orderWrapper);
+
+        List<Wrappers.OrderWrapper> ordersWrapper = new List<Wrappers.OrderWrapper>();
+        ordersWrapper.add(orderWrapper);
+
+        RestRequest request = new RestRequest();
+        RestResponse response = new RestResponse();
+        request.requestUri = '/services/apexrest/orders/';
+        request.httpMethod = 'POST';
+        request.addHeader('Content-Type', 'application/json');
+
+        String jsonBody = JSON.serialize(new Map<String, List<Wrappers.OrderWrapper>>{
+            'request' => ordersWrapper
+        });
+
+        System.debug('Body: ' + jsonBody);
+
+        request.requestBody = Blob.valueOf(jsonBody);
+
+        RestContext.request = request;
+        RestContext.response = response;
+
+        Test.startTest();
+            List<InResponse> responseList = OrderInbound.createOrder();
+        Test.stopTest();
+
+        System.debug('Responta: ' + responseList);
+
+        System.Assert.areEqual(false, responseList[0].hasError , 'Deveria ter retornado uma resposta sem erros');
+        
 
     }
 }

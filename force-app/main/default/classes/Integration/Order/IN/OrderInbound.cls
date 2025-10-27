@@ -5,45 +5,6 @@ global with sharing class OrderInbound {
         public List<Wrappers.OrderWrapper> request;
     }
 
-    private static List<FilledObjects.FilledObject> fillOrderItem(List<Wrappers.OrderWrapper> orders) {
-
-        
-        List<Wrappers.OrderItemWrapper> allItemWrapper = new List<Wrappers.OrderItemWrapper>();
-
-        for(Wrappers.OrderWrapper iOrder : orders){
-            
-            if (iOrder.orderItems == null) continue;
-            
-            allItemWrapper.addAll(iOrder.orderItems);
-            
-        }
-        
-        List<FilledObjects.FilledObject> filledObjectsList = FilledObjectServices.processRequiredFieldValidation(allItemWrapper);
-        
-        filledObjectsList = FilledObjectServices.processRequiredLookUpsValidation(filledObjectsList);
-
-        return filledObjectsList;
-    }
-
-    private static Set<String> getItensExternalIds(List<Wrappers.OrderWrapper> ordersWrapper){
-
-        Set<String> orderExternalIds = new Set<String>();
-
-        for(Wrappers.OrderWrapper iOrder : ordersWrapper){
-            
-            if(iOrder.orderItems == null) continue;
-           
-            for(Wrappers.OrderItemWrapper iItemWrapper : iOrder.orderItems){
-          
-                orderExternalIds.add(iItemWrapper.itemCode);
-           
-            }
-        
-        }
-
-        return orderExternalIds;
-    }
-
 
 @HttpPost
 global static List<InResponse> createOrder() {
