@@ -6,7 +6,6 @@ public with sharing class GetLoginsToUpdate {
 
     }
 
-
     private static  List<DevUser__c> executeCallout(List<DevUser__c> devUsersToUpdate){
 
         List<DevUser__c> devUsers = new List<DevUser__c>();
