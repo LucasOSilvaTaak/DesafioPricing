@@ -31,7 +31,7 @@ global with sharing class DevUserInsertBatch implements Database.Batchable<DevUs
 
       if(toUpdate.size() > 0){
 
-         update toUpdate;
+         Database.update(toUpdate, false);
 
       }
       
