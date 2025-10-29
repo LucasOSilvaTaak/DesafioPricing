@@ -16,18 +16,7 @@ global with sharing class DevUserInsertBatch implements Database.Batchable<DevUs
       
       Map<String, DevUser__c> devUserMap = new Map<String, DevUser__c>();
 
-      for( DevUser__c iDevUser : scope ){
-
-         devUserMap.put(iDevUser.Login__c, iDevUser);
-      }
-
-      List<DevUser__c> toUpdate = GetLoginsToUpdate.getValues(scope);
-
-      for( DevUser__c iDevUser : toUpdate){
-
-         iDevUser.id = devUserMap.get(iDevUser.Login__c).id;
-
-      }
+      List<DevUser__c> toUpdate = GetLoginsToUpdate.getDevUserApiValues(scope);
 
       if(toUpdate.size() > 0){
 

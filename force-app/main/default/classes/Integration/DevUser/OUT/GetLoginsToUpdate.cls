@@ -1,10 +1,21 @@
 public with sharing class GetLoginsToUpdate {
 
-    public static  List<DevUser__c> getValues(List<DevUser__c> devUsersToUpdate){
+    public static  List<DevUser__c> getDevUserApiValues(List<DevUser__c> devUsersToUpdate){
         
         return executeCallout(devUsersToUpdate);
 
     }
+
+    @InvocableMethod
+    public static  List<DevUser__c> retryUpdateDevUser(List<Id> devUsersToUpdate){
+        
+        List<DevUser__c> toUpdate = executeCallout([SELECT Id, Login__c FROM DevUser__c WHERE Id IN :devUsersToUpdate]);
+        update toUpdate;
+        return toUpdate;
+
+    }
+
+
 
     private static  List<DevUser__c> executeCallout(List<DevUser__c> devUsersToUpdate){
 
@@ -16,7 +27,7 @@ public with sharing class GetLoginsToUpdate {
         request.setTimeout(10000);
     
         for(DevUser__c iDevUser : devUsersToUpdate){
-
+            
             Boolean hasError = false;
             Boolean hasDeleted = false;
             String errorMessage = '';
@@ -31,12 +42,17 @@ public with sharing class GetLoginsToUpdate {
             if(response.getStatusCode() == 200){
                 System.debug('response body : ' + response.getBody());
                 System.debug('response body deserialised : ' + (Wrapper)JSON.deserialize(response.getBody(), Wrapper.class));
-                devUserWrapped = (Wrapper)JSON.deserialize(response.getBody(), Wrapper.class);
                 
-                devUsers.add(devUserWrapped.deserialise());
+                devUserWrapped = (Wrapper)JSON.deserialize(response.getBody(), Wrapper.class) ?? new Wrapper(iDevUser.Login__c, iDevUser.Type__c, iDevUser.Bio__c);
+
+
+                DevUser__c toUpdate = devUserWrapped.deserialise();           
+                toUpdate.Id = iDevUser.Id;
+
+                devUsers.add(toUpdate);
             }
             else{
-                                hasError = true;
+                hasError = true;
                 errorMessage = 'Error: ' + response.getStatusCode();
                 
             }

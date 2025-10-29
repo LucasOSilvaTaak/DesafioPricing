@@ -1,4 +1,4 @@
-public with sharing class DevUserTriggerHandler {
+public with sharing class FreightTriggerHandler {
     
     private static Boolean isEnabled;
     
@@ -31,7 +31,7 @@ public with sharing class DevUserTriggerHandler {
 	Map<Id, Freight__c> oldRecordMap { get; set; }
 	Map<Id, Freight__c> newRecordMap { get; set; }
     
-    public DevUserTriggerHandler(		
+    public FreightTriggerHandler(		
         List<Freight__c> oldRecordList,
 		List<Freight__c> newRecordList,
 		Map<Id, Freight__c> oldRecordMap,
