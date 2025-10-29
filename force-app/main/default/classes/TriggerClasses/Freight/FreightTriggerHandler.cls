@@ -52,7 +52,7 @@ public with sharing class FreightTriggerHandler {
     
     }
     
-    public void afterInsert(){
+    public void BeforeUpdate(){
     
         FreightTriggerHelper.HandleUpdateFreight(oldRecordList, newRecordList);
     

@@ -12,7 +12,7 @@ public with sharing class DevUserTriggerHelper {
             logins.add(devUser.Login__c);
         }
 
-        Database.executeBatch(new DevUserInsertBatch(logins), 200);
+        Database.executeBatch(new DevUserInsertBatch(logins), 100);
         
     }
 }
