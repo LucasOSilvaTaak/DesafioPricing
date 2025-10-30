@@ -39,7 +39,6 @@ public with sharing class GetLoginsToUpdate {
                 
                 filledDevUser.wrapper = (Wrappers.DevUserWrapper)JSON.deserialize(response.getBody(), Wrappers.DevUserWrapper.class);
 
-
                 filledDevUser.record = (DevUser__c) filledDevUser.wrapper.deserialize();  
 
                 filledDevUser.record.Id = iDevUser.Id;

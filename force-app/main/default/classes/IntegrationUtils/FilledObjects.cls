@@ -44,6 +44,15 @@ public with sharing abstract class FilledObjects {
             record = new DevUser__c();
         }
     }
+
+    public class FilledPokemon extends FilledObject{
+
+        public FilledPokemon(){
+            super();
+            wrapper = new Wrappers.PokemonWrapper();
+            record = new Pokemon__c();
+        }
+    }
     
 }
 

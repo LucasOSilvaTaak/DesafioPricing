@@ -231,4 +231,51 @@ public with sharing class Wrappers {
 		}
 
 	}
+	public class PokemonWrapper implements Wrapper{
+		
+		String name;
+        String url;
+
+		public void serialize(SObject record) {
+            
+			Pokemon__c pokemon = (Pokemon__c) record;
+
+			name = pokemon.Name;
+            url = pokemon.Url__c;
+			
+
+        }
+
+        public SObject deserialize() {
+            
+			Pokemon__c pokemon = new Pokemon__c(
+                Name = name,
+                Url__c = url
+            );
+
+            return pokemon;
+        }
+
+		public String getFieldKey() { return ''; }
+		
+		public String getFieldId() { return ''; }
+		
+		public String getExternalId() { return null; }
+
+		public Set<String> getRequiredFields() {
+			return new Set<String>{
+				'Name',
+                'Url__c'
+			};
+		}
+
+		public Map<String, String> getRequiredLookups() {
+			return new Map<String, String>{
+			};
+		}
+
+	}
+
+
+
 }

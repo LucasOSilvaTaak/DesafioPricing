@@ -2,7 +2,9 @@ public with sharing class FilledObjectServices {
 
     private static Map<String, Type> filledObjectsMap = new Map<String, Type>{
         'Order' => FilledObjects.FilledOrder.class,
-        'OrderItem' => FilledObjects.FilledItem.class
+        'OrderItem' => FilledObjects.FilledItem.class,
+        'Pokemon__c' => FilledObjects.FilledPokemon.class,
+        'DevUser__c' => FilledObjects.FilledDevUser.class
     };
 
     public static List<FilledObjects.FilledObject> processRequiredFieldValidation (List<Wrappers.Wrapper> request){
