@@ -1,6 +1,6 @@
 public with sharing class ExecuteCallout {
 
-    public static RequestResponse executeCallout(String endpoint, String payload, Map<String, String> headers){
+    public static RequestResponse executeCalloutPost(String endpoint, String payload, Map<String, String> headers){
         
         HttpRequest request = new HttpRequest(); 
 
@@ -46,6 +46,79 @@ public with sharing class ExecuteCallout {
             return outResponse;
         
         }
+
+
+    }
+    public static HttpResponse executeCalloutGet(String endpoint, String payload, Map<String, String> headers){
+        
+        HttpRequest request = new HttpRequest();
+
+        System.debug('endpoint: ' + endpoint);
+        System.debug('payload: ' + payload);
+        System.debug('headers: ' + headers);
+        
+        request.setMethod('GET');
+        request.setTimeout(110000);
+ 
+        request.setEndpoint(endpoint);
+        request.setBody(payload);
+
+        if (headers != null && headers.size() > 0){
+            for (String headerKey : headers.keySet()){
+                request.setHeader(headerKey, headers.get(headerKey));
+            }
+        }
+        
+        HttpResponse response;
+
+        try{
+            
+            response = (new Http()).send(request);
+        
+            
+        }
+        catch (Exception e){
+            
+            response = new HttpResponse();
+            response.setStatusCode(500);
+            response.setStatus('Error');
+            response.setBody(e.getMessage());
+        }
+
+        return response;
+
+
+    }
+
+    public static HttpResponse executeCalloutGet(String endpoint){
+        
+        HttpRequest request = new HttpRequest();
+
+        System.debug('endpoint: ' + endpoint);
+        
+        request.setMethod('GET');
+        request.setTimeout(110000);
+ 
+        request.setEndpoint(endpoint);
+
+        
+        HttpResponse response;
+
+        try{
+            
+            response = (new Http()).send(request);
+        
+            
+        }
+        catch (Exception e){
+            
+            response = new HttpResponse();
+            response.setStatusCode(500);
+            response.setStatus('Error');
+            response.setBody(e.getMessage());
+        }
+
+        return response;
 
 
     }

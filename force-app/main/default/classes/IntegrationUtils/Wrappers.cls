@@ -181,4 +181,101 @@ public with sharing class Wrappers {
 		}
 
 	}
+
+	public class DevUserWrapper implements Wrapper{
+		
+		String login;
+        String type;
+        String bio;
+        String Id;
+
+		public void serialize(SObject record) {
+            
+			DevUser__c devUser = (DevUser__c) record;
+
+			login = devUser.Login__c;
+            type = devUser.Type__c;
+            bio = devUser.Bio__c;
+            id = devUser.ExternalId__c;
+			
+
+        }
+
+        public SObject deserialize() {
+            
+			DevUser__c devUser = new DevUser__c(
+                Login__c = login,
+                Type__c = type,
+                Bio__c = bio,
+                ExternalId__c = Id
+            );
+
+            return devUser;
+        }
+
+		public String getFieldKey() { return 'ExternalId__c'; }
+		
+		public String getFieldId() { return 'Id'; }
+		
+		public String getExternalId() { return this.Id; }
+
+		public Set<String> getRequiredFields() {
+			return new Set<String>{
+				'Login__c'
+			};
+		}
+
+		public Map<String, String> getRequiredLookups() {
+			return new Map<String, String>{
+			};
+		}
+
+	}
+	public class PokemonWrapper implements Wrapper{
+		
+		String name;
+        String url;
+
+		public void serialize(SObject record) {
+            
+			Pokemon__c pokemon = (Pokemon__c) record;
+
+			name = pokemon.Name;
+            url = pokemon.Url__c;
+			
+
+        }
+
+        public SObject deserialize() {
+            
+			Pokemon__c pokemon = new Pokemon__c(
+                Name = name,
+                Url__c = url
+            );
+
+            return pokemon;
+        }
+
+		public String getFieldKey() { return ''; }
+		
+		public String getFieldId() { return ''; }
+		
+		public String getExternalId() { return null; }
+
+		public Set<String> getRequiredFields() {
+			return new Set<String>{
+				'Name',
+                'Url__c'
+			};
+		}
+
+		public Map<String, String> getRequiredLookups() {
+			return new Map<String, String>{
+			};
+		}
+
+	}
+
+
+
 }

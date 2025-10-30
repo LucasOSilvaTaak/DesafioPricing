@@ -35,6 +35,24 @@ public with sharing abstract class FilledObjects {
 
         }
     }
+
+    public class FilledDevUser extends FilledObject{
+
+        public FilledDevUser(){
+            super();
+            wrapper = new Wrappers.DevUserWrapper();
+            record = new DevUser__c();
+        }
+    }
+
+    public class FilledPokemon extends FilledObject{
+
+        public FilledPokemon(){
+            super();
+            wrapper = new Wrappers.PokemonWrapper();
+            record = new Pokemon__c();
+        }
+    }
     
 }
 
