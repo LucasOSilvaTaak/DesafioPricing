@@ -1,7 +1,7 @@
 public with sharing class PokemonQueue implements Queueable, Finalizer, Database.AllowsCallouts{
 
     private Integer offset;
-    private Integer limitSearch = 50;
+    private Integer limitSearch = 20;
     private Boolean endSearch = false;
 
 
@@ -9,9 +9,9 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
         this.offset = offset;
     }
 
-    private List<Pokemon__c> weGotatCacthThemAllweGottaCatchEmAll(Integer offset){
+    private List<Pokemon__c> weGotatCacthThemAll(Integer offset){
 
-        List<FilledObjects.FilledObject> filledPokemonList = PokemonApiGet.PokemonApiGet(offset, 50);
+        List<FilledObjects.FilledObject> filledPokemonList = PokemonApiGet.PokemonApiGet(offset, limitSearch);
 
         return FilledObjectServices.getAllSobjects(filledPokemonList);
     }
@@ -20,15 +20,12 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
     public void execute(QueueableContext context){
         System.attachFinalizer(this);
 
-        List<Pokemon__c> pokemonList = weGotatCacthThemAllweGottaCatchEmAll(offset);
+        List<Pokemon__c> pokemonList = weGotatCacthThemAll(offset);
 
-        if(pokemonList.isEmpty()){
+        if(!pokemonList.isEmpty()) Database.insert(pokemonList, false);
 
-            Database.insert(pokemonList, false);
-
-            endSearch = true;
-
-        }
+        
+        else endSearch = true;
 
 
 
@@ -42,7 +39,7 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
         }
 
         else{
-            offset += 50;
+            offset += limitSearch;
             System.enqueueJob(new PokemonQueue(offset));
 
         }

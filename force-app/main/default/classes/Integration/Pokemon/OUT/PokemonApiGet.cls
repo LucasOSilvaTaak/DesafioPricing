@@ -7,14 +7,6 @@ public with sharing class PokemonApiGet {
         return filledPokemonList;
     }
 
-    public static void test(Integer offset, Integer limitSearch) {
-
-        List<FilledObjects.FilledObject> filledPokemonList = executeCallout(offset, limitSearch);
-        System.debug('filledPokemonList: ' + filledPokemonList);
-    }
-
-
-
     private class ResultsWrapper{
         
         public List<Wrappers.PokemonWrapper> results = new List<Wrappers.PokemonWrapper>();
