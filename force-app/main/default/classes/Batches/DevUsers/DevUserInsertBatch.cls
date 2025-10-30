@@ -16,11 +16,23 @@ global with sharing class DevUserInsertBatch implements Database.Batchable<DevUs
       
       Map<String, DevUser__c> devUserMap = new Map<String, DevUser__c>();
 
-      List<DevUser__c> toUpdate = GetLoginsToUpdate.getDevUserApiValues(scope);
+      List<FilledObjects.FilledObject> toUpdate = GetLoginsToUpdate.getDevUserApiValues(scope);
+
+      String externalIds = '';
+
+      for(String externalId : FilledObjectServices.getAllExternalIds(toUpdate)){
+         externalIds += externalId + ',';
+      }
+
+      if(externalIds.length() > 0){
+         externalIds = externalIds.substring(0, externalIds.length() - 1);
+
+      }
+
 
       if(toUpdate.size() > 0){
 
-         Database.update(toUpdate, false);
+         Database.update(FilledObjectServices.getAllSobjects(toUpdate), false);
 
       }
       

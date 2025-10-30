@@ -55,7 +55,7 @@ global with sharing class OrderOutbound {
         Map<String, String> headersMap = new Map<String, String>();
         headersMap.put('Content-type', 'application/json');
         
-        RequestResponse requestResponse = ExecuteCallout.executeCallout(endPoint, payload, headersMap);
+        RequestResponse requestResponse = ExecuteCallout.executeCalloutPost(endPoint, payload, headersMap);
         
         OutResponse outResponse;
         
