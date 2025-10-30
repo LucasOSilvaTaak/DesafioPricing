@@ -18,12 +18,19 @@ public with sharing class GetLoginsToUpdate {
 
         List<FilledObjects.FilledObject> filledUserList = new List<FilledObjects.FilledObject>();        
         
+        List<IntegrationLog__c> logList = new List<IntegrationLog__c>();
+
         for(DevUser__c iDevUser : devUsersToUpdate){
             
+            Boolean hasError = false;
+            String errorMessage = '';
+            String endpoint = 'https://api.github.com/users/' + iDevUser.Login__c;
+
             FilledObjects.FilledObject filledDevUser = new FilledObjects.FilledDevUser();
 
-            HttpResponse response = ExecuteCallout.executeCalloutGet('https://api.github.com/users/' + iDevUser.Login__c);
+            HttpResponse response = ExecuteCallout.executeCalloutGet(endpoint);
             
+
             if(response.getStatusCode() == 200){
                 
                 System.debug('response body : ' + response.getBody());
@@ -39,7 +46,25 @@ public with sharing class GetLoginsToUpdate {
 
                 filledUserList.add(filledDevUser);
             }
+            else{
+
+                errorMessage = 'The response status code is ' + response.getStatusCode() + ' and the body is ' + response.getBody();
+                hasError = true;
+            }
+
+
+            IntegrationLogsBuilder.LogBuilder logBuilder = new IntegrationLogsBuilder.LogBuilder();
+            logList.add(logBuilder.setEndpoint(endpoint)
+                .setPayloadIN('')
+                .setPayloadOUT(response.getBody())
+                .setExternalIdList(filledDevUser.wrapper.getExternalId())
+                .setHasAnyErrors(hasError)
+                .setIntegrationName('Outbound', 'DevUser')
+                .setErrorMessage(errorMessage)
+                .build());
         }
+
+        Database.insert(logList);
 
         return filledUserList;
     }
