@@ -9,7 +9,7 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
         this.offset = offset;
     }
 
-    private List<Pokemon__c> weGotatCacthThemAll(Integer offset){
+    private List<Pokemon__c> weGottaCacthThemAll(Integer offset){
 
         List<FilledObjects.FilledObject> filledPokemonList = PokemonApiGet.PokemonApiGet(offset, limitSearch);
 
@@ -20,7 +20,7 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
     public void execute(QueueableContext context){
         System.attachFinalizer(this);
 
-        List<Pokemon__c> pokemonList = weGotatCacthThemAll(offset);
+        List<Pokemon__c> pokemonList = weGottaCacthThemAll(offset);
 
         if(!pokemonList.isEmpty()) Database.insert(pokemonList, false);
 
