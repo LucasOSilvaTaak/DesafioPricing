@@ -1,56 +1,75 @@
 global with sharing class GoalSalesValueBatch implements Database.Batchable<SObject> , Database.Stateful {
 
     Map<Id, Goal__c> goalsMap = new Map<Id, Goal__c>();
-    Map<Id, Decimal> goalSalesValueMap = new Map<Id, Decimal>();
+
+
+    Set<String> statusComplete = new Set<String>{
+        'Approved',
+        'Integrated'
+    };
 
     global Iterable<SObject> start(Database.BatchableContext bc){
+
+        Set<id> sallers = new Set<id>();
+
+        for (Goal__c iGoals : [
+            SELECT Id, Seller__c
+            FROM Goal__c
+            WHERE Year__c = :Date.today().year()
+        ]) {
+            sallers.add(iGoals.Seller__c);
+        }
+
+
         return Database.getQueryLocator([
-            SELECT Id, ValueAchieved__c, Goal__c
-            FROM GoalItem__c
-            WHERE Goal__r.Year__c = :Date.today().year()
-            ORDER BY Goal__c
+            SELECT Id, TotalDiscount__c, OwnerId
+            FROM Order
+            WHERE LastModifiedDate = THIS_YEAR
+            AND status IN :statusComplete
+            AND OwnerId IN :sallers
         ]);
     }
 
 
-    global void execute(Database.BatchableContext bc, List<SObject > scope){
+    global void execute(Database.BatchableContext bc, List<SObject> scope) {
+
+        List<Order> orderList = new List<Order>();
         
-        Map<Id,GoalItem__c> goalItemsMap = new Map<Id,GoalItem__c>();
+        Set<Id> sellerIds = new Set<Id>();
 
-        Set<Id> goalIds = new Set<Id>();
+        for (SObject iSObject : scope) {
 
-        for( SObject iSObject : scope){
+            Order iOrder = (Order) iSObject;
 
-            GoalItem__c iGoalItem = (GoalItem__c) iSObject;
+            orderList.add(iOrder);
 
-            goalItemsMap.put(iGoalItem.Id,iGoalItem);
-
-            goalIds.add(iGoalItem.Goal__c);
+            sellerIds.add(iOrder.OwnerId);
 
         }
 
         for (Goal__c iGoal : [
-            SELECT Id, SalesValue__c
+            SELECT Id, Seller__c, SalesValue__c
             FROM Goal__c
             WHERE Year__c = :Date.today().year()
-            AND Id IN :goalIds
-            ORDER BY Seller__c
-        ]){
-            if(!goalsMap.containsKey(iGoal.Id)){
-                goalsMap.put(iGoal.Id,iGoal);
+            AND Seller__c IN :sellerIds
+        ]) {
+            if (!goalsMap.containsKey(iGoal.Seller__c)) {
+                goalsMap.put(iGoal.Seller__c, iGoal);
             }
         }
-        
-        For (GoalItem__c iGoalItem : goalItemsMap.values()){
 
-            if (goalsMap.containsKey(iGoalItem.Goal__c)) {
-                goalsMap.get(iGoalItem.Goal__c).SalesValue__c += iGoalItem.ValueAchieved__c;
-            }
+        for (Order iOrder : orderList) {
+           
+    
+            if (goalsMap.containsKey(iOrder.OwnerId)) 
+                goalsMap.get(iOrder.OwnerId).SalesValue__c += iOrder.TotalDiscount__c;
+
         }
 
         Database.update(goalsMap.values(), false);
 
     }
+
 
     global void finish(Database.BatchableContext bc){
 
