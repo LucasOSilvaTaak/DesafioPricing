@@ -1,5 +1,7 @@
 global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>, Database.Stateful{
 
+    Set<Id> seenIds = new Set<Id>();
+
     //map de id de goal e seu respectivos itens
     Map<Id,Set<Id>> goalItensMap = new Map<Id,Set<Id>>();
 
@@ -23,7 +25,7 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
         //Fazer um batch de reset valores para rodar antes desse
 
         return Database.getQueryLocator([
-            SELECT Id, OwnerId, Status
+            SELECT Id, OwnerId, Status, PaymentCondition__c
             FROM Order
             WHERE LastModifiedDate = THIS_YEAR
             Order by OwnerId
@@ -34,7 +36,6 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
     global void execute(Database.BatchableContext bc, List<SObject > scope){
 
         Set<Id> OrderIds = new Set<Id>();
-        Set<Id> seenIds = new Set<Id>();
         List<GoalItem__c> goalsToUpdate = new List<GoalItem__c>();
 
 
@@ -63,18 +64,15 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
             WHERE OrderId IN :OrderIds
         ]);
 
-        //Busca os goals que usaremos
-        List<Goal__c> goals =  new List<Goal__c>([
+        Set<Id> goalIds = new Set<Id>();
+        for (Goal__c g : [
             SELECT Id
             FROM Goal__c
             WHERE OwnerId IN :Sallers 
             AND Year__c = :Date.today().year()
-        ]);
-
-        //Gurda os ids dos goals
-        Set<Id> goalIds = new Set<Id>();
-        for (Goal__c iGoal : goals)
-                goalIds.add(iGoal.Id);
+        ]) {
+            goalIds.add(g.Id);
+        }
                 
         for(GoalItem__c iGoalItem : [
             SELECT Id, recordTypeId, Type__c, Goal__c, Goal__r.Seller__c,
@@ -84,7 +82,6 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
             WHERE Goal__c IN :goalIds
         ]) {
             if (!goalItems.containsKey(iGoalItem.Id)) {
-                
                 goalItems.put(iGoalItem.Id, iGoalItem);
             }
         }
@@ -163,7 +160,11 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
             goalsToUpdate.add(goalItems.get(iId));
         
 
-        if (!goalsToUpdate.isEmpty()) update goalsToUpdate;
+        if (!goalsToUpdate.isEmpty()){
+            
+            System.debug('goalsToUpdate - ' + goalsToUpdate);
+            Database.update(goalsToUpdate, false);
+        }
 
     }
 
@@ -178,9 +179,12 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
     
             if (statusComplete.contains(iOrderItem.Order.Status)) {
                 iGoalItem.ValueAchieved__c += iOrderItem.Final__c;
+                System.debug(iGoalItem.ValueAchieved__c);
             } 
             else if (statusNotComplete.contains(iOrderItem.Order.Status)) {
                 iGoalItem.NegotiatedValue__c += iOrderItem.Final__c;
+                System.debug(iGoalItem.NegotiatedValue__c);
+
             }
 
         }
