@@ -1,9 +1,6 @@
-global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>, Database.Stateful{
+global with sharing class GoalsItemOrderBatch implements Database.Batchable<SObject>, Database.Stateful{
 
     Set<Id> seenIds = new Set<Id>();
-
-    //map de id de goal e seu respectivos itens
-    Map<Id,Set<Id>> goalItensMap = new Map<Id,Set<Id>>();
 
     //Goal Itens já buscados
     Map<Id, GoalItem__c> goalItems = new  Map<Id, GoalItem__c>();
@@ -64,27 +61,7 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
             WHERE OrderId IN :OrderIds
         ]);
 
-        Set<Id> goalIds = new Set<Id>();
-        for (Goal__c g : [
-            SELECT Id
-            FROM Goal__c
-            WHERE OwnerId IN :Sallers 
-            AND Year__c = :Date.today().year()
-        ]) {
-            goalIds.add(g.Id);
-        }
-                
-        for(GoalItem__c iGoalItem : [
-            SELECT Id, recordTypeId, Type__c, Goal__c, Goal__r.Seller__c,
-                Product__c, ProductHierarchy__c, PaymentCondition__c,
-                ValueAchieved__c, NegotiatedValue__c
-            FROM GoalItem__c 
-            WHERE Goal__c IN :goalIds
-        ]) {
-            if (!goalItems.containsKey(iGoalItem.Id)) {
-                goalItems.put(iGoalItem.Id, iGoalItem);
-            }
-        }
+        goalItems.putAll(GoalItemBatchHelper.getGoalItems(Sallers, goalItems)); 
 
         Map<Id,GoalItem__c> productGoals = new Map<Id,GoalItem__c>();
         Map<Id,GoalItem__c> productHierarchyGoals = new Map<Id,GoalItem__c>();
@@ -171,6 +148,7 @@ global with sharing class GoalsOrderBatch implements Database.Batchable<SObject>
 
 
    global void finish(Database.BatchableContext bc){
+        Database.executeBatch(new GoalOpportunityBatch(), 200);
 
    }
 

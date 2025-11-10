@@ -15,6 +15,9 @@ global with sharing class GoalItemResetBatch implements Database.Batchable<SObje
 
             GoalItem__c iGoalItem = (GoalItem__c) iSObject;
 
+            iGoalItem.ValueAchieved__c = 0;
+            iGoalItem.NegotiatedValue__c = 0;
+            iGoalItem.ProjectedValue__c = 0;
 
         }
 
@@ -23,6 +26,7 @@ global with sharing class GoalItemResetBatch implements Database.Batchable<SObje
 
 
     global void finish(Database.BatchableContext bc){
+        Database.executeBatch(new GoalsOrderBatch(), 200);
 
     }
 
