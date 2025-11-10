@@ -6,7 +6,9 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
 
 
     public PokemonQueue(Integer offset){
+        
         this.offset = offset;
+
     }
 
     private List<Pokemon__c> weGottaCacthThemAll(Integer offset){
@@ -18,16 +20,14 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
 
 
     public void execute(QueueableContext context){
+        
         System.attachFinalizer(this);
 
         List<Pokemon__c> pokemonList = weGottaCacthThemAll(offset);
 
         if(!pokemonList.isEmpty()) Database.insert(pokemonList, false);
-
         
         else endSearch = true;
-
-
 
     }
 
@@ -39,7 +39,9 @@ public with sharing class PokemonQueue implements Queueable, Finalizer, Database
         }
 
         else{
+            
             offset += limitSearch;
+            
             System.enqueueJob(new PokemonQueue(offset));
 
         }

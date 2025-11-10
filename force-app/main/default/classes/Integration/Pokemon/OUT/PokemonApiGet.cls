@@ -3,7 +3,9 @@ public with sharing class PokemonApiGet {
     public static List<FilledObjects.FilledObject> PokemonApiGet(Integer offset, Integer limitSearch) {
 
         List<FilledObjects.FilledObject> filledPokemonList = executeCallout(offset, limitSearch);
+        
         System.debug('filledPokemonList: ' + filledPokemonList);
+        
         return filledPokemonList;
     }
 
