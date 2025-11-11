@@ -1,4 +1,4 @@
-global with sharing class GoalItemOpportunityBatch implements Database.Batchable<SObject>, Database.Stateful{
+global with sharing class GoalItemFillBasedOnOpportunityBatch implements Database.Batchable<SObject>, Database.Stateful{
 
     Set<Id> seenIds = new Set<Id>();
 
@@ -6,7 +6,6 @@ global with sharing class GoalItemOpportunityBatch implements Database.Batchable
         'Closed Won'
     };
 
-    //Goal Itens já buscados
     Map<Id, GoalItem__c> goalItems = new  Map<Id, GoalItem__c>();
     
     global Iterable<SObject> start(Database.BatchableContext bc){
@@ -91,7 +90,9 @@ global with sharing class GoalItemOpportunityBatch implements Database.Batchable
                 paymentConditionOpportunityItems.add(iOpportunityItem);
             }
 
-            performanceOpportunityItems.add(iOpportunityItem);
+            if (paymentConditionGoals.containsKey(iOpportunityItem.Opportunity.OwnerId)) {
+                performanceOpportunityItems.add(iOpportunityItem);
+            }
         }
 
         for(OpportunityLineItem iOpportunityItem : opportunityItems ){

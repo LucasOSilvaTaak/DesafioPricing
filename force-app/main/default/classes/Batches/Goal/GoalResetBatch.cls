@@ -27,7 +27,7 @@ global with sharing class GoalResetBatch implements Database.Batchable<SObject>{
     }
 
     global void finish(Database.BatchableContext bc){
-        Database.executeBatch(new GoalSalesValueBatch(), 200);
+        Database.executeBatch(new GoalUpdateSalesValueBatch(), 200);
 
     }
 

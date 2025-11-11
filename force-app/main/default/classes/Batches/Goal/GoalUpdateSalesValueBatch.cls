@@ -1,4 +1,4 @@
-global with sharing class GoalSalesValueBatch implements Database.Batchable<SObject> , Database.Stateful {
+global with sharing class GoalUpdateSalesValueBatch implements Database.Batchable<SObject> , Database.Stateful {
 
     Map<Id, Goal__c> goalsMap = new Map<Id, Goal__c>();
 

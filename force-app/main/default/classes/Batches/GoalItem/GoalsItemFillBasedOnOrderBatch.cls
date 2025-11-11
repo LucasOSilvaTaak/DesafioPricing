@@ -1,8 +1,7 @@
-global with sharing class GoalsItemOrderBatch implements Database.Batchable<SObject>, Database.Stateful{
+global with sharing class GoalsItemFillBasedOnOrderBatch implements Database.Batchable<SObject>, Database.Stateful{
 
     Set<Id> seenIds = new Set<Id>();
 
-    //Goal Itens já buscados
     Map<Id, GoalItem__c> goalItems = new  Map<Id, GoalItem__c>();
 
 
@@ -19,8 +18,6 @@ global with sharing class GoalsItemOrderBatch implements Database.Batchable<SObj
 
     global Iterable<SObject> start(Database.BatchableContext bc){
 
-        //Fazer um batch de reset valores para rodar antes desse
-
         return Database.getQueryLocator([
             SELECT Id, OwnerId, Status, PaymentCondition__c
             FROM Order
@@ -36,10 +33,8 @@ global with sharing class GoalsItemOrderBatch implements Database.Batchable<SObj
         List<GoalItem__c> goalsToUpdate = new List<GoalItem__c>();
 
 
-        //Vendedores
         Set<Id> Sallers = new Set<Id>();
 
-        //Loop para pegar os vendedores 
         for(SObject iSObject : scope){
             
             Order iOrder = (Order) iSObject;
@@ -148,7 +143,6 @@ global with sharing class GoalsItemOrderBatch implements Database.Batchable<SObj
 
 
    global void finish(Database.BatchableContext bc){
-        Database.executeBatch(new GoalOpportunityBatch(), 200);
 
    }
 
