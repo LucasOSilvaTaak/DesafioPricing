@@ -1,4 +1,4 @@
-global with sharing class GoalItemResetBatch implements Database.Batchable<SObject>{
+global with sharing class GoalItemRecaulculateBatch implements Database.Batchable<SObject>{
 
     global Iterable<SObject> start(Database.BatchableContext bc){
         return Database.getQueryLocator([
@@ -26,8 +26,8 @@ global with sharing class GoalItemResetBatch implements Database.Batchable<SObje
 
 
     global void finish(Database.BatchableContext bc){
-        Database.executeBatch(new GoalsOrderBatch(), 200);
-        Database.executeBatch(new GoalOpportunityBatch(), 200);
+        Database.executeBatch(new GoalsItemFillBasedOnOrderBatch(), 200);
+        Database.executeBatch(new GoalItemFillBasedOnOpportunityBatch(), 200);
 
     }
 

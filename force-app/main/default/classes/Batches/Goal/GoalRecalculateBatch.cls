@@ -1,4 +1,4 @@
-global with sharing class GoalResetBatch implements Database.Batchable<SObject>{
+global with sharing class GoalRecalculateBatch implements Database.Batchable<SObject>{
 
     Map<Id, Goal__c> goalsMap = new Map<Id, Goal__c>();
     Map<Id, Decimal> goalSalesValueMap = new Map<Id, Decimal>();

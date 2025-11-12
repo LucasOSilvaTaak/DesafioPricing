@@ -57,10 +57,10 @@ global with sharing class GoalItemFillBasedOnOpportunityBatch implements Databas
                 when 'Product2' {
                     productGoals.put(iGoalItem.Product__c,iGoalItem);
                 }
-                when 'ProductHierarchy__c' { 
+                when 'ProductHierarchy' { 
                     productHierarchyGoals.put(iGoalItem.ProductHierarchy__c,iGoalItem);
                 }
-                when 'PaymentCondition__c' {
+                when 'PaymentCondition' {
                     paymentConditionGoals.put(iGoalItem.PaymentCondition__c,iGoalItem);
                 }
                 when 'Performance' {
