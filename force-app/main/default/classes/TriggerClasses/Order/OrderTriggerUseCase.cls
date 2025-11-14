@@ -27,7 +27,7 @@
         Map<Id, OrderItem> orderMap = new Map<Id, OrderItem>();
 
         for(OrderItem iOrderItem : [
-            SELECT Id, OrderId, Final__c
+            SELECT Id, OrderId, FinalPrice__c
             FROM OrderItem
             WHERE OrderId IN :ordersId
         ]){
@@ -56,12 +56,12 @@
         }
 
         for( OrderItem iItem : [
-            SELECT Discount__c, OrderId, Final__c
+            SELECT Discount__c, OrderId, FinalPrice__c
             FROM OrderItem
             WHERE OrderId  IN :ordersIdSet
         ]){
 
-            ordersMap.get(iItem.OrderId).TotalDiscount__c += iItem.Final__c;
+            ordersMap.get(iItem.OrderId).TotalDiscount__c += iItem.FinalPrice__c;
 
         }
 

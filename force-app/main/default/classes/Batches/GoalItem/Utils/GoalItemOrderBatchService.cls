@@ -40,7 +40,7 @@ public with sharing class GoalItemOrderBatchService implements GoalItemBatchServ
             SELECT Id,
                 Product2Id,
                 Product2.ProductHierarchy__c,
-                Final__c,
+                finalPrice__c,
                 Order.PaymentCondition__c,
                 Order.OwnerId,
                 Order.Status
@@ -105,11 +105,11 @@ public with sharing class GoalItemOrderBatchService implements GoalItemBatchServ
         if(iOrderItem.Order.OwnerId == iGoalItem.Goal__r.Seller__c){
     
             if (getStatusComplete().contains(iOrderItem.Order.Status)) {
-                iGoalItem.ValueAchieved__c += iOrderItem.Final__c;
+               iGoalItem.ValueAchieved__c += iOrderItem.finalPrice__c;
                 System.debug(iGoalItem.ValueAchieved__c);
             } 
             else if (getStatusNotComplete().contains(iOrderItem.Order.Status)) {
-                iGoalItem.NegotiatedValue__c += iOrderItem.Final__c;
+               iGoalItem.NegotiatedValue__c += iOrderItem.finalPrice__c;
                 System.debug(iGoalItem.NegotiatedValue__c);
 
             }

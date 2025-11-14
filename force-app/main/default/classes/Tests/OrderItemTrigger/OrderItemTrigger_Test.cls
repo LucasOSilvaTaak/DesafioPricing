@@ -249,7 +249,7 @@ private class OrderItemTrigger_Test {
 
         
 
-        OrderItem oldOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
+        OrderItem oldOrderItem = [SELECT finalPrice__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
         orderItem.Quantity = 5;
 
         Test.startTest();
@@ -258,9 +258,9 @@ private class OrderItemTrigger_Test {
         
         Test.stopTest();
 
-        OrderItem newOrderItem = [SELECT Final__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
+        OrderItem newOrderItem = [SELECT finalPrice__c FROM OrderItem WHERE Id = :orderItem.Id LIMIT 1];
 
-        Assert.areNotEqual(oldOrderItem.Final__c, newOrderItem.Final__c, 'The old Price( ' + oldOrderItem.Final__c + ') should be different from the new Price( ' + newOrderItem.Final__c + ')');
+        Assert.areNotEqual(oldOrderItem.finalPrice__c, newOrderItem.finalPrice__c, 'The old Price( ' + oldOrderItem.finalPrice__c + ') should be different from the new Price( ' + newOrderItem.finalPrice__c+ ')');
     }
 
      @isTest
