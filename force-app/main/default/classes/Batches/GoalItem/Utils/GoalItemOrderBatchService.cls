@@ -1,13 +1,13 @@
 public with sharing class GoalItemOrderBatchService implements GoalItemBatchServiceInterface {
     
-    public Set<String> getStatusNotComplete(){
+    public Set<String> getStatusComplete(){
         return new Set<String>{
             'Approved',
             'Integrated'
         };
     }
 
-    public Set<String> getStatusComplete(){
+    public Set<String> getStatusNotComplete(){
         return new Set<String>{
             'New',
             'Waiting Approval',
